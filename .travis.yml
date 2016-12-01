@@ -6,6 +6,8 @@ addons:
   apt:
     packages:
     - ruby
+    - libdwarf-dev
+    - libelf-dev
 
 install:
   - git clone https://github.com/aquynh/capstone
