@@ -212,7 +212,7 @@ void list_eh_frame_entries(Dwarf_Debug dbg, Dwarf_Addr mypcval)
                 Dwarf_Regtable3 reg_table;
                 Dwarf_Addr row_pc;
 
-                reg_table.rt3_reg_table_size = 16;
+                reg_table.rt3_reg_table_size = 17;
                 reg_table.rt3_rules = calloc (sizeof(Dwarf_Regtable_Entry3),
                                               reg_table.rt3_reg_table_size);
 

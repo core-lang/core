@@ -7,6 +7,7 @@ use stacktrace::Stacktrace;
 pub use self::param::*;
 pub use self::reg::*;
 
+pub mod dwarfinfo;
 pub mod emit;
 pub mod instr;
 pub mod param;

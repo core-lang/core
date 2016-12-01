@@ -1,6 +1,7 @@
 use std::mem;
 
 use ast::{self, Ast};
+use cpu::x64::dwarfinfo;
 use ctxt::{Context, FctId};
 use driver::cmd;
 use error::msg::Msg;
