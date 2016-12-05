@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <dwarf.h>
 #include <libdwarf.h>
+#include <inttypes.h>
 
 typedef unsigned char u8;
 
@@ -18,7 +19,7 @@ typedef struct {
     Dwarf_Addr row_pc;
 } dwarf_info_t;
 
-dwarf_info_t *dwarfinfo_init(const char *name, int reg_table_size) {
+dwarf_info_t *dwarfinfo_init(const char *name, int32_t reg_table_size) {
     Dwarf_Error err;
     dwarf_info_t *info = calloc(sizeof(dwarf_info_t), 1);
 
