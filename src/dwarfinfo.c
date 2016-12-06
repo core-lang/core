@@ -150,6 +150,74 @@ static uintptr_t dwarfinfo_get_value (Dwarf_Regtable_Entry3 *entry, machine_cont
     }
 }
 
+#define MAX 32
+intptr_t stack[MAX];
+
+#define PUSH(val) do { \
+                        if (top < stack_end) \
+                            *top++ = (val); \
+                        else \
+                            assert (false && "stack overflow"); \
+                  } while (0)
+
+#define POP(val) do { \
+                        if (top < stack_start) \
+                            assert (false && "stack underflow"); \
+                        else \
+                            *top-- = (val); \
+                  } while (0)
+
+static void dwarfinfo_eval(u8 *block_start, size_t len) {
+    u8 *block_end = block_start + len;
+    u8 *ptr = block_start;
+
+    intptr_t *stack_start = &stack[0];
+    intptr_t *stack_end = &stack[MAX];
+    intptr_t top = &stack[0];
+
+    while (ptr < block_end) {
+        switch (*ptr) {
+            case DW_OP_lit0:
+            case DW_OP_lit1:
+            case DW_OP_lit2:
+            case DW_OP_lit3:
+            case DW_OP_lit4:
+            case DW_OP_lit5:
+            case DW_OP_lit6:
+            case DW_OP_lit7:
+            case DW_OP_lit8:
+            case DW_OP_lit9:
+            case DW_OP_lit10:
+            case DW_OP_lit11:
+            case DW_OP_lit12:
+            case DW_OP_lit13:
+            case DW_OP_lit14:
+            case DW_OP_lit15:
+            case DW_OP_lit16:
+            case DW_OP_lit17:
+            case DW_OP_lit18:
+            case DW_OP_lit19:
+            case DW_OP_lit20:
+            case DW_OP_lit21:
+            case DW_OP_lit22:
+            case DW_OP_lit23:
+            case DW_OP_lit24:
+            case DW_OP_lit25:
+            case DW_OP_lit26:
+            case DW_OP_lit27:
+            case DW_OP_lit28:
+            case DW_OP_lit29:
+            case DW_OP_lit30:
+            case DW_OP_lit31:
+                {
+                    intptr_t value = *ptr - DW_OP_lit0;
+                    PUSH (value);
+
+                }
+        }
+    }
+}
+
 static void dwarfinfo_get (dwarf_info_t *info, machine_context_t *mctxt) {
     uintptr_t cfa = dwarfinfo_get_value (&info->reg_table.rt3_cfa_rule, mctxt, 0, 0);
     mctxt->pc = dwarfinfo_get_value (&info->reg_table.rt3_rules[RIP], mctxt, mctxt->pc, cfa);
