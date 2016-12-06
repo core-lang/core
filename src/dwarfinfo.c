@@ -142,6 +142,9 @@ static uintptr_t dwarfinfo_get_value (Dwarf_Regtable_Entry3 *entry, machine_cont
             return dwarfinfo_get_register (mctxt, register_num);
         }
 
+    } else if (value_type == DW_EXPR_EXPRESSION) {
+        assert (false && "DW_EXPR_EXPRESSION not yet supported.");
+
     } else {
         assert (false);
     }
