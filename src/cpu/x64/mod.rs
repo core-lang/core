@@ -1,7 +1,9 @@
-use ctxt::{Context, FctKind, get_ctxt};
+use cpu::x64::dwarfinfo::{DwarfInfo, MachineContext};
+use ctxt::{Context, FctId, FctKind, get_ctxt};
 use execstate::ExecState;
 use jit::fct::CatchType;
 use object::{Handle, Obj};
+use os::MemMapTable;
 use stacktrace::Stacktrace;
 
 pub use self::param::*;
@@ -99,46 +101,71 @@ fn find_handler(exception: Handle<Obj>, es: &mut ExecState, pc: usize, fp: usize
 
 pub fn get_rootset(ctxt: &Context) -> Vec<usize> {
     let mut rootset = Vec::new();
-    let mut pc : usize;
-    unsafe { asm!("lea (%rip), $0": "=r"(pc)) }
+    let mut mctxt = MachineContext::new();
 
-    let mut fp : usize;
-    unsafe { asm!("mov %rbp, $0": "=r"(fp)) }
+    unsafe { asm!("lea (%rip), $0": "=r"(mctxt.pc)) }
+    unsafe { asm!("mov %rbp, $0": "=r"(mctxt.fp)) }
+    unsafe { asm!("mov %rsp, $0": "=r"(mctxt.sp)) }
 
-    determine_rootset(&mut rootset, ctxt, fp, pc);
+    let table = MemMapTable::new();
 
-    while fp != 0 {
-        pc = unsafe { *((fp + 8) as *const usize) };
-        fp = unsafe { *(fp as *const usize) };
-
-        determine_rootset(&mut rootset, ctxt, fp, pc);
+    while mctxt.fp != 0 {
+        pop_frame(ctxt, &mut rootset, &table, &mut mctxt);
     }
 
     rootset
 }
 
-fn determine_rootset(rootset: &mut Vec<usize>, ctxt: &Context, fp: usize, pc: usize) {
+fn pop_frame(ctxt: &Context, rootset: &mut Vec<usize>, table: &MemMapTable,
+             mctxt: &mut MachineContext) {
     let code_map = ctxt.code_map.lock().unwrap();
-    let fct_id = code_map.get(pc);
+    let fct_id = code_map.get(mctxt.pc);
 
     if let Some(fct_id) = fct_id {
-        let fct = ctxt.fct_by_id(fct_id);
+        determine_rootset(rootset, ctxt, mctxt, fct_id);
 
-        if let FctKind::Source(ref src) = fct.kind {
-            let src = src.lock().unwrap();
-            let jit_fct = src.jit_fct.as_ref().expect("no jit information");
-            let offset = pc - (jit_fct.fct_ptr().raw() as usize);
-            let gcpoint = jit_fct.gcpoint_for_offset(offset as i32).expect("no gcpoint");
-
-            for &offset in &gcpoint.offsets {
-                let addr = (fp as isize + offset as isize) as usize;
-                let obj = unsafe { *(addr as *const usize) };
-
-                rootset.push(obj);
-            }
-        } else {
-            panic!("should be FctKind::Source");
+        unsafe {
+            mctxt.pc = *((mctxt.fp + 8) as *const usize);
+            mctxt.fp = *(mctxt.fp as *const usize);
         }
+
+    } else if let Some(entry) = table.find_entry(mctxt.pc) {
+        let pc = entry.address(mctxt.pc) as *const u8;
+
+        let mut info = DwarfInfo::new(&entry.pathname, 17);
+        let found = info.at(mctxt, pc);
+
+        if !entry.pathname.contains("dora") {
+            panic!("does this happen?");
+        }
+
+        if !found {
+            panic!("no dwarf info found for pc.");
+        }
+
+    } else {
+        panic!("pc does not point into valid memory area.");
+    }
+}
+
+fn determine_rootset(rootset: &mut Vec<usize>, ctxt: &Context,
+                     mctxt: &MachineContext, fct_id: FctId) {
+    let fct = ctxt.fct_by_id(fct_id);
+
+    if let FctKind::Source(ref src) = fct.kind {
+        let src = src.lock().unwrap();
+        let jit_fct = src.jit_fct.as_ref().expect("no jit information");
+        let offset = mctxt.pc - (jit_fct.fct_ptr().raw() as usize);
+        let gcpoint = jit_fct.gcpoint_for_offset(offset as i32).expect("no gcpoint");
+
+        for &offset in &gcpoint.offsets {
+            let addr = (mctxt.fp as isize + offset as isize) as usize;
+            let obj = unsafe { *(addr as *const usize) };
+
+            rootset.push(obj);
+        }
+    } else {
+        panic!("should be FctKind::Source");
     }
 }
 

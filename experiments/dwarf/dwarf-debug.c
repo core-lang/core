@@ -21,7 +21,7 @@ const char *regnames[] = {
     "rax",
     "rcx",
     "rdx",
-    "rbp",
+    "rbx",
     "rsi",
     "rdi",
     "rbp",
@@ -64,20 +64,14 @@ void emit_info(const char *reg,
         } else if (register_num == DW_FRAME_UNDEFINED_VAL) {
             printf("UNDEFINED\n");
         } else if (offset_relevant) {
-            printf("r%Ld + %Ld\n", register_num, offset_or_block_len);
+            printf("%s + %Ld\n", regnames[register_num], offset_or_block_len);
         } else {
-            printf("r%Ld\n", register_num);
+            printf("%s\n", regnames[register_num]);
         }
 
     } else {
         printf("UNKNOWN (value_type != DW_EXPR_OFFSET)\n");
     }
-
-    // printf("\tvalue_type = %d\n", (Dwarf_Signed) value_type);
-    // printf("\toffset_relevant = %d\n", offset_relevant);
-    // printf("\tregister_num = %d\n", register_num);
-    // printf("\toffset_or_block_len = %d\n", offset_or_block_len);
-    // printf("\tblock_ptr = %p\n", block_ptr);
 }
 
 void list_eh_frame_entries(Dwarf_Debug dbg, Dwarf_Addr mypcval)
