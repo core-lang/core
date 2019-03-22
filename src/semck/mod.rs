@@ -118,7 +118,7 @@ fn internalck<'ast>(ctxt: &SemContext<'ast>) {
             continue;
         }
 
-        if fct.internal && !fct.internal_resolved {
+        if fct.intrinsic && !fct.intrinsic_resolved {
             ctxt.diag.lock().report_without_path(fct.pos, Msg::UnresolvedInternal);
         }
 
@@ -130,7 +130,7 @@ fn internalck<'ast>(ctxt: &SemContext<'ast>) {
     for cls in ctxt.classes.iter() {
         let cls = cls.read();
 
-        if cls.internal && !cls.internal_resolved {
+        if cls.intrinsic && !cls.intrinsic_resolved {
             ctxt.diag.lock().report_without_path(cls.pos, Msg::UnresolvedInternal);
         }
 
@@ -138,7 +138,7 @@ fn internalck<'ast>(ctxt: &SemContext<'ast>) {
             let method = ctxt.fcts.idx(*method);
             let method = method.read();
 
-            if method.internal && !method.internal_resolved {
+            if method.intrinsic && !method.intrinsic_resolved {
                 ctxt.diag.lock().report_without_path(method.pos, Msg::UnresolvedInternal);
             }
 

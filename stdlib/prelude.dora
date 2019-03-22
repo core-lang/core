@@ -1,6 +1,6 @@
-internal fun fatalError(msg: Str);
-internal fun abort();
-internal fun exit(status: int);
+intrinsic fun fatalError(msg: Str);
+intrinsic fun abort();
+intrinsic fun exit(status: int);
 fun unreachable() {
   fatalError("unreachable code");
 }
@@ -9,24 +9,24 @@ fun unimplemented() {
   fatalError("not yet implemented");
 }
 
-internal fun print(text: Str);
-internal fun println(text: Str);
-internal fun addressOf(object: Object) -> long;
-internal fun assert(val: bool);
-internal fun debug();
-internal fun argc() -> int;
-internal fun argv(idx: int) -> Str;
-internal fun forceCollect();
-internal fun forceMinorCollect();
+intrinsic fun print(text: Str);
+intrinsic fun println(text: Str);
+intrinsic fun addressOf(object: Object) -> long;
+intrinsic fun assert(val: bool);
+intrinsic fun debug();
+intrinsic fun argc() -> int;
+intrinsic fun argv(idx: int) -> Str;
+intrinsic fun forceCollect();
+intrinsic fun forceMinorCollect();
 
-internal fun call(fct: Str);
-internal fun throwFromNative(val: bool) throws;
-internal fun throwFromNativeButNotThrows(val: bool);
+intrinsic fun call(fct: Str);
+intrinsic fun throwFromNative(val: bool) throws;
+intrinsic fun throwFromNativeButNotThrows(val: bool);
 
-internal fun timestamp() -> long;
+intrinsic fun timestamp() -> long;
 
-internal class bool {
-  internal fun toInt() -> int;
+intrinsic class bool {
+  intrinsic fun toInt() -> int;
   fun toString() -> Str {
     if self {
       return "true";
@@ -35,26 +35,26 @@ internal class bool {
     }
   }
 
-  internal fun equals(rhs: bool) -> bool;
-  internal fun not() -> bool;
+  intrinsic fun equals(rhs: bool) -> bool;
+  intrinsic fun not() -> bool;
 }
 
-internal class byte {
-  internal fun toInt() -> int;
-  internal fun toLong() -> long;
-  internal fun toString() -> Str;
+intrinsic class byte {
+  intrinsic fun toInt() -> int;
+  intrinsic fun toLong() -> long;
+  intrinsic fun toString() -> Str;
 
-  internal fun equals(rhs: byte) -> bool;
-  internal fun compareTo(rhs: byte) -> int;
+  intrinsic fun equals(rhs: byte) -> bool;
+  intrinsic fun compareTo(rhs: byte) -> int;
 }
 
-internal class char {
-  internal fun toInt() -> int;
-  internal fun toLong() -> long;
-  internal fun toString() -> Str;
+intrinsic class char {
+  intrinsic fun toInt() -> int;
+  intrinsic fun toLong() -> long;
+  intrinsic fun toString() -> Str;
 
-  internal fun equals(rhs: char) -> bool;
-  internal fun compareTo(rhs: char) -> int;
+  intrinsic fun equals(rhs: char) -> bool;
+  intrinsic fun compareTo(rhs: char) -> int;
 
   fun encodeUtf8(bytes: Array<byte>, offset: int) {
     let val = self.toInt();
@@ -91,8 +91,8 @@ internal class char {
   }
 }
 
-internal class int {
-  internal fun toByte() -> byte;
+intrinsic class int {
+  intrinsic fun toByte() -> byte;
   fun toChar() throws -> char {
     if self >= 0 && self <= 0x10FFFF && (self < 0xD800 || self > 0xDFFF) {
       return self.toCharUnchecked();
@@ -100,35 +100,35 @@ internal class int {
       throw "invalid code point";
     }
   }
-  internal fun toCharUnchecked() -> char;
-  internal fun toLong() -> long;
-  internal fun toString() -> Str;
+  intrinsic fun toCharUnchecked() -> char;
+  intrinsic fun toLong() -> long;
+  intrinsic fun toString() -> Str;
 
-  internal fun toFloat() -> float;
-  internal fun toDouble() -> double;
+  intrinsic fun toFloat() -> float;
+  intrinsic fun toDouble() -> double;
 
-  internal fun asFloat() -> float;
+  intrinsic fun asFloat() -> float;
 
-  internal fun equals(rhs: int) -> bool;
-  internal fun compareTo(rhs: int) -> int;
+  intrinsic fun equals(rhs: int) -> bool;
+  intrinsic fun compareTo(rhs: int) -> int;
 
-  internal fun plus(rhs: int) -> int;
-  internal fun minus(rhs: int) -> int;
-  internal fun times(rhs: int) -> int;
-  internal fun div(rhs: int) -> int;
-  internal fun mod(rhs: int) -> int;
+  intrinsic fun plus(rhs: int) -> int;
+  intrinsic fun minus(rhs: int) -> int;
+  intrinsic fun times(rhs: int) -> int;
+  intrinsic fun div(rhs: int) -> int;
+  intrinsic fun mod(rhs: int) -> int;
 
-  internal fun bitwiseOr(rhs: int) -> int;
-  internal fun bitwiseAnd(rhs: int) -> int;
-  internal fun bitwiseXor(rhs: int) -> int;
+  intrinsic fun bitwiseOr(rhs: int) -> int;
+  intrinsic fun bitwiseAnd(rhs: int) -> int;
+  intrinsic fun bitwiseXor(rhs: int) -> int;
 
-  internal fun shiftLeft(rhs: int) -> int;
-  internal fun shiftRight(rhs: int) -> int;
-  internal fun unsignedShiftRight(rhs: int) -> int;
+  intrinsic fun shiftLeft(rhs: int) -> int;
+  intrinsic fun shiftRight(rhs: int) -> int;
+  intrinsic fun unsignedShiftRight(rhs: int) -> int;
 
-  internal fun unaryPlus() -> int;
-  internal fun unaryMinus() -> int;
-  internal fun not() -> int;
+  intrinsic fun unaryPlus() -> int;
+  intrinsic fun unaryMinus() -> int;
+  intrinsic fun not() -> int;
 
   fun abs() -> int {
     if self >= 0 {
@@ -163,8 +163,8 @@ internal class int {
   }
 }
 
-internal class long {
-  internal fun toByte() -> byte;
+intrinsic class long {
+  intrinsic fun toByte() -> byte;
   fun toChar() throws -> char {
     if self >= 0L && self <= 0x10FFFFL && (self < 0xD800L || self > 0xDFFFL) {
       return self.toCharUnchecked();
@@ -172,35 +172,35 @@ internal class long {
       throw "invalid code point";
     }
   }
-  internal fun toCharUnchecked() -> char;
-  internal fun toInt() -> int;
-  internal fun toString() -> Str;
+  intrinsic fun toCharUnchecked() -> char;
+  intrinsic fun toInt() -> int;
+  intrinsic fun toString() -> Str;
 
-  internal fun toFloat() -> float;
-  internal fun toDouble() -> double;
+  intrinsic fun toFloat() -> float;
+  intrinsic fun toDouble() -> double;
 
-  internal fun asDouble() -> double;
+  intrinsic fun asDouble() -> double;
 
-  internal fun equals(rhs: long) -> bool;
-  internal fun compareTo(rhs: long) -> int;
+  intrinsic fun equals(rhs: long) -> bool;
+  intrinsic fun compareTo(rhs: long) -> int;
 
-  internal fun plus(rhs: long) -> long;
-  internal fun minus(rhs: long) -> long;
-  internal fun times(rhs: long) -> long;
-  internal fun div(rhs: long) -> long;
-  internal fun mod(rhs: long) -> long;
+  intrinsic fun plus(rhs: long) -> long;
+  intrinsic fun minus(rhs: long) -> long;
+  intrinsic fun times(rhs: long) -> long;
+  intrinsic fun div(rhs: long) -> long;
+  intrinsic fun mod(rhs: long) -> long;
 
-  internal fun bitwiseOr(rhs: long) -> long;
-  internal fun bitwiseAnd(rhs: long) -> long;
-  internal fun bitwiseXor(rhs: long) -> long;
+  intrinsic fun bitwiseOr(rhs: long) -> long;
+  intrinsic fun bitwiseAnd(rhs: long) -> long;
+  intrinsic fun bitwiseXor(rhs: long) -> long;
 
-  internal fun shiftLeft(rhs: long) -> long;
-  internal fun shiftRight(rhs: long) -> long;
-  internal fun unsignedShiftRight(rhs: long) -> long;
+  intrinsic fun shiftLeft(rhs: long) -> long;
+  intrinsic fun shiftRight(rhs: long) -> long;
+  intrinsic fun unsignedShiftRight(rhs: long) -> long;
 
-  internal fun unaryPlus() -> long;
-  internal fun unaryMinus() -> long;
-  internal fun not() -> long;
+  intrinsic fun unaryPlus() -> long;
+  intrinsic fun unaryMinus() -> long;
+  intrinsic fun not() -> long;
 
   static fun max_value() -> long {
     return 9223372036854775807L;
@@ -227,55 +227,55 @@ internal class long {
   }
 }
 
-internal class float {
-  internal fun toInt() -> int;
-  internal fun toLong() -> long;
-  internal fun toDouble() -> double;
-  internal fun toString() -> Str;
+intrinsic class float {
+  intrinsic fun toInt() -> int;
+  intrinsic fun toLong() -> long;
+  intrinsic fun toDouble() -> double;
+  intrinsic fun toString() -> Str;
 
-  internal fun asInt() -> int;
+  intrinsic fun asInt() -> int;
 
-  internal fun equals(rhs: float) -> bool;
-  internal fun compareTo(rhs: float) -> int;
+  intrinsic fun equals(rhs: float) -> bool;
+  intrinsic fun compareTo(rhs: float) -> int;
 
-  internal fun plus(rhs: float) -> float;
-  internal fun minus(rhs: float) -> float;
-  internal fun times(rhs: float) -> float;
-  internal fun div(rhs: float) -> float;
+  intrinsic fun plus(rhs: float) -> float;
+  intrinsic fun minus(rhs: float) -> float;
+  intrinsic fun times(rhs: float) -> float;
+  intrinsic fun div(rhs: float) -> float;
 
-  internal fun unaryPlus() -> float;
-  internal fun unaryMinus() -> float;
+  intrinsic fun unaryPlus() -> float;
+  intrinsic fun unaryMinus() -> float;
 
-  internal fun isNan() -> bool;
-  internal fun sqrt() -> float;
+  intrinsic fun isNan() -> bool;
+  intrinsic fun sqrt() -> float;
 }
 
-internal class double {
-  internal fun toInt() -> int;
-  internal fun toLong() -> long;
-  internal fun toFloat() -> float;
-  internal fun toString() -> Str;
+intrinsic class double {
+  intrinsic fun toInt() -> int;
+  intrinsic fun toLong() -> long;
+  intrinsic fun toFloat() -> float;
+  intrinsic fun toString() -> Str;
 
-  internal fun asLong() -> long;
+  intrinsic fun asLong() -> long;
 
-  internal fun equals(rhs: double) -> bool;
-  internal fun compareTo(rhs: double) -> int;
+  intrinsic fun equals(rhs: double) -> bool;
+  intrinsic fun compareTo(rhs: double) -> int;
 
-  internal fun plus(rhs: double) -> double;
-  internal fun minus(rhs: double) -> double;
-  internal fun times(rhs: double) -> double;
-  internal fun div(rhs: double) -> double;
+  intrinsic fun plus(rhs: double) -> double;
+  intrinsic fun minus(rhs: double) -> double;
+  intrinsic fun times(rhs: double) -> double;
+  intrinsic fun div(rhs: double) -> double;
 
-  internal fun unaryPlus() -> double;
-  internal fun unaryMinus() -> double;
+  intrinsic fun unaryPlus() -> double;
+  intrinsic fun unaryMinus() -> double;
 
-  internal fun isNan() -> bool;
-  internal fun sqrt() -> double;
+  intrinsic fun isNan() -> bool;
+  intrinsic fun sqrt() -> double;
 }
 
 class Object
 
-internal class Array<T> {
+intrinsic class Array<T> {
   init() {}
   init(len: int) {}
   init(len: int, value: T) {
@@ -287,9 +287,9 @@ internal class Array<T> {
     }
   }
 
-  internal fun len() -> int;
-  internal fun get(idx: int) -> T;
-  internal fun set(idx: int, val: T);
+  intrinsic fun len() -> int;
+  intrinsic fun get(idx: int) -> T;
+  intrinsic fun set(idx: int, val: T);
 
   fun contains(value: T /* : Equals*/) -> bool {
     var i = 0;
@@ -333,7 +333,7 @@ trait Equals {
 }
 
 impl Equals for int {
-  internal fun equals(other: int) -> bool;
+  intrinsic fun equals(other: int) -> bool;
 }
 
 trait Comparable {
@@ -341,7 +341,7 @@ trait Comparable {
 }
 
 impl Comparable for int {
-  internal fun compareTo(other: int) -> int;
+  intrinsic fun compareTo(other: int) -> int;
 }
 
 fun bubbleSort<T: Comparable>(array: Array<T>) {
@@ -368,17 +368,17 @@ fun bubbleSort<T: Comparable>(array: Array<T>) {
 
 }
 
-internal fun defaultValue<T>() -> T;
+intrinsic fun defaultValue<T>() -> T;
 
-internal fun loadFunction(name: Str) -> long;
-internal fun call0(fct: long) -> long;
-internal fun call1(fct: long, arg0: long) -> long;
-internal fun call2(fct: long, arg0: long, arg1: long) -> long;
-internal fun call3(fct: long, arg0: long, arg1: long, arg2: long) -> long;
+intrinsic fun loadFunction(name: Str) -> long;
+intrinsic fun call0(fct: long) -> long;
+intrinsic fun call1(fct: long, arg0: long) -> long;
+intrinsic fun call2(fct: long, arg0: long, arg1: long) -> long;
+intrinsic fun call3(fct: long, arg0: long, arg1: long, arg2: long) -> long;
 
-internal fun native_malloc(size: long) -> long;
-internal fun native_free(address: long);
-internal fun set_uint8(address: long, val: byte);
+intrinsic fun native_malloc(size: long) -> long;
+intrinsic fun native_free(address: long);
+intrinsic fun set_uint8(address: long, val: byte);
 
 fun native_string(val: Str) -> long {
   var i = 0;
@@ -406,7 +406,7 @@ fun getppid() -> int {
   return call0(fct).toInt();
 }
 
-internal fun sleep(seconds: int);
+intrinsic fun sleep(seconds: int);
 
 class Exception {
   var msg: Str = nil;
@@ -461,8 +461,8 @@ class Exception {
     }
   }
 
-  internal fun retrieveStackTrace();
-  internal fun getStackTraceElement(idx: int) -> StackTraceElement;
+  intrinsic fun retrieveStackTrace();
+  intrinsic fun getStackTraceElement(idx: int) -> StackTraceElement;
 }
 
 class StackTraceElement(let name: Str, let line: int) {
@@ -503,7 +503,7 @@ impl Iterator for IntRangeIter {
 }
 
 open abstract class Thread {
-  internal fun start();
+  intrinsic fun start();
 
   abstract fun run();
 }

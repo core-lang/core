@@ -1,4 +1,4 @@
-internal class Str {
+intrinsic class Str {
   fun equals(rhs: Str) -> bool {
     var i = 0;
 
@@ -19,18 +19,18 @@ internal class Str {
     return true;
   }
 
-  internal fun compareTo(rhs: Str) -> int;
+  intrinsic fun compareTo(rhs: Str) -> int;
 
-  internal fun len() -> int;
-  internal fun parseInt() -> int;
-  internal fun parseLong() -> long;
-  internal fun plus(rhs: Str) -> Str;
+  intrinsic fun len() -> int;
+  intrinsic fun parseInt() -> int;
+  intrinsic fun parseLong() -> long;
+  intrinsic fun plus(rhs: Str) -> Str;
 
-  internal fun getByte(idx: int) -> byte;
-  internal fun clone() -> Str;
+  intrinsic fun getByte(idx: int) -> byte;
+  intrinsic fun clone() -> Str;
 
-  internal static fun fromBytesPartOrNull(val: Array<byte>, offset: int, len: int) -> Str;
-  internal static fun fromStrPartOrNull(val: Str, offset: int, len: int) -> Str;
+  intrinsic static fun fromBytesPartOrNull(val: Array<byte>, offset: int, len: int) -> Str;
+  intrinsic static fun fromStrPartOrNull(val: Str, offset: int, len: int) -> Str;
 
   static fun fromBytesPart(val: Array<byte>, offset: int, len: int) throws -> Str {
     let str = Str::fromBytesPartOrNull(val, offset, len);

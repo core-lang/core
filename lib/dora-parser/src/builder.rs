@@ -157,7 +157,7 @@ impl<'a> BuilderFct<'a> {
             is_pub: self.is_public,
             is_static: false,
             is_abstract: false,
-            internal: false,
+            intrinsic: false,
             ctor: self.ctor,
             params: self.params,
             throws: false,

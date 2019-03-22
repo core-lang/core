@@ -50,12 +50,12 @@ fn internal_class<'ast>(
         let cls = ctxt.classes.idx(clsid);
         let mut cls = cls.write();
 
-        if cls.internal {
+        if cls.intrinsic {
             if let Some(ty) = ty {
                 cls.ty = ty;
             }
 
-            cls.internal_resolved = true;
+            cls.intrinsic_resolved = true;
         }
 
         clsid
@@ -343,9 +343,9 @@ fn internal_method<'ast>(ctxt: &mut SemContext<'ast>, clsid: ClassId, name: &str
         let mtd = ctxt.fcts.idx(mid);
         let mut mtd = mtd.write();
 
-        if mtd.name == name && mtd.internal {
+        if mtd.name == name && mtd.intrinsic {
             mtd.kind = kind;
-            mtd.internal_resolved = true;
+            mtd.intrinsic_resolved = true;
             break;
         }
     }
@@ -367,9 +367,9 @@ fn internal_fct<'ast>(ctxt: &mut SemContext<'ast>, name: &str, kind: FctKind) {
         let fct = ctxt.fcts.idx(fctid);
         let mut fct = fct.write();
 
-        if fct.internal {
+        if fct.intrinsic {
             fct.kind = kind;
-            fct.internal_resolved = true;
+            fct.intrinsic_resolved = true;
         }
     }
 }
@@ -403,9 +403,9 @@ fn internal_impl<'ast>(
                 let fct = ctxt.fcts.idx(fid);
                 let mut fct = fct.write();
 
-                if fct.internal && fct.name == name {
+                if fct.intrinsic && fct.name == name {
                     fct.kind = kind;
-                    fct.internal_resolved = true;
+                    fct.intrinsic_resolved = true;
                     return;
                 }
             }

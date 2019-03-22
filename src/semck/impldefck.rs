@@ -70,11 +70,11 @@ impl<'x, 'ast> Visitor<'ast> for ImplCheck<'x, 'ast> {
             return;
         }
 
-        if f.block.is_none() && !f.internal {
+        if f.block.is_none() && !f.intrinsic {
             report(self.ctxt, f.pos, Msg::MissingFctBody);
         }
 
-        let kind = if f.internal {
+        let kind = if f.intrinsic {
             FctKind::Definition
         } else {
             FctKind::Source(RwLock::new(FctSrc::new()))
@@ -94,8 +94,8 @@ impl<'x, 'ast> Visitor<'ast> for ImplCheck<'x, 'ast> {
             is_pub: f.is_pub,
             is_static: f.is_static,
             is_abstract: false,
-            internal: f.internal,
-            internal_resolved: false,
+            intrinsic: f.intrinsic,
+            intrinsic_resolved: false,
             overrides: None,
             throws: f.throws,
             ctor: ast::CtorType::None,

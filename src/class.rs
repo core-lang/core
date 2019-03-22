@@ -51,8 +51,8 @@ pub struct Class {
     pub parent_class: Option<ClassId>,
     pub has_open: bool,
     pub is_abstract: bool,
-    pub internal: bool,
-    pub internal_resolved: bool,
+    pub intrinsic: bool,
+    pub intrinsic_resolved: bool,
     pub primary_ctor: bool,
 
     pub ctors: Vec<FctId>,
