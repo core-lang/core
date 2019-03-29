@@ -1229,6 +1229,7 @@ pub enum Expr {
     ExprNil(ExprNilType),
     ExprArray(ExprArrayType),
     ExprConv(ExprConvType),
+    ExprIf(ExprIfType),
     ExprTry(ExprTryType),
     ExprLambda(ExprLambdaType),
 }
@@ -1265,6 +1266,21 @@ impl Expr {
                           lhs: lhs,
                           rhs: rhs,
                       })
+    }
+
+    pub fn create_if(id: NodeId,
+                     pos: Position,
+                     cond: Box<Expr>,
+                     then_block: Box<Expr>,
+                     else_block: Box<Expr>)
+                     -> Expr {
+        Expr::ExprIf(ExprIfType {
+            id: id,
+            pos: pos,
+            cond: cond,
+            then_block: then_block,
+            else_block: else_block,
+        })
     }
 
     pub fn create_conv(id: NodeId,
@@ -1722,6 +1738,7 @@ impl Expr {
             Expr::ExprNil(ref val) => val.pos,
             Expr::ExprArray(ref val) => val.pos,
             Expr::ExprConv(ref val) => val.pos,
+            Expr::ExprIf(ref val) => val.pos,
             Expr::ExprTry(ref val) => val.pos,
             Expr::ExprLambda(ref val) => val.pos,
         }
@@ -1747,6 +1764,7 @@ impl Expr {
             Expr::ExprNil(ref val) => val.id,
             Expr::ExprArray(ref val) => val.id,
             Expr::ExprConv(ref val) => val.id,
+            Expr::ExprIf(ref val) => val.id,
             Expr::ExprTry(ref val) => val.id,
             Expr::ExprLambda(ref val) => val.id,
         }
@@ -1776,6 +1794,15 @@ pub struct ExprConvType {
     pub object: Box<Expr>,
     pub is: bool,
     pub data_type: Box<Type>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ExprIfType {
+    pub id: NodeId,
+    pub pos: Position,
+    pub cond: Box<Expr>,
+    pub then_block: Box<Expr>,
+    pub else_block: Box<Expr>,
 }
 
 #[derive(Clone, Debug)]

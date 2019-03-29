@@ -1161,6 +1161,19 @@ impl<'a, 'ast> TypeCheck<'a, 'ast> {
         }
     }
 
+    fn check_expr_if(&mut self, s: &'ast ExprIfType) {
+        self.visit_expr(&s.cond);
+
+        if self.expr_type != BuiltinType::Bool && !self.expr_type.is_error() {
+            let expr_type = self.expr_type.name(self.ctxt);
+            let msg = Msg::IfCondType(expr_type);
+            self.ctxt.diag.lock().report_without_path(s.pos, msg);
+        }
+
+        self.visit_expr(&s.then_block);
+        self.visit_expr(&s.else_block);
+    }
+
     fn check_expr_try(&mut self, e: &'ast ExprTryType) {
         if let Some(call) = e.expr.to_call() {
             self.check_expr_call(call, true);
@@ -1369,6 +1382,7 @@ impl<'a, 'ast> Visitor<'ast> for TypeCheck<'a, 'ast> {
             ExprNil(ref expr) => self.check_expr_nil(expr),
             ExprArray(ref expr) => self.check_expr_array(expr),
             ExprConv(ref expr) => self.check_expr_conv(expr),
+            ExprIf(ref expr) => self.check_expr_if(expr),
             ExprTry(ref expr) => self.check_expr_try(expr),
             ExprLambda(ref expr) => self.check_expr_lambda(expr),
         }

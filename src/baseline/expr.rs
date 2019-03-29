@@ -150,9 +150,25 @@ where
             ExprNil(_) => self.emit_nil(dest.reg()),
             ExprArray(ref expr) => self.emit_array(expr, dest),
             ExprConv(ref expr) => self.emit_conv(expr, dest.reg()),
+            ExprIf(ref expr) => self.emit_expr_if(expr, dest),
             ExprTry(ref expr) => self.emit_try(expr, dest),
             ExprLambda(_) => unimplemented!(),
         }
+    }
+
+    fn emit_expr_if(&mut self, s: &'ast ExprIfType, dest: ExprStore) {
+        let lbl_end = self.asm.create_label();
+        let lbl_else = self.asm.create_label();
+
+        self.emit_expr(&s.cond, dest);
+        self.asm.test_and_jump_if(CondCode::Zero, REG_RESULT, lbl_else);
+
+        self.visit_stmt(&s.then_block);
+        self.asm.jump(lbl_end);
+
+        self.asm.bind_label(lbl_else);
+        self.visit_stmt(else_block);
+        self.asm.bind_label(lbl_end);
     }
 
     fn emit_try(&mut self, e: &'ast ExprTryType, dest: ExprStore) {

@@ -325,8 +325,10 @@ impl<'a> AstDumper<'a> {
                         d.indent(|d| { d.dump_expr(&stmt.cond); });
                         dump!(d, "then");
                         d.indent(|d| { d.dump_stmt(&stmt.then_block); });
-                        dump!(d, "else");
-                        d.indent(|d| { d.dump_stmt(&stmt.then_block); });
+                        if let Some(e) = &stmt.else_block {
+                            dump!(d, "else");
+                            d.indent(|d| { d.dump_stmt(&e); });
+                        }
                     });
     }
 
@@ -424,6 +426,7 @@ impl<'a> AstDumper<'a> {
             ExprSuper(ref expr) => self.dump_expr_super(expr),
             ExprNil(ref nil) => self.dump_expr_nil(nil),
             ExprConv(ref expr) => self.dump_expr_conv(expr),
+            ExprIf(ref expr) => self.dump_expr_if(expr),
             ExprTry(ref expr) => self.dump_expr_try(expr),
             ExprLambda(ref expr) => self.dump_expr_lambda(expr),
         }
@@ -434,6 +437,18 @@ impl<'a> AstDumper<'a> {
         let op = if expr.is { "is" } else { "as" };
         dump!(self, "{} @ {} {}", op, expr.pos, expr.id);
         self.indent(|d| d.dump_type(&expr.data_type));
+    }
+
+    fn dump_expr_if(&mut self, stmt: &ExprIfType) {
+        dump!(self, "if @ {} {}", stmt.pos, stmt.id);
+
+        self.indent(|d| {
+            d.indent(|d| { d.dump_expr(&stmt.cond); });
+            dump!(d, "then");
+            d.indent(|d| { d.dump_expr(&stmt.then_block); });
+            dump!(d, "else");
+            d.indent(|d| { d.dump_expr(&stmt.else_block); });
+        });
     }
 
     fn dump_expr_try(&mut self, expr: &ExprTryType) {

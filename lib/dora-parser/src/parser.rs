@@ -540,7 +540,6 @@ impl<'a> Parser<'a> {
         let expr = if self.token.is(TokenKind::Eq) {
             self.expect_token(TokenKind::Eq)?;
             Some(self.parse_expression()?)
-
         } else {
             None
         };

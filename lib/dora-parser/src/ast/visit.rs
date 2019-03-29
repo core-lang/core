@@ -330,6 +330,12 @@ pub fn walk_expr<'v, V: Visitor<'v>>(v: &mut V, e: &'v Expr) {
             v.visit_type(&value.data_type);
         }
 
+        ExprIf(ref value) => {
+            v.visit_expr_top(&value.cond);
+            v.visit_expr(&value.then_block);
+            v.visit_expr(&value.else_block);
+        }
+
         ExprTry(ref value) => {
             v.visit_expr(&value.expr);
         }
