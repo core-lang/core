@@ -106,7 +106,7 @@ pub fn generate_fct<'ast>(
     }
     .generate();
 
-    if should_emit_asm(vm, &*fct) {
+    if cfg!(debug_assertions) && should_emit_asm(vm, &*fct) {
         dump_asm(
             vm,
             &*fct,
@@ -146,20 +146,21 @@ pub fn generate_fct<'ast>(
     fct_ptr
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(target_arch = "x86_64", debug_assertions))]
 fn get_engine() -> Result<Engine, Error> {
     use capstone::{Arch, MODE_64};
 
     Engine::new(Arch::X86, MODE_64)
 }
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(all(target_arch = "aarch64", debug_assertions))]
 fn get_engine() -> Result<Engine, Error> {
     use capstone::{Arch, MODE_ARM};
 
     Engine::new(Arch::Arm64, MODE_ARM)
 }
 
+#[cfg(debug_assertions)]
 pub fn dump_asm<'ast>(
     vm: &VM<'ast>,
     fct: &Fct<'ast>,

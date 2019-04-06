@@ -1,8 +1,10 @@
 use baseline::asm::BaselineAssembler;
 use baseline::codegen::{
-    self, dump_asm, register_for_mode, should_emit_asm, should_emit_debug, CondCode, Scopes,
+    self, register_for_mode, should_emit_asm, should_emit_debug, CondCode, Scopes,
     TempOffsets,
 };
+#[cfg(debug_assertions)]
+use baseline::codegen::dump_asm;
 use baseline::dora_native::{self, InternalFct, InternalFctDescriptor};
 use baseline::fct::{CatchType, Comment, GcPoint};
 use baseline::info::JitInfo;
@@ -1999,7 +2001,7 @@ pub fn ensure_native_stub(vm: &VM, fct_id: FctId, internal_fct: InternalFct) -> 
 
         let fct_start = jit_fct.fct_start;
 
-        if should_emit_asm(vm, &*fct) {
+        if cfg!(debug_assertions) && should_emit_asm(vm, &*fct) {
             dump_asm(
                 vm,
                 &*fct,
