@@ -301,6 +301,15 @@ impl<'a, 'ast> NameCheck<'a, 'ast> {
                     found = true;
                 }
 
+                // should we introduce a new CallType for this?
+                /*
+                SymVar(var_id) => {
+                    let call_type = CallType::Fct(panic!(), TypeParams::empty(), TypeParams::empty());
+                    self.src.map_calls.insert(call.id, Arc::new(call_type));
+                    found = true;
+                }
+                */
+
                 _ => {}
             }
         }

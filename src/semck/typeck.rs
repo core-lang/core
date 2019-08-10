@@ -2603,6 +2603,9 @@ fn lookup_method<'ast>(
                     return Some((cls_id, candidate, cmp_type));
                 }
             }
+        } else {
+            println!("looking for a field!");
+
         }
     }
 
@@ -3120,6 +3123,7 @@ mod tests {
     #[test]
     fn type_array() {
         ok("fun f(a: Array[Int]) -> Int { return a.get(1); }");
+        ok("fun f(a: Array[Int]) -> Int { return a(1); }");
         err(
             "fun f(a: Array[Int]) -> String { return a.get(1); }",
             pos(1, 34),
