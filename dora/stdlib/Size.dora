@@ -1,0 +1,27 @@
+trait Size {
+  fun size() -> Long;
+}
+
+impl Size for Array {
+  fun size() -> Long = self.length().toLong();
+}
+
+impl Size for HashMap {
+  fun size() -> Long = self.length().toLong();
+}
+
+impl Size for HashSet {
+  fun size() -> Long = self.length().toLong();
+}
+
+impl Size for String {
+  fun size() -> Long = self.length().toLong();
+}
+
+impl Size for StringBuffer {
+  fun size() -> Long = self.length().toLong();
+}
+
+impl Size for Vec {
+  fun size() -> Long = self.length().toLong();
+}
