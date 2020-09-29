@@ -68,7 +68,6 @@ pub struct Fct<'ast> {
 }
 
 impl<'ast> Fct<'ast> {
-    #[allow(dead_code)]
     pub fn new(
         vm: &VM,
         ast: &'ast ast::Function,
@@ -77,7 +76,7 @@ impl<'ast> Fct<'ast> {
         parent: FctParent,
         is_constructor: bool,
     ) -> Fct<'ast> {
-        let annotations = ast::AnnotationUsages::new();
+        let annotations = &ast.annotation_usages;
         Fct {
             id: FctId(0),
             ast,

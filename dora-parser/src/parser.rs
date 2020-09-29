@@ -93,85 +93,59 @@ impl<'a> Parser<'a> {
         &mut self,
         elements: &mut Vec<Elem>,
     ) -> Result<(), ParseErrorAndPos> {
-        let modifiers = self.parse_annotation_usages()?;
+        let annotation_usages = self.parse_annotation_usages()?;
 
         match self.token.kind {
             TokenKind::Fun => {
-                self.restrict_modifiers(
-                    &modifiers,
-                    &[
-                        Modifier::Internal,
-                        Modifier::OptimizeImmediately,
-                        Modifier::Test,
-                        Modifier::Cannon,
-                    ],
-                )?;
-                let fct = self.parse_function(&modifiers)?;
+                let fct = self.parse_function(annotation_usages)?;
                 elements.push(ElemFunction(fct));
             }
 
             TokenKind::Class => {
-                self.restrict_modifiers(
-                    &modifiers,
-                    &[
-                        Modifier::Abstract,
-                        Modifier::Open,
-                        Modifier::Internal,
-                        Modifier::Cannon,
-                    ],
-                )?;
-                let class = self.parse_class(&modifiers)?;
+                let class = self.parse_class(annotation_usages)?;
                 elements.push(ElemClass(class));
             }
 
             TokenKind::Struct => {
-                self.ban_modifiers(&modifiers)?;
                 let struc = self.parse_struct()?;
                 elements.push(ElemStruct(struc))
             }
 
             TokenKind::Trait => {
-                self.ban_modifiers(&modifiers)?;
                 let xtrait = self.parse_trait()?;
                 elements.push(ElemTrait(xtrait));
             }
 
             TokenKind::Impl => {
-                self.ban_modifiers(&modifiers)?;
                 let ximpl = self.parse_impl()?;
                 elements.push(ElemImpl(ximpl));
             }
 
             TokenKind::Module => {
-                self.ban_modifiers(&modifiers)?;
-                let module = self.parse_module(&modifiers)?;
+                let module = self.parse_module(annotation_usages)?;
                 elements.push(ElemModule(module));
             }
 
             TokenKind::Annotation => {
-                let annotation = self.parse_annotation(&modifiers)?;
+                let annotation = self.parse_annotation(annotation_usages)?;
                 elements.push(ElemAnnotation(annotation));
             }
 
             TokenKind::Alias => {
-                self.ban_modifiers(&modifiers)?;
                 let alias = self.parse_alias()?;
                 elements.push(ElemAlias(alias));
             }
 
             TokenKind::Let | TokenKind::Var => {
-                self.ban_modifiers(&modifiers)?;
                 self.parse_global(elements)?;
             }
 
             TokenKind::Const => {
-                self.ban_modifiers(&modifiers)?;
                 let xconst = self.parse_const()?;
                 elements.push(ElemConst(xconst));
             }
 
             TokenKind::Enum => {
-                self.ban_modifiers(&modifiers)?;
                 let xenum = self.parse_enum()?;
                 elements.push(ElemEnum(xenum));
             }
@@ -272,11 +246,8 @@ impl<'a> Parser<'a> {
         let mut methods = Vec::new();
 
         while !self.token.is(TokenKind::RBrace) {
-            let modifiers = self.parse_annotation_usages()?;
-            let mods = &[Modifier::Static, Modifier::Internal, Modifier::Cannon];
-            self.restrict_modifiers(&modifiers, mods)?;
-
-            methods.push(self.parse_function(&modifiers)?);
+            let annotation_usages = self.parse_annotation_usages()?;
+            methods.push(self.parse_function(annotation_usages)?);
         }
 
         self.expect_token(TokenKind::RBrace)?;
@@ -344,11 +315,8 @@ impl<'a> Parser<'a> {
         let mut methods = Vec::new();
 
         while !self.token.is(TokenKind::RBrace) {
-            let modifiers = self.parse_annotation_usages()?;
-            let mods = &[Modifier::Static];
-            self.restrict_modifiers(&modifiers, mods)?;
-
-            methods.push(self.parse_function(&modifiers)?);
+            let annotation_usages = self.parse_annotation_usages()?;
+            methods.push(self.parse_function(annotation_usages)?);
         }
 
         self.expect_token(TokenKind::RBrace)?;
@@ -401,11 +369,15 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_class(&mut self, modifiers: &Modifiers) -> Result<Class, ParseErrorAndPos> {
+    fn parse_class(
+        &mut self,
+        annotation_usages: AnnotationUsages,
+    ) -> Result<Class, ParseErrorAndPos> {
         let start = self.token.span.start();
-        let has_open = modifiers.contains(Modifier::Open);
-        let internal = modifiers.contains(Modifier::Internal);
-        let is_abstract = modifiers.contains(Modifier::Abstract);
+        let use_cannon = annotation_usages.iter().any(|annotation_usage| {
+            self.interner.str(annotation_usage.name).to_string()
+                == InternalAnnotation::Cannon.name()
+        });
 
         let pos = self.expect_token(TokenKind::Class)?.position;
         let ident = self.expect_identifier()?;
@@ -416,9 +388,7 @@ impl<'a> Parser<'a> {
             name: ident,
             pos,
             span: Span::invalid(),
-            has_open,
-            internal,
-            is_abstract,
+            annotation_usages: annotation_usages,
             has_constructor: false,
             parent_class: None,
             constructor: None,
@@ -430,8 +400,6 @@ impl<'a> Parser<'a> {
 
         self.in_class_or_module = true;
         let ctor_params = self.parse_constructor(&mut cls)?;
-
-        let use_cannon = modifiers.contains(Modifier::Cannon);
 
         cls.parent_class = self.parse_class_parent()?;
 
@@ -473,8 +441,14 @@ impl<'a> Parser<'a> {
         Ok(types)
     }
 
-    fn parse_module(&mut self, modifiers: &Modifiers) -> Result<Module, ParseErrorAndPos> {
-        let internal = modifiers.contains(Modifier::Internal);
+    fn parse_module(
+        &mut self,
+        annotation_usages: AnnotationUsages,
+    ) -> Result<Module, ParseErrorAndPos> {
+        let internal = annotation_usages.iter().any(|annotation_usage| {
+            self.interner.str(annotation_usage.name).to_string()
+                == InternalAnnotation::Internal.name()
+        });
 
         let pos = self.expect_token(TokenKind::Module)?.position;
         let ident = self.expect_identifier()?;
@@ -482,6 +456,7 @@ impl<'a> Parser<'a> {
             id: self.generate_id(),
             name: ident,
             pos: pos,
+            annotation_usages: annotation_usages,
             parent_class: None,
             internal: internal,
             has_constructor: false,
@@ -514,13 +489,19 @@ impl<'a> Parser<'a> {
         Ok(module)
     }
 
-    fn parse_annotation(&mut self, modifiers: &Modifiers) -> Result<Annotation, ParseErrorAndPos> {
-        let internal = modifiers.contains(Modifier::Internal);
+    fn parse_annotation(
+        &mut self,
+        annotation_usages: AnnotationUsages,
+    ) -> Result<Annotation, ParseErrorAndPos> {
+        let internal = annotation_usages.iter().any(|annotation_usage| {
+            self.interner.str(annotation_usage.name).to_string()
+                == InternalAnnotation::Internal.name()
+        });
 
         let pos = self.expect_token(TokenKind::Annotation)?.position;
         let ident = self.expect_identifier()?;
         let internal = if internal {
-            Modifier::find(&self.interner.str(ident))
+            InternalAnnotation::find(&self.interner.str(ident))
         } else {
             None
         };
@@ -732,29 +713,15 @@ impl<'a> Parser<'a> {
         self.advance_token()?;
 
         while !self.token.is(TokenKind::RBrace) {
-            let modifiers = self.parse_annotation_usages()?;
+            let annotation_usages = self.parse_annotation_usages()?;
 
             match self.token.kind {
                 TokenKind::Fun => {
-                    let mods = &[
-                        Modifier::Abstract,
-                        Modifier::Internal,
-                        Modifier::Open,
-                        Modifier::Override,
-                        Modifier::Final,
-                        Modifier::Pub,
-                        Modifier::Static,
-                        Modifier::Cannon,
-                    ];
-                    self.restrict_modifiers(&modifiers, mods)?;
-
-                    let fct = self.parse_function(&modifiers)?;
+                    let fct = self.parse_function(annotation_usages)?;
                     cls.methods.push(fct);
                 }
 
                 TokenKind::Var | TokenKind::Let => {
-                    self.ban_modifiers(&modifiers)?;
-
                     let field = self.parse_field()?;
                     cls.fields.push(field);
                 }
@@ -778,28 +745,15 @@ impl<'a> Parser<'a> {
         self.advance_token()?;
 
         while !self.token.is(TokenKind::RBrace) {
-            let modifiers = self.parse_annotation_usages()?;
+            let annotation_usages = self.parse_annotation_usages()?;
 
             match self.token.kind {
                 TokenKind::Fun => {
-                    let mods = &[
-                        Modifier::Abstract,
-                        Modifier::Internal,
-                        Modifier::Open,
-                        Modifier::Override,
-                        Modifier::Final,
-                        Modifier::Pub,
-                        Modifier::Static,
-                    ];
-                    self.restrict_modifiers(&modifiers, mods)?;
-
-                    let fct = self.parse_function(&modifiers)?;
+                    let fct = self.parse_function(annotation_usages)?;
                     module.methods.push(fct);
                 }
 
                 TokenKind::Var | TokenKind::Let => {
-                    self.ban_modifiers(&modifiers)?;
-
                     let field = self.parse_field()?;
                     module.fields.push(field);
                 }
@@ -815,65 +769,47 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
-    fn parse_annotation_usages(&mut self) -> Result<Modifiers, ParseErrorAndPos> {
-        let mut modifiers = Modifiers::new();
+    fn parse_annotation_usages(&mut self) -> Result<AnnotationUsages, ParseErrorAndPos> {
+        let mut annotation_usages = AnnotationUsages::new();
         loop {
             if !self.token.is(TokenKind::At) {
                 break;
             }
             self.advance_token()?;
             let ident = self.expect_identifier()?;
-            let modifier = match self.interner.str(ident).as_str() {
-                "abstract" => Modifier::Abstract,
-                "open" => Modifier::Open,
-                "override" => Modifier::Override,
-                "final" => Modifier::Final,
-                "internal" => Modifier::Internal,
-                "pub" => Modifier::Pub,
-                "static" => Modifier::Static,
-                "test" => Modifier::Test,
-                "cannon" => Modifier::Cannon,
-                "optimizeImmediately" => Modifier::OptimizeImmediately,
-                annotation => {
-                    return Err(ParseErrorAndPos::new(
-                        self.token.position,
-                        ParseError::UnknownAnnotation(annotation.into()),
-                    ));
-                }
-            };
+            let mut type_args = Vec::new();
+            if self.token.is(TokenKind::LBracket) {
+                self.advance_token()?;
+                type_args =
+                    self.parse_list(TokenKind::Comma, TokenKind::RBracket, |p| p.parse_type())?;
+            }
+            let mut term_args = Vec::new();
+            if self.token.is(TokenKind::LParen) {
+                self.advance_token()?;
+                term_args = self.parse_list(TokenKind::Comma, TokenKind::RParen, |p| {
+                    p.parse_expression()
+                })?;
+            }
 
-            if modifiers.contains(modifier) {
+            if annotation_usages.contains(ident) {
+                let string = self.interner.str(ident).to_string();
                 return Err(ParseErrorAndPos::new(
                     self.token.position,
-                    ParseError::RedundantAnnotation(modifier.name().into()),
+                    ParseError::RedundantAnnotation(string),
                 ));
             }
 
-            modifiers.add(modifier, self.token.position, self.token.span);
+            let annotation_usage = AnnotationUsage {
+                name: ident,
+                pos: self.token.position,
+                span: self.token.span,
+                type_args: type_args,
+                term_args: term_args,
+            };
+            annotation_usages.add(annotation_usage);
         }
 
-        Ok(modifiers)
-    }
-
-    fn ban_modifiers(&mut self, modifiers: &Modifiers) -> Result<(), ParseErrorAndPos> {
-        self.restrict_modifiers(modifiers, &[])
-    }
-
-    fn restrict_modifiers(
-        &mut self,
-        modifiers: &Modifiers,
-        restrict: &[Modifier],
-    ) -> Result<(), ParseErrorAndPos> {
-        for modifier in modifiers.iter() {
-            if !restrict.contains(&modifier.value) {
-                return Err(ParseErrorAndPos::new(
-                    modifier.pos,
-                    ParseError::MisplacedAnnotation(modifier.value.name().into()),
-                ));
-            }
-        }
-
-        Ok(())
+        Ok(annotation_usages)
     }
 
     fn parse_field(&mut self) -> Result<Field, ParseErrorAndPos> {
@@ -915,7 +851,10 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_function(&mut self, modifiers: &Modifiers) -> Result<Function, ParseErrorAndPos> {
+    fn parse_function(
+        &mut self,
+        annotation_usages: AnnotationUsages,
+    ) -> Result<Function, ParseErrorAndPos> {
         let start = self.token.span.start();
         let pos = self.expect_token(TokenKind::Fun)?.position;
         let ident = self.expect_identifier()?;
@@ -930,18 +869,9 @@ impl<'a> Parser<'a> {
             name: ident,
             pos,
             span,
+            annotation_usages: annotation_usages,
             method: self.in_class_or_module,
-            has_open: modifiers.contains(Modifier::Open),
-            has_override: modifiers.contains(Modifier::Override),
-            has_final: modifiers.contains(Modifier::Final),
-            has_optimize_immediately: modifiers.contains(Modifier::OptimizeImmediately),
-            is_pub: modifiers.contains(Modifier::Pub),
-            is_static: modifiers.contains(Modifier::Static),
-            internal: modifiers.contains(Modifier::Internal),
-            is_abstract: modifiers.contains(Modifier::Abstract),
             is_constructor: false,
-            is_test: modifiers.contains(Modifier::Test),
-            use_cannon: modifiers.contains(Modifier::Cannon),
             params,
             return_type,
             block,
@@ -3148,12 +3078,6 @@ mod tests {
         let cls = prog.cls0();
         assert_eq!(0, cls.fields.len());
         assert_eq!(2, cls.methods.len());
-
-        let mtd1 = &cls.methods[0];
-        assert_eq!(true, mtd1.is_abstract);
-
-        let mtd2 = &cls.methods[1];
-        assert_eq!(false, mtd2.is_abstract);
     }
 
     #[test]
@@ -3162,8 +3086,6 @@ mod tests {
         let class = prog.cls0();
 
         assert_eq!(0, class.fields.len());
-        assert_eq!(false, class.has_open);
-        assert_eq!(false, class.is_abstract);
         assert_eq!(Position::new(1, 1), class.pos);
         assert_eq!("Foo", *interner.str(class.name));
     }
@@ -3173,7 +3095,6 @@ mod tests {
         let (prog, interner) = parse("@abstract class Foo");
         let class = prog.cls0();
 
-        assert_eq!(true, class.is_abstract);
         assert_eq!("Foo", *interner.str(class.name));
     }
 
@@ -3183,7 +3104,6 @@ mod tests {
         let class = prog.cls0();
 
         assert_eq!(0, class.fields.len());
-        assert_eq!(true, class.has_open);
         assert_eq!(Position::new(1, 7), class.pos);
         assert_eq!("Foo", *interner.str(class.name));
     }
@@ -3245,14 +3165,6 @@ mod tests {
     }
 
     #[test]
-    fn parse_class_with_open() {
-        let (prog, _) = parse("@open class Foo");
-        let class = prog.cls0();
-
-        assert_eq!(true, class.has_open);
-    }
-
-    #[test]
     fn parse_module() {
         let (prog, interner) = parse("module Foo");
         let module = prog.mod0();
@@ -3283,6 +3195,42 @@ mod tests {
 
         assert_eq!(2, module.fields.len());
         assert_eq!(1, module.methods.len());
+    }
+
+    #[test]
+    fn parse_annotation() {
+        let (prog, _) = parse("annotation Foo");
+        let annotation = prog.ann0();
+
+        assert_eq!(true, annotation.term_params.is_none());
+        assert_eq!(true, annotation.type_params.is_none());
+    }
+
+    #[test]
+    fn parse_annotation_type_params() {
+        let (prog, _) = parse("annotation Foo[A, B]");
+        let annotation = prog.ann0();
+
+        assert_eq!(true, annotation.term_params.is_none());
+        assert_eq!(2, annotation.type_params.as_ref().unwrap().len());
+    }
+
+    #[test]
+    fn parse_annotation_term_params() {
+        let (prog, _) = parse("annotation Foo(s: String, i: Int32)");
+        let annotation = prog.ann0();
+
+        assert_eq!(2, annotation.term_params.as_ref().unwrap().len());
+        assert_eq!(true, annotation.type_params.is_none());
+    }
+
+    #[test]
+    fn parse_annotation_type_params_term_params() {
+        let (prog, _) = parse("annotation Foo[A, B](a: A, b: B)");
+        let annotation = prog.ann0();
+
+        assert_eq!(2, annotation.term_params.as_ref().unwrap().len());
+        assert_eq!(2, annotation.type_params.as_ref().unwrap().len());
     }
 
     #[test]
@@ -3327,57 +3275,12 @@ mod tests {
     }
 
     #[test]
-    fn parse_open_method() {
-        let (prog, _) = parse("class A { @open fun f() {} fun g() {} }");
-        let cls = prog.cls0();
-
-        let m1 = &cls.methods[0];
-        assert_eq!(true, m1.has_open);
-
-        let m2 = &cls.methods[1];
-        assert_eq!(false, m2.has_open);
-    }
-
-    #[test]
-    fn parse_override_method() {
-        let (prog, _) = parse(
-            "class A { fun f() {}
-                @override fun g() {}
-                @open fun h() {} }",
-        );
-        let cls = prog.cls0();
-
-        let m1 = &cls.methods[0];
-        assert_eq!(false, m1.has_override);
-        assert_eq!(false, m1.has_open);
-
-        let m2 = &cls.methods[1];
-        assert_eq!(true, m2.has_override);
-        assert_eq!(false, m2.has_open);
-
-        let m3 = &cls.methods[2];
-        assert_eq!(false, m3.has_override);
-        assert_eq!(true, m3.has_open);
-    }
-
-    #[test]
     fn parse_parent_class_params() {
         let (prog, _) = parse("class A extends B(1, 2)");
         let cls = prog.cls0();
 
         let parent_class = cls.parent_class.as_ref().unwrap();
         assert_eq!(2, parent_class.params.len());
-    }
-
-    #[test]
-    fn parse_final_method() {
-        let (prog, _) = parse("@open class A { @final @override fun g() {} }");
-        let cls = prog.cls0();
-
-        let m1 = &cls.methods[0];
-        assert_eq!(true, m1.has_override);
-        assert_eq!(false, m1.has_open);
-        assert_eq!(true, m1.has_final);
     }
 
     #[test]
@@ -3397,24 +3300,10 @@ mod tests {
     }
 
     #[test]
-    fn parse_internal() {
-        let (prog, _) = parse("@internal fun foo();");
-        let fct = prog.fct0();
-        assert!(fct.internal);
-    }
-
-    #[test]
     fn parse_function_without_body() {
         let (prog, _) = parse("fun foo();");
         let fct = prog.fct0();
         assert!(fct.block.is_none());
-    }
-
-    #[test]
-    fn parse_internal_class() {
-        let (prog, _) = parse("@internal class Foo {}");
-        let cls = prog.cls0();
-        assert!(cls.internal);
     }
 
     #[test]
@@ -3548,7 +3437,6 @@ mod tests {
 
         assert_eq!("Foo", *interner.str(xtrait.name));
         assert_eq!(1, xtrait.methods.len());
-        assert_eq!(false, xtrait.methods[0].is_static);
     }
 
     #[test]
@@ -3558,7 +3446,6 @@ mod tests {
 
         assert_eq!("Foo", *interner.str(xtrait.name));
         assert_eq!(1, xtrait.methods.len());
-        assert_eq!(true, xtrait.methods[0].is_static);
     }
 
     #[test]
@@ -3585,7 +3472,6 @@ mod tests {
         );
         assert_eq!("B", ximpl.class_type.to_string(&interner));
         assert_eq!(1, ximpl.methods.len());
-        assert_eq!(false, ximpl.methods[0].is_static);
     }
 
     #[test]
@@ -3599,7 +3485,6 @@ mod tests {
         );
         assert_eq!("B", ximpl.class_type.to_string(&interner));
         assert_eq!(1, ximpl.methods.len());
-        assert_eq!(true, ximpl.methods[0].is_static);
     }
 
     #[test]
@@ -3663,9 +3548,6 @@ mod tests {
         );
         let cls = prog.cls0();
         assert_eq!(1, cls.methods.len());
-
-        let mtd = &cls.methods[0];
-        assert!(mtd.is_static);
     }
 
     #[test]
