@@ -21,13 +21,13 @@ use crate::sym::{SymTable, TermSym};
 use crate::threads::{Threads, STACK_SIZE, THREAD};
 use crate::ty::{BuiltinType, LambdaTypes, TypeList, TypeLists};
 use crate::utils::GrowableVec;
-use crate::vm::module::{Module, ModuleDef, ModuleId};
 
 use dora_parser::ast;
 use dora_parser::interner::*;
 use dora_parser::lexer::File;
 use dora_parser::parser::NodeIdGenerator;
 
+pub use self::annotation::{Annotation, AnnotationId};
 pub use self::class::{
     find_field_in_class, find_method_in_class, find_methods_in_class, Class, ClassDef, ClassDefId,
     ClassId, TypeParam,
@@ -41,7 +41,10 @@ pub use self::fct::{Fct, FctId, FctKind, FctParent, Intrinsic};
 pub use self::field::{Field, FieldDef, FieldId};
 pub use self::global::{GlobalData, GlobalId};
 pub use self::impls::{ImplData, ImplId};
-pub use self::known::{KnownClasses, KnownElements, KnownFunctions, KnownModules, KnownTraits};
+pub use self::known::{
+    KnownAnnotations, KnownClasses, KnownElements, KnownFunctions, KnownModules, KnownTraits,
+};
+pub use self::module::{Module, ModuleDef, ModuleId};
 pub use self::src::{CallType, ConvInfo, FctSrc, ForTypeInfo, IdentType, NodeMap, Var, VarId};
 pub use self::strct::{
     StructData, StructDef, StructDefId, StructFieldData, StructFieldDef, StructId,
@@ -49,6 +52,7 @@ pub use self::strct::{
 pub use self::traits::{TraitData, TraitId};
 pub use self::tuple::{ensure_tuple, TupleId, Tuples};
 
+pub mod annotation;
 pub mod class;
 mod cnst;
 mod enums;
@@ -102,6 +106,7 @@ pub struct VM<'ast> {
     pub tuples: Mutex<Tuples>,                 // stores all tuple definitions
     pub modules: GrowableVec<RwLock<Module>>,  // stores all module source definitions
     pub module_defs: GrowableVec<RwLock<ModuleDef>>, // stores all module definitions
+    pub annotations: GrowableVec<RwLock<Annotation>>, // stores all annotation source definitions
     pub fcts: GrowableVec<RwLock<Fct<'ast>>>,  // stores all function source definitions
     pub jit_fcts: GrowableVec<JitFct>,         // stores all function implementations
     pub enums: Vec<RwLock<EnumData>>,          // store all enum source definitions
@@ -128,6 +133,7 @@ impl<'ast> VM<'ast> {
         let empty_module_id: ModuleId = 0.into();
         let empty_trait_id: TraitId = 0.into();
         let empty_fct_id: FctId = 0.into();
+        let empty_annotation_id: AnnotationId = 0.into();
         let gc = Gc::new(&args);
 
         let vm = Box::new(VM {
@@ -142,6 +148,7 @@ impl<'ast> VM<'ast> {
             tuples: Mutex::new(Tuples::new()),
             modules: GrowableVec::new(),
             module_defs: GrowableVec::new(),
+            annotations: GrowableVec::new(),
             enums: Vec::new(),
             enum_defs: GrowableVec::new(),
             traits: Vec::new(),
@@ -173,18 +180,33 @@ impl<'ast> VM<'ast> {
                     string_buffer: empty_module_id,
                 },
 
-                functions: KnownFunctions {
-                    string_buffer_empty: empty_fct_id,
-                    string_buffer_append: empty_fct_id,
-                    string_buffer_to_string: empty_fct_id,
-                },
-
                 traits: KnownTraits {
                     equals: empty_trait_id,
                     comparable: empty_trait_id,
                     stringable: empty_trait_id,
                     iterator: empty_trait_id,
                     zero: empty_trait_id,
+                },
+
+                annotations: KnownAnnotations {
+                    abstract_: empty_annotation_id,
+                    final_: empty_annotation_id,
+                    internal: empty_annotation_id,
+                    override_: empty_annotation_id,
+                    open: empty_annotation_id,
+                    pub_: empty_annotation_id,
+                    static_: empty_annotation_id,
+
+                    test: empty_annotation_id,
+
+                    cannon: empty_annotation_id,
+                    optimize_immediately: empty_annotation_id,
+                },
+
+                functions: KnownFunctions {
+                    string_buffer_empty: empty_fct_id,
+                    string_buffer_append: empty_fct_id,
+                    string_buffer_to_string: empty_fct_id,
                 },
 
                 byte_array_def: Mutex::new(None),
@@ -312,6 +334,12 @@ impl<'ast> VM<'ast> {
     pub fn enum_by_name(&self, name: &'static str) -> EnumId {
         let name = self.interner.intern(name);
         self.sym.lock().get_enum(name).expect("class not found")
+    }
+
+    #[cfg(test)]
+    pub fn module_by_name(&self, name: &'static str) -> ModuleId {
+        let name = self.interner.intern(name);
+        self.sym.lock().get_module(name).expect("module not found")
     }
 
     #[cfg(test)]
