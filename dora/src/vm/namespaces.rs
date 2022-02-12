@@ -1,11 +1,11 @@
 use parking_lot::RwLock;
 use std::sync::Arc;
 
-use crate::language::sym::SymTable;
-use crate::vm::VM;
-
-use dora_parser::ast::Namespace;
+use dora_parser::ast;
 use dora_parser::interner::Name;
+
+use crate::language::sym::SymTable;
+use crate::vm::{AnnotationDefinition, SemAnalysis, VM};
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct NamespaceId(pub usize);
@@ -25,7 +25,7 @@ impl From<usize> for NamespaceId {
 #[derive(Debug)]
 pub struct NamespaceData {
     pub id: NamespaceId,
-    pub ast: Option<Arc<Namespace>>,
+    pub ast: Option<Arc<ast::Namespace>>,
     pub parent_namespace_id: Option<NamespaceId>,
     pub name: Option<Name>,
     pub table: Arc<RwLock<SymTable>>,
@@ -48,7 +48,7 @@ impl NamespaceData {
         }
     }
 
-    pub fn new(vm: &mut VM, parent_id: NamespaceId, ast: &Arc<Namespace>) -> NamespaceData {
+    pub fn new(vm: &mut VM, parent_id: NamespaceId, ast: &Arc<ast::Namespace>) -> NamespaceData {
         let id: NamespaceId = vm.namespaces.len().into();
 
         let parent = &vm.namespaces[parent_id.to_usize()].read();
@@ -66,6 +66,28 @@ impl NamespaceData {
             is_pub: ast.is_pub,
             parents,
             depth,
+        }
+    }
+
+    pub fn init_modifiers(&mut self, sa: &SemAnalysis) {
+        #[allow(unused_variables)]
+        if let Some(ast) = &self.ast {
+            let annotation_usages = &ast::AnnotationUsages::new();
+            self.is_pub = AnnotationDefinition::is_pub(annotation_usages, sa);
+            AnnotationDefinition::reject_modifiers(
+                sa,
+                annotation_usages,
+                &[
+                    sa.known.annotations.abstract_,
+                    sa.known.annotations.final_,
+                    sa.known.annotations.internal,
+                    sa.known.annotations.open,
+                    sa.known.annotations.optimize_immediately,
+                    sa.known.annotations.override_,
+                    sa.known.annotations.static_,
+                    sa.known.annotations.test,
+                ],
+            );
         }
     }
 

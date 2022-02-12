@@ -1,3 +1,4 @@
+use crate::language::error::msg::SemError;
 use crate::language::ty::SourceType;
 use crate::utils::GrowableVec;
 use crate::vm::{FileId, NamespaceId, TypeParam, VM};
@@ -130,5 +131,26 @@ impl AnnotationDefinition {
             .read()
             .name;
         annotation_usages.contains(name)
+    }
+
+    pub fn reject_modifiers(
+        vm: &VM,
+        modifiers: &AnnotationUsages,
+        rejects: &[AnnotationDefinitionId],
+    ) {
+        for reject in rejects.iter() {
+            let reject = vm.annotations.idx(*reject).read().name;
+            for modifier in modifiers.iter() {
+                if modifier.name == reject {
+                    vm.diag.lock().report(
+                        FileId(0),
+                        modifier.pos,
+                        SemError::MisplacedAnnotation(
+                            vm.interner.str(modifier.name).as_str().into(),
+                        ),
+                    );
+                }
+            }
+        }
     }
 }
