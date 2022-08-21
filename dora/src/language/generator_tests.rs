@@ -739,27 +739,6 @@ fn gen_expr_bit_xor() {
 }
 
 #[test]
-fn gen_expr_bit_shiftl() {
-    let result = code("fn f(a: Int32, b: Int32): Int32 { return a << b; }");
-    let expected = vec![Shl(r(2), r(0), r(1)), Ret(r(2))];
-    assert_eq!(expected, result);
-}
-
-#[test]
-fn gen_expr_bit_shiftr() {
-    let result = code("fn f(a: Int32, b: Int32): Int32 { return a >>> b; }");
-    let expected = vec![Shr(r(2), r(0), r(1)), Ret(r(2))];
-    assert_eq!(expected, result);
-}
-
-#[test]
-fn gen_expr_bit_ashiftr() {
-    let result = code("fn f(a: Int32, b: Int32): Int32 { return a >> b; }");
-    let expected = vec![Sar(r(2), r(0), r(1)), Ret(r(2))];
-    assert_eq!(expected, result);
-}
-
-#[test]
 fn gen_expr_test_equal_bool() {
     let result = code("fn f(a: Bool, b: Bool): Bool { return a == b; }");
     let expected = vec![TestEq(r(2), r(0), r(1)), Ret(r(2))];
