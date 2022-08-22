@@ -1257,8 +1257,8 @@ impl Expr {
         id: NodeId,
         pos: Position,
         span: Span,
-        cond: Box<Expr>,
-        then_block: Box<Expr>,
+        cond_head: Box<StmtLetType>,
+        branches: Vec<Branch>,
         else_block: Option<Box<Expr>>,
     ) -> Expr {
         Expr::If(ExprIfType {
@@ -1266,8 +1266,8 @@ impl Expr {
             pos,
             span,
 
-            cond,
-            then_block,
+            cond_head,
+            branches,
             else_block,
         })
     }
@@ -1897,9 +1897,15 @@ pub struct ExprIfType {
     pub pos: Position,
     pub span: Span,
 
-    pub cond: Box<Expr>,
-    pub then_block: Box<Expr>,
+    pub cond_head: Box<StmtLetType>,
+    pub branches: Vec<Branch>,
     pub else_block: Option<Box<Expr>>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Branch {
+    pub cond_tail: Option<Box<Expr>>,
+    pub then_block: Box<Expr>,
 }
 
 #[derive(Clone, Debug)]

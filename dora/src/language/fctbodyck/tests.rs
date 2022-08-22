@@ -256,7 +256,7 @@ fn type_if() {
     ok("fun x() { if false { } }");
     err(
         "fun x() { if 4i32 { } }",
-        pos(1, 11),
+        pos(1, 14),
         ErrorMessage::IfCondType("Int32".into()),
     );
 }
