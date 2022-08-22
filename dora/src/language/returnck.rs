@@ -37,7 +37,9 @@ pub fn expr_block_returns_value(e: &ExprBlockType) -> Result<(), Position> {
 }
 
 fn expr_if_returns_value(e: &ExprIfType) -> Result<(), Position> {
-    expr_returns_value(&e.then_block)?;
+    for case in &e.cases {
+        expr_returns_value(&case.value)?;
+    }
 
     match e.else_block {
         Some(ref block) => expr_returns_value(block),
