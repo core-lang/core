@@ -215,7 +215,9 @@ impl<'a> AstBytecodeGen<'a> {
             ast::Stmt::Break(ref stmt) => self.visit_stmt_break(stmt),
             ast::Stmt::Continue(ref stmt) => self.visit_stmt_continue(stmt),
             ast::Stmt::Expr(ref expr) => self.visit_stmt_expr(expr),
-            ast::Stmt::Let(ref stmt) => self.visit_stmt_let(stmt),
+            ast::Stmt::Let(ref stmt) => {
+                self.visit_stmt_let(stmt);
+            }
             ast::Stmt::While(ref stmt) => self.visit_stmt_while(stmt),
             ast::Stmt::For(ref stmt) => self.visit_stmt_for(stmt),
         }
@@ -475,23 +477,27 @@ impl<'a> AstBytecodeGen<'a> {
         self.free_if_temp(object_reg);
     }
 
-    fn visit_stmt_let(&mut self, stmt: &ast::StmtLetType) {
+    fn visit_stmt_let(&mut self, stmt: &ast::StmtLetType) -> Option<Register> {
         match &*stmt.pattern {
-            ast::LetPattern::Ident(ref ident) => {
-                self.visit_stmt_let_ident(stmt, ident);
-            }
+            ast::LetPattern::Ident(ref ident) => self.visit_stmt_let_ident(stmt, ident),
 
             ast::LetPattern::Underscore(_) => {
                 self.visit_stmt_let_underscore(stmt);
+                None
             }
 
             ast::LetPattern::Tuple(ref tuple) => {
                 self.visit_stmt_let_pattern(stmt, tuple);
+                None
             }
         }
     }
 
-    fn visit_stmt_let_ident(&mut self, stmt: &ast::StmtLetType, ident: &ast::LetIdentType) {
+    fn visit_stmt_let_ident(
+        &mut self,
+        stmt: &ast::StmtLetType,
+        ident: &ast::LetIdentType,
+    ) -> Option<Register> {
         let var_id = *self.analysis.map_vars.get(ident.id).unwrap();
         let var = self.analysis.vars.get_var(var_id);
 
@@ -504,6 +510,7 @@ impl<'a> AstBytecodeGen<'a> {
                     self.store_in_context(value_reg, context_idx, ident.pos);
                     self.free_if_temp(value_reg);
                 }
+                None
             }
 
             VarLocation::Stack => {
@@ -518,7 +525,9 @@ impl<'a> AstBytecodeGen<'a> {
                 };
 
                 if let Some(ref expr) = stmt.expr {
-                    self.visit_expr(expr, dest);
+                    Some(self.visit_expr(expr, dest))
+                } else {
+                    None
                 }
             }
         }
@@ -963,38 +972,62 @@ impl<'a> AstBytecodeGen<'a> {
                 self.ensure_register(dest, register_bty_from_ty(ty))
             };
 
-            let else_lbl = self.builder.create_label();
+            let mut next_lbl;
             let end_lbl = self.builder.create_label();
 
-            let cond_reg = self.visit_expr(&expr.cond, DataDest::Alloc);
-            self.builder.emit_jump_if_false(cond_reg, else_lbl);
-            self.free_if_temp(cond_reg);
+            let cond_head_reg = self.visit_stmt_let(&expr.cond_head).unwrap();
 
-            self.visit_expr(&expr.then_block, DataDest::Reg(dest));
-
-            if !expr_always_returns(&expr.then_block) {
-                self.builder.emit_jump(end_lbl);
+            for branch in &expr.branches {
+                next_lbl = self.builder.create_label();
+                self.visit_if_branch(cond_head_reg, branch, next_lbl, end_lbl, dest);
             }
 
-            self.builder.bind_label(else_lbl);
             self.visit_expr(else_block, DataDest::Reg(dest));
             self.builder.bind_label(end_lbl);
 
             dest
         } else {
-            // Without else-branch there can't be return value
+            // Without else-branch there can't be return value.
+            // This will assumption will change when we start considering exhaustive types, i. e.
+            // `cond_head` is an enum and all enum members have been covered in preceding branches.
             assert!(ty.is_unit());
 
             let end_lbl = self.builder.create_label();
-            let cond_reg = self.visit_expr(&expr.cond, DataDest::Alloc);
+            let cond_reg = self.visit_expr(&expr.cond_head.expr.as_ref().unwrap(), DataDest::Alloc);
             self.builder.emit_jump_if_false(cond_reg, end_lbl);
             self.free_if_temp(cond_reg);
 
-            self.emit_expr_for_effect(&expr.then_block);
+            for branch in expr.branches.iter() {
+                self.emit_expr_for_effect(&branch.then_block);
+            }
 
             self.builder.bind_label(end_lbl);
             Register::invalid()
         }
+    }
+
+    fn visit_if_branch(
+        &mut self,
+        cond_head: Register,
+        branch: &ast::Branch,
+        next_lbl: Label,
+        end_lbl: Label,
+        dest: Register,
+    ) {
+        let cond_reg = if branch.cond_tail.is_some() {
+            let cond = branch.cond_tail.as_ref().unwrap();
+            self.visit_expr(cond, DataDest::Alloc)
+        } else {
+            cond_head
+        };
+        self.builder.emit_jump_if_false(cond_reg, next_lbl);
+        self.free_if_temp(cond_reg);
+
+        self.visit_expr(&branch.then_block, DataDest::Reg(dest));
+        if !expr_always_returns(&branch.then_block) {
+            self.builder.emit_jump(end_lbl);
+        }
+        self.builder.bind_label(next_lbl);
     }
 
     fn visit_expr_block(&mut self, block: &ast::ExprBlockType, dest: DataDest) -> Register {
