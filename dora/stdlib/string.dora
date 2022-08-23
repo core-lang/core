@@ -23,7 +23,7 @@ impl String {
     return true;
   }
 
-  @pub fun toString(): String { self }
+  @pub fun toString(): String = self;
 
   @pub @internal fun compareTo(rhs: String): Int32;
 
@@ -41,37 +41,33 @@ impl String {
   @internal fun toFloat32OrZero(): Float32;
   @internal fun toFloat64OrZero(): Float64;
 
-  @pub fun toInt32(): Option[Int32] {
+  @pub fun toInt32(): Option[Int32] =
     if self.toInt32Success() {
       Option[Int32]::Some(self.toInt32OrZero())
     } else {
       Option[Int32]::None
-    }
-  }
+    };
 
-  @pub fun toInt64(): Option[Int64] {
+  @pub fun toInt64(): Option[Int64] =
     if self.toInt64Success() {
       Option[Int64]::Some(self.toInt64OrZero())
     } else {
       Option[Int64]::None
-    }
-  }
+    };
 
-  @pub fun toFloat32(): Option[Float32] {
+  @pub fun toFloat32(): Option[Float32] =
     if self.toFloat32Success() {
       Option[Float32]::Some(self.toFloat32OrZero())
     } else {
       Option[Float32]::None
-    }
-  }
+    };
 
-  @pub fun toFloat64(): Option[Float64] {
+  @pub fun toFloat64(): Option[Float64] =
     if self.toFloat64Success() {
       Option[Float64]::Some(self.toFloat64OrZero())
     } else {
       Option[Float64]::None
-    }
-  }
+    };
 
   @pub @internal fun plus(rhs: String): String;
 
@@ -79,13 +75,9 @@ impl String {
 
   @pub @internal fun clone(): String;
 
-  @pub fun isEmpty(): Bool {
-    self.size() == 0i64
-  }
+  @pub fun isEmpty(): Bool = self.size() == 0i64;
 
-  @pub fun contains(val: String): Bool {
-    self.indexOfFirst(val).isSome()
-  }
+  @pub fun contains(val: String): Bool = self.indexOfFirst(val).isSome();
 
   @pub fun indexOfFirst(val: String): Option[Int64] {
     let m = val.size();
@@ -169,15 +161,11 @@ impl String {
     return true;
   }
 
-  @pub fun codePoints(): CodepointIterator {
-    CodepointIterator(self, 0i64)
-  }
+  @pub fun codePoints(): CodepointIterator = CodepointIterator(self, 0i64);
 
-  @pub @static @internal fun fromBytesPart(val: Array[UInt8], offset: Int64, len: Int64): Option[String];
+  @pub @static @internal fun fromBytesPart(val: Array[UInt8], offset: Int64, len: Int64): Option[String] ;
 
-  @pub @static fun fromBytes(val: Array[UInt8]): Option[String] {
-    String::fromBytesPart(val, 0i64, val.size())
-  }
+  @pub @static fun fromBytes(val: Array[UInt8]): Option[String] = String::fromBytesPart(val, 0i64, val.size());
 
   @pub @static @internal fun fromStringPart(val: String, offset: Int64, len: Int64): Option[String];
 
@@ -220,51 +208,35 @@ impl String {
 }
 
 impl Stringable for Bool {
-  fun toString(): String {
-    self.toString()
-  }
+  fun toString(): String = self.toString();
 }
 
 impl Stringable for UInt8 {
-  fun toString(): String {
-    self.toString()
-  }
+  fun toString(): String = self.toString();
 }
 
 impl Stringable for Int32 {
-  fun toString(): String {
-    self.toString()
-  }
+  fun toString(): String = self.toString();
 }
 
 impl Stringable for Int64 {
-  fun toString(): String {
-    self.toString()
-  }
+  fun toString(): String = self.toString();
 }
 
 impl Stringable for Float32 {
-  fun toString(): String {
-    self.toString()
-  }
+  fun toString(): String = self.toString();
 }
 
 impl Stringable for Float64 {
-  fun toString(): String {
-    self.toString()
-  }
+  fun toString(): String = self.toString();
 }
 
 impl Stringable for String {
-  fun toString(): String {
-    self.toString()
-  }
+  fun toString(): String = self.toString();
 }
 
 impl Stringable for Char {
-  fun toString(): String {
-    self.toString()
-  }
+  fun toString(): String = self.toString();
 }
 
 @pub class StringBuffer {
@@ -273,17 +245,11 @@ impl Stringable for Char {
 }
 
 impl StringBuffer {
-  @pub @static fun new(): StringBuffer {
-    StringBuffer(Array[UInt8]::new(), 0)
-  }
+  @pub @static fun new(): StringBuffer = StringBuffer(Array[UInt8]::new(), 0);
 
-  @pub fun size(): Int64 {
-    return self.len;
-  }
+  @pub fun size(): Int64 = self.len;
 
-  @pub fun capacity(): Int64 {
-    return self.buf.size();
-  }
+  @pub fun capacity(): Int64 = self.buf.size();
 
   // reserve `elements` bytes
   // (capacity - length >= elements)
@@ -344,25 +310,17 @@ impl StringBuffer {
     self
   }
 
-  @pub fun appendNewline(): StringBuffer {
-    self.appendChar('\n')
-  }
+  @pub fun appendNewline(): StringBuffer = self.appendChar('\n');
 
-  @pub fun toString(): String {
-    String::fromBytesPart(self.buf, 0i64, self.size()).getOrPanic()
-  }
+  @pub fun toString(): String = String::fromBytesPart(self.buf, 0i64, self.size()).getOrPanic();
 
-  @pub @static fun empty(): StringBuffer {
-    StringBuffer::new()
-  }
+  @pub @static fun empty(): StringBuffer = StringBuffer::new();
 }
 
 @pub class CodepointIterator(value: String, start: Int64)
 
 impl CodepointIterator {
-  @pub @static fun new(value: String): CodepointIterator {
-    CodepointIterator(value, 0)
-  }
+  @pub @static fun new(value: String): CodepointIterator = CodepointIterator(value, 0);
 
   @pub fun next(): Option[Char] {
     if self.start < self.value.size() {
@@ -456,7 +414,5 @@ impl CodepointIterator {
     return i;
   }
 
-  @pub fun toString(): String {
-    String::fromStringPart(self.value, self.start, self.value.size() - self.start).getOrPanic()
-  }
+  @pub fun toString(): String = String::fromStringPart(self.value, self.start, self.value.size() - self.start).getOrPanic();
 }

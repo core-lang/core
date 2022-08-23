@@ -4,9 +4,7 @@
 }
 
 impl Thread {
-    @pub fun id(): Int64 {
-        self.id
-    }
+    @pub fun id(): Int64 = self.id;
 
     @pub @static @internal fun current(): Thread;
 
@@ -18,9 +16,7 @@ impl Thread {
 @pub class AtomicInt32(value: Int32)
 
 impl AtomicInt32 {
-    @pub @static fun new(value: Int32): AtomicInt32 {
-        AtomicInt32(value)
-    }
+    @pub @static fun new(value: Int32): AtomicInt32 = AtomicInt32(value);
 
     @pub @internal fun get(): Int32;
     @pub @internal fun set(value: Int32);
@@ -32,9 +28,7 @@ impl AtomicInt32 {
 @pub class AtomicInt64(value: Int64)
 
 impl AtomicInt64 {
-    @pub @static fun new(value: Int64): AtomicInt64 {
-        AtomicInt64(value)
-    }
+    @pub @static fun new(value: Int64): AtomicInt64 = AtomicInt64(value);
 
     @pub @internal fun get(): Int64;
     @pub @internal fun set(value: Int64);
@@ -53,9 +47,7 @@ const LOCKED_CONTENDED: Int32 = 2i32;
 }
 
 impl Mutex {
-    @pub @static fun new(): Mutex {
-        Mutex(AtomicInt32::new(UNLOCKED), 0)
-    }
+    @pub @static fun new(): Mutex = Mutex(AtomicInt32::new(UNLOCKED), 0);
 
     @pub fun lock[T](fct: (): T): T {
         self.lockOp();
@@ -120,9 +112,7 @@ impl Mutex {
 }
 
 impl Condition {
-    @pub @static fun new(): Condition {
-        Condition(AtomicInt32::new(0i32))
-    }
+    @pub @static fun new(): Condition = Condition(AtomicInt32::new(0i32));
 
     @pub fun wait(mtx: Mutex) {
         self.enqueue();

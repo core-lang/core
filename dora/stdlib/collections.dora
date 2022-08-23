@@ -11,7 +11,7 @@ impl[T] Array[T] {
   @pub @internal fun get(idx: Int64): T;
   @pub @internal fun set(idx: Int64, val: T);
 
-  @pub fun isEmpty(): Bool { self.size() == 0i64 }
+  @pub fun isEmpty(): Bool = self.size() == 0i64;
 
   @pub fun makeIterator(): ArrayIter[T] {
     ArrayIter[T]::new(self)
@@ -61,9 +61,7 @@ impl[T: Default] Array[T] {
 }
 
 impl[T: Zero] Array[T] {
-  @pub @static fun zero(len: Int64): Array[T] {
-    Array[T]::unsafeNew(len)
-  }
+  @pub @static fun zero(len: Int64): Array[T] = Array[T]::unsafeNew(len);
 }
 
 @pub class ArrayIter[T] {
@@ -93,9 +91,7 @@ impl[T] ArrayIter[T] {
 }
 
 impl[T] ArrayEnumerator[T] {
-  @static fun new(data: Array[T]): ArrayEnumerator[T] {
-    ArrayEnumerator[T](data, 0)
-  }
+  @static fun new(data: Array[T]): ArrayEnumerator[T] = ArrayEnumerator[T](data, 0);
 
   @pub fun next(): Option[(Int64, T)] {
     if self.idx < self.array.size() {
