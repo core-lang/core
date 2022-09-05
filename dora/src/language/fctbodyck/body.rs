@@ -33,6 +33,7 @@ use dora_parser::interner::Name;
 use dora_parser::lexer::position::Position;
 use dora_parser::lexer::token::{FloatSuffix, IntBase, IntSuffix};
 use fixedbitset::FixedBitSet;
+use option_ext::OptionExt;
 
 pub struct TypeCheck<'a> {
     pub sa: &'a mut SemAnalysis,
@@ -486,7 +487,7 @@ impl<'a> TypeCheck<'a> {
             .method(object_type)
             .name(make_iterator_name)
             .type_param_defs(&self.fct.type_params)
-            .args(&[]);
+            .arg_types(&[]);
 
         if lookup.find() {
             let make_iterator_id = lookup.found_fct_id().unwrap();
@@ -509,7 +510,7 @@ impl<'a> TypeCheck<'a> {
             .method(object_type.clone())
             .name(next_name)
             .type_param_defs(&self.fct.type_params)
-            .args(&[]);
+            .arg_types(&[]);
 
         if !next.find() {
             return None;
@@ -1070,7 +1071,7 @@ impl<'a> TypeCheck<'a> {
         let mut arg_types: Vec<SourceType> = call
             .args
             .iter()
-            .map(|arg| self.check_expr(arg, SourceType::Any))
+            .map(|arg| self.check_expr(&arg.expr, SourceType::Any))
             .collect();
 
         let value_type = self.check_expr(&e.rhs, SourceType::Any);
@@ -1462,7 +1463,7 @@ impl<'a> TypeCheck<'a> {
         let arg_types: Vec<SourceType> = e
             .args
             .iter()
-            .map(|arg| self.check_expr(arg, SourceType::Any))
+            .map(|arg| self.check_expr(&arg.expr, SourceType::Any))
             .collect();
 
         if let Some(expr_ident) = callee.to_ident() {
@@ -1821,7 +1822,8 @@ impl<'a> TypeCheck<'a> {
         let mut lookup = MethodLookup::new(self.sa, self.fct)
             .pos(e.pos)
             .callee(fct_id)
-            .args(&arg_types)
+            .arg_types(&arg_types)
+            .arg_names(e.arg_names())
             .fct_type_params(&type_params);
 
         let ty = if lookup.find() {
@@ -1850,7 +1852,8 @@ impl<'a> TypeCheck<'a> {
             .pos(e.pos)
             .static_method(object_type)
             .name(method_name)
-            .args(arg_types)
+            .arg_types(arg_types)
+            .arg_names(e.arg_names())
             .fct_type_params(&fct_type_params)
             .type_param_defs(&self.fct.type_params);
 
@@ -1906,7 +1909,8 @@ impl<'a> TypeCheck<'a> {
             .name(method_name)
             .fct_type_params(&fct_type_params)
             .type_param_defs(&self.fct.type_params)
-            .args(arg_types);
+            .arg_types(arg_types)
+            .arg_names(e.arg_names());
 
         if lookup.find() {
             let fct_id = lookup.found_fct_id().unwrap();
@@ -1947,7 +1951,8 @@ impl<'a> TypeCheck<'a> {
                 .fct_type_params(&fct_type_params)
                 .type_param_defs(&self.fct.type_params)
                 .pos(e.pos)
-                .args(arg_types);
+                .arg_types(arg_types)
+                .arg_names(e.arg_names());
 
             assert!(!lookup.find());
 
@@ -2018,7 +2023,8 @@ impl<'a> TypeCheck<'a> {
             .fct_type_params(&type_params)
             .type_param_defs(&self.fct.type_params)
             .pos(e.pos)
-            .args(arg_types);
+            .arg_types(arg_types)
+            .arg_names(e.arg_names());
         assert!(!lookup.find());
 
         self.analysis.set_ty(e.id, SourceType::Error);
@@ -2067,6 +2073,28 @@ impl<'a> TypeCheck<'a> {
             return SourceType::Error;
         }
 
+        let field_names: Vec<Name> = struct_.fields.iter().map(|f| f.name).collect();
+        let arg_names = &e.arg_names();
+        if !arg_names_valid(&field_names, arg_names) {
+            let struct_1 = &*struct_;
+            let struct_name = struct_1.name(self.sa);
+            let param_names = struct_1
+                .fields
+                .iter()
+                .map(|f| self.sa.interner.str(f.name).to_string());
+            let param_type_names = struct_1
+                .fields
+                .iter()
+                .map(|field| field.ty.name_struct(self.sa, struct_1));
+            let msg = self.argument_name_mismatch_message(
+                struct_name,
+                param_names,
+                param_type_names,
+                arg_names,
+                arg_types,
+            );
+            self.sa.diag.lock().report(self.file_id, e.pos, msg);
+        }
         if !self.check_expr_call_struct_args(&*struct_, type_params.clone(), arg_types) {
             let struct_name = self.sa.interner.str(struct_.name).to_string();
             let field_types = struct_
@@ -2157,18 +2185,41 @@ impl<'a> TypeCheck<'a> {
             self.sa.diag.lock().report(self.file_id, e.pos, msg);
         }
 
+        let field_names: Vec<Name> = cls.fields.iter().map(|f| f.name).collect();
+        let arg_names = &e.arg_names();
+        if !arg_names_valid(&field_names, arg_names) {
+            let cls = &*cls;
+            let class_name = cls.name(self.sa);
+            let param_names = cls
+                .fields
+                .iter()
+                .map(|f| self.sa.interner.str(f.name).to_string());
+            let param_type_names = cls
+                .fields
+                .iter()
+                .map(|field| field.ty.name_cls(self.sa, cls));
+            let msg = self.argument_name_mismatch_message(
+                class_name,
+                param_names,
+                param_type_names,
+                arg_names,
+                arg_types,
+            );
+            self.sa.diag.lock().report(self.file_id, e.pos, msg);
+        }
         if !self.check_expr_call_class_args(&*cls, type_params.clone(), arg_types) {
             let class_name = cls.name(self.sa);
-            let field_types = cls
+            let param_type_names = cls
                 .fields
                 .iter()
                 .map(|field| field.ty.name_cls(self.sa, &*cls))
                 .collect::<Vec<_>>();
-            let arg_types = arg_types
+            let arg_type_names = arg_types
                 .iter()
                 .map(|a| a.name_fct(self.sa, self.fct))
                 .collect::<Vec<_>>();
-            let msg = ErrorMessage::ParamTypesIncompatible(class_name, field_types, arg_types);
+            let msg =
+                ErrorMessage::ParamTypesIncompatible(class_name, param_type_names, arg_type_names);
             self.sa.diag.lock().report(self.file_id, e.pos, msg);
         }
 
@@ -2178,6 +2229,35 @@ impl<'a> TypeCheck<'a> {
 
         self.analysis.set_ty(e.id, cls_ty.clone());
         cls_ty
+    }
+
+    fn argument_name_mismatch_message(
+        &self,
+        name: String,
+        param_names: impl Iterator<Item = String>,
+        param_type_names: impl Iterator<Item = String>,
+        arg_names: &Vec<&Option<Name>>,
+        arg_types: &[SourceType],
+    ) -> ErrorMessage {
+        let params = param_names
+            .zip(param_type_names)
+            .map(|(n, t)| n + ": " + &*t)
+            .collect();
+        let arg_names = arg_names
+            .iter()
+            .map(|on| on.map(|n| self.sa.interner.str(n).to_string()));
+        let arg_type_names = arg_types.iter().map(|a| a.name_fct(self.sa, self.fct));
+        let args = arg_names
+            .zip(arg_type_names)
+            .map(|(arg_name, type_name)| {
+                if arg_name.is_some() {
+                    arg_name.unwrap() + ": " + type_name.as_str()
+                } else {
+                    type_name
+                }
+            })
+            .collect();
+        ErrorMessage::ArgumentNameMismatch(name, params, args)
     }
 
     fn check_expr_call_class_args(
@@ -3370,6 +3450,16 @@ pub fn args_compatible_fct(
         type_params,
         self_ty,
     )
+}
+
+pub fn arg_names_valid(param_names: &Vec<Name>, arg_names: &Vec<&Option<Name>>) -> bool {
+    for (idx, arg_name) in arg_names.iter().enumerate() {
+        if arg_name.is_some() && !arg_name.contains(&param_names[idx]) {
+            return false;
+        }
+    }
+
+    true
 }
 
 fn args_compatible(
