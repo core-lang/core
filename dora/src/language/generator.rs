@@ -1171,7 +1171,7 @@ impl<'a> AstBytecodeGen<'a> {
 
     fn visit_expr_assert(&mut self, expr: &ast::ExprCallType, dest: DataDest) {
         assert!(dest.is_unit());
-        let assert_reg = self.visit_expr(&*expr.args[0], DataDest::Alloc);
+        let assert_reg = self.visit_expr(&*expr.args[0].expr, DataDest::Alloc);
         self.builder.emit_push_register(assert_reg);
         let fid = self.sa.known.functions.assert();
         let idx = self.builder.add_const_fct(fid);
@@ -1278,7 +1278,7 @@ impl<'a> AstBytecodeGen<'a> {
         let mut arguments = Vec::new();
 
         for arg in &expr.args {
-            arguments.push(self.visit_expr(arg, DataDest::Alloc));
+            arguments.push(self.visit_expr(&arg.expr, DataDest::Alloc));
         }
 
         for &arg_reg in &arguments {
@@ -1315,7 +1315,7 @@ impl<'a> AstBytecodeGen<'a> {
         arguments.push(lambda_object);
 
         for arg in &node.args {
-            arguments.push(self.visit_expr(arg, DataDest::Alloc));
+            arguments.push(self.visit_expr(&arg.expr, DataDest::Alloc));
         }
 
         for &arg_reg in &arguments {
@@ -1352,7 +1352,7 @@ impl<'a> AstBytecodeGen<'a> {
         let mut arguments = Vec::new();
 
         for arg in &expr.args {
-            arguments.push(self.visit_expr(arg, DataDest::Alloc));
+            arguments.push(self.visit_expr(&arg.expr, DataDest::Alloc));
         }
 
         for &arg_reg in &arguments {
@@ -1383,7 +1383,7 @@ impl<'a> AstBytecodeGen<'a> {
         let mut arguments = Vec::new();
 
         for arg in &expr.args {
-            arguments.push(self.visit_expr(arg, DataDest::Alloc));
+            arguments.push(self.visit_expr(&arg.expr, DataDest::Alloc));
         }
 
         for &arg_reg in &arguments {
@@ -1498,7 +1498,7 @@ impl<'a> AstBytecodeGen<'a> {
 
         // Evaluate non-variadic arguments and track registers.
         for arg in expr.args.iter().take(non_variadic_arguments) {
-            let reg = self.visit_expr(arg, DataDest::Alloc);
+            let reg = self.visit_expr(&arg.expr, DataDest::Alloc);
             registers.push(reg);
         }
 
@@ -1544,14 +1544,14 @@ impl<'a> AstBytecodeGen<'a> {
         if element_ty.is_unit() {
             // Evaluate rest arguments
             for arg in expr.args.iter().skip(non_variadic_arguments) {
-                self.visit_expr(arg, DataDest::Effect);
+                self.visit_expr(&arg.expr, DataDest::Effect);
             }
         } else {
             let index_reg = self.alloc_temp(BytecodeType::Int64);
 
             // Evaluate rest arguments and store them in array
             for (idx, arg) in expr.args.iter().skip(non_variadic_arguments).enumerate() {
-                let arg_reg = self.visit_expr(arg, DataDest::Alloc);
+                let arg_reg = self.visit_expr(&arg.expr, DataDest::Alloc);
                 self.builder.emit_const_int64(index_reg, idx as i64);
                 self.builder
                     .emit_store_array(arg_reg, array_reg, index_reg, expr.pos);
@@ -2063,13 +2063,15 @@ impl<'a> AstBytecodeGen<'a> {
 
             match expr.args.len() {
                 0 => self.emit_intrinsic_un(object, info, expr.pos, dest),
-                1 => self.emit_intrinsic_bin(object, &expr.args[0], info, None, expr.pos, dest),
+                1 => {
+                    self.emit_intrinsic_bin(object, &expr.args[0].expr, info, None, expr.pos, dest)
+                }
                 2 => {
                     assert_eq!(intrinsic, Intrinsic::ArraySet);
                     self.emit_intrinsic_array_set(
                         expr.object().unwrap(),
-                        &expr.args[0],
-                        &expr.args[1],
+                        &expr.args[0].expr,
+                        &expr.args[1].expr,
                         expr.pos,
                         dest,
                     )
@@ -2083,9 +2085,14 @@ impl<'a> AstBytecodeGen<'a> {
                     Register::invalid()
                 }
 
-                Intrinsic::ArrayGet => {
-                    self.emit_intrinsic_bin(&expr.callee, &expr.args[0], info, None, expr.pos, dest)
-                }
+                Intrinsic::ArrayGet => self.emit_intrinsic_bin(
+                    &expr.callee,
+                    &expr.args[0].expr,
+                    info,
+                    None,
+                    expr.pos,
+                    dest,
+                ),
 
                 Intrinsic::ArrayNewOfSize => self.emit_intrinsic_new_array(expr, dest),
 
@@ -2114,7 +2121,7 @@ impl<'a> AstBytecodeGen<'a> {
         let cls_idx = self.builder.add_const_cls_types(cls_id, type_params);
 
         let array_reg = self.ensure_register(dest, BytecodeType::Ptr);
-        let length_reg = self.visit_expr(&expr.args[0], DataDest::Alloc);
+        let length_reg = self.visit_expr(&expr.args[0].expr, DataDest::Alloc);
 
         self.builder
             .emit_new_array(array_reg, cls_idx, length_reg, expr.pos);
@@ -2621,7 +2628,13 @@ impl<'a> AstBytecodeGen<'a> {
         if let Some(info) = self.get_intrinsic(expr.id) {
             match info.intrinsic {
                 Intrinsic::ArraySet => {
-                    self.emit_intrinsic_array_set(object, index, value, expr.pos, DataDest::Effect);
+                    self.emit_intrinsic_array_set(
+                        object,
+                        &index.expr,
+                        value,
+                        expr.pos,
+                        DataDest::Effect,
+                    );
                 }
                 _ => panic!("unexpected intrinsic {:?}", info.intrinsic),
             }
@@ -2630,7 +2643,7 @@ impl<'a> AstBytecodeGen<'a> {
             let fct_id = call_type.fct_id().unwrap();
 
             let obj_reg = self.visit_expr(object, DataDest::Alloc);
-            let idx_reg = self.visit_expr(index, DataDest::Alloc);
+            let idx_reg = self.visit_expr(&index.expr, DataDest::Alloc);
             let val_reg = self.visit_expr(value, DataDest::Alloc);
 
             let obj_ty = self.ty(object.id());
