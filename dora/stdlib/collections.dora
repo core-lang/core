@@ -504,19 +504,21 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
         let mut idx = hash.toInt64() & (self.cap - 1i64);
 
         while true {
-            if self.isLive(idx) {
+            if self
+            ... .isLive(idx) {
                 let current_key = self.keys.get(idx);
 
                 if current_key.hash() == hash && current_key.equals(key) {
                     return true;
                 }
-            } else if self.isDeleted(idx) {
-                // There might be live entries after a deleted one.
-            } else {
-                break;
+                idx = (idx + 1i64) & (self.cap - 1i64);
             }
-
-            idx = (idx + 1i64) & (self.cap - 1i64);
+            ... .isDeleted(idx) {
+                // There might be live entries after a deleted one.
+                idx = (idx + 1i64) & (self.cap - 1i64);
+            } else {
+                return false;
+            }
         }
 
         false
@@ -533,19 +535,21 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
         let mut idx = hash.toInt64() & (self.cap - 1i64);
 
         while true {
-            if self.isLive(idx) {
+            if self
+            ... .isLive(idx) {
                 let current_key = self.keys.get(idx);
 
                 if current_key.hash() == hash && current_key.equals(key) {
                     return Option[V]::Some(self.values.get(idx));
                 }
-            } else if self.isDeleted(idx) {
-                // There might be live entries after a deleted one.
-            } else {
-                break;
+                idx = (idx + 1i64) & (self.cap - 1i64);
             }
-
-            idx = (idx + 1i64) & (self.cap - 1i64);
+            ... .isDeleted(idx) {
+                // There might be live entries after a deleted one.
+                idx = (idx + 1i64) & (self.cap - 1i64);
+            } else {
+                return Option[V]::None;
+            }
         }
 
         Option[V]::None
@@ -558,7 +562,8 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
         let mut idx = hash.toInt64() & (self.cap - 1i64);
 
         while true {
-            if self.isLive(idx) {
+            if self
+            ... .isLive(idx) {
                 let current_key = self.keys.get(idx);
 
                 if current_key.hash() == hash && current_key.equals(key) {
@@ -571,13 +576,14 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
                     self.entries = self.entries - 1i64;
                     return Option[V]::Some(value);
                 }
-            } else if self.isDeleted(idx) {
-                // There might be live entries after a deleted one.
-            } else {
-                break;
+                idx = (idx + 1i64) & (self.cap - 1i64);
             }
-
-            idx = (idx + 1i64) & (self.cap - 1i64);
+            ... .isDeleted(idx) {
+                // There might be live entries after a deleted one.
+                idx = (idx + 1i64) & (self.cap - 1i64);
+            } else {
+                Option[V]::None;
+            }
         }
 
         Option[V]::None
