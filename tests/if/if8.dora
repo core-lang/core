@@ -1,4 +1,4 @@
-fun main() {
+fun main(): Unit {
   let x = if check()
     ... == false { 1 }
     ... == true { 2 }
