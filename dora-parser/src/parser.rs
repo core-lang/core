@@ -6,9 +6,7 @@ use crate::ast;
 use crate::ast::*;
 use crate::builder::Builder;
 use crate::error::{ParseError, ParseErrorAndPos};
-
 use crate::interner::*;
-
 use crate::lexer::position::{Position, Span};
 use crate::lexer::reader::Reader;
 use crate::lexer::token::*;
@@ -1557,7 +1555,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::EqEqEq
                 | TokenKind::NeEqEq => 4,
                 TokenKind::Add | TokenKind::Sub | TokenKind::Or | TokenKind::Caret => 5,
-                TokenKind::Mul | TokenKind::Div | TokenKind::Modulo | TokenKind::And => 6,
+                TokenKind::Mul | TokenKind::Div | TokenKind::And => 6,
                 TokenKind::As => 7,
                 _ => {
                     return Ok(left);
@@ -1738,7 +1736,6 @@ impl<'a> Parser<'a> {
             TokenKind::Sub => BinOp::Sub,
             TokenKind::Mul => BinOp::Mul,
             TokenKind::Div => BinOp::Div,
-            TokenKind::Modulo => BinOp::Mod,
             _ => panic!("unimplemented token {:?}", tok),
         };
 
@@ -2164,9 +2161,8 @@ impl NodeIdGenerator {
 #[cfg(test)]
 mod tests {
     use crate::ast::*;
-    use crate::interner::*;
-
     use crate::error::ParseError;
+    use crate::interner::*;
     use crate::lexer::position::Position;
     use crate::parser::Parser;
 
@@ -2429,16 +2425,6 @@ mod tests {
         assert_eq!(BinOp::Div, div.op);
         assert_eq!(4, div.lhs.to_lit_int().unwrap().value);
         assert_eq!(5, div.rhs.to_lit_int().unwrap().value);
-    }
-
-    #[test]
-    fn parse_mod() {
-        let (expr, _) = parse_expr("2%15");
-
-        let div = expr.to_bin().unwrap();
-        assert_eq!(BinOp::Mod, div.op);
-        assert_eq!(2, div.lhs.to_lit_int().unwrap().value);
-        assert_eq!(15, div.rhs.to_lit_int().unwrap().value);
     }
 
     #[test]
