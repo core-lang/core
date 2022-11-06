@@ -6,7 +6,7 @@ fun main(): Unit {
   assert(x == 2);
 }
 
-let mut checked: Int64 = 0;
+var checked: Int64 = 0;
 
 fun check(): Bool {
   if checked != 0 {

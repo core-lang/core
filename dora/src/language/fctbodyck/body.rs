@@ -221,7 +221,7 @@ impl<'a> TypeCheck<'a> {
                 ty.clone()
             };
 
-            let var_id = self.vars.add_var(param.name, ty, param.mutable);
+            let var_id = self.vars.add_var(param.name, ty, false);
             self.analysis
                 .map_vars
                 .insert(param.id, self.vars.local_var_id(var_id));
@@ -304,7 +304,7 @@ impl<'a> TypeCheck<'a> {
         }
 
         // update type of variable, necessary when stmt has initializer expression but no type
-        self.check_stmt_let_pattern(&s.pattern, defined_type.clone());
+        self.check_stmt_let_pattern(&s.pattern, defined_type.clone(), s.mutable);
 
         if s.expr.is_some() {
             if !expr_type.is_error()
@@ -343,10 +343,10 @@ impl<'a> TypeCheck<'a> {
         .unwrap_or(SourceType::Error)
     }
 
-    fn check_stmt_let_pattern(&mut self, pattern: &ast::LetPattern, ty: SourceType) {
+    fn check_stmt_let_pattern(&mut self, pattern: &ast::LetPattern, ty: SourceType, mutable: bool) {
         match pattern {
             ast::LetPattern::Ident(ref ident) => {
-                let var_id = self.vars.add_var(ident.name, ty, ident.mutable);
+                let var_id = self.vars.add_var(ident.name, ty, mutable);
 
                 self.add_local(var_id, ident.pos);
                 self.analysis
@@ -383,7 +383,7 @@ impl<'a> TypeCheck<'a> {
 
                 if ty.is_error() {
                     for part in &tuple.parts {
-                        self.check_stmt_let_pattern(part, SourceType::Error);
+                        self.check_stmt_let_pattern(part, SourceType::Error, mutable);
                     }
                     return;
                 }
@@ -405,7 +405,7 @@ impl<'a> TypeCheck<'a> {
                 }
 
                 for (part, subtype) in tuple.parts.iter().zip(subtypes.iter()) {
-                    self.check_stmt_let_pattern(&*part, subtype.clone());
+                    self.check_stmt_let_pattern(&*part, subtype.clone(), mutable);
                 }
             }
         }
@@ -416,7 +416,7 @@ impl<'a> TypeCheck<'a> {
 
         if object_type.is_error() {
             self.symtable.push_level();
-            self.check_stmt_let_pattern(&stmt.pattern, SourceType::Error);
+            self.check_stmt_let_pattern(&stmt.pattern, SourceType::Error, false);
             self.visit_stmt(&stmt.block);
             self.symtable.pop_level();
             return;
@@ -427,7 +427,7 @@ impl<'a> TypeCheck<'a> {
         {
             self.symtable.push_level();
             // set variable type to return type of next
-            self.check_stmt_let_pattern(&stmt.pattern, ret_type);
+            self.check_stmt_let_pattern(&stmt.pattern, ret_type, false);
             // store fct ids for code generation
             self.analysis.map_fors.insert(stmt.id, for_type_info);
             self.check_loop_body(&stmt.block);
@@ -444,7 +444,7 @@ impl<'a> TypeCheck<'a> {
                 self.symtable.push_level();
 
                 // set variable type to return type of next
-                self.check_stmt_let_pattern(&stmt.pattern, ret_type);
+                self.check_stmt_let_pattern(&stmt.pattern, ret_type, false);
 
                 // store fct ids for code generation
                 for_type_info.make_iterator = Some(make_iterator);
@@ -465,7 +465,7 @@ impl<'a> TypeCheck<'a> {
 
         // set invalid error type
         self.symtable.push_level();
-        self.check_stmt_let_pattern(&stmt.pattern, SourceType::Error);
+        self.check_stmt_let_pattern(&stmt.pattern, SourceType::Error, false);
         self.check_loop_body(&stmt.block);
         self.symtable.pop_level();
     }
@@ -755,7 +755,7 @@ impl<'a> TypeCheck<'a> {
                                                 );
                                             }
 
-                                            let var_id = self.vars.add_var(name, ty, param.mutable);
+                                            let var_id = self.vars.add_var(name, ty, false);
                                             self.add_local(var_id, param.pos);
                                             self.analysis
                                                 .map_vars
