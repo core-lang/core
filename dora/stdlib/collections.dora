@@ -31,7 +31,7 @@ impl[T] Array[T] {
 
   @pub fun all(fct: (T): Bool): Bool {
     let len = self.size();
-    let mut idx = 0;
+    var idx = 0;
     while idx < len {
       if fct(self(idx)).not() {
         return false;
@@ -43,7 +43,7 @@ impl[T] Array[T] {
 
   @pub fun any(fct: (T): Bool): Bool {
     let len = self.size();
-    let mut idx = 0;
+    var idx = 0;
     while idx < len {
       if fct(self(idx)) {
         return true;
@@ -55,7 +55,7 @@ impl[T] Array[T] {
 
   @pub fun each(fct: (T): Unit): Unit {
     let len = self.size();
-    let mut idx = 0;
+    var idx = 0;
     while idx < len {
       fct(self(idx));
       idx = idx + 1;
@@ -65,7 +65,7 @@ impl[T] Array[T] {
   @pub fun map[U](fct: (T): U): Array[U] {
     let len = self.size();
     let result = Array[U]::unsafeNew(len);
-    let mut idx = 0;
+    var idx = 0;
     while idx < len {
       result.set(idx, fct(self(idx)));
       idx = idx + 1;
@@ -76,7 +76,7 @@ impl[T] Array[T] {
   @pub fun retain(fct: (T): Bool): Array[T] {
     let result = List[T]::new();
     let len = self.size();
-    let mut idx = 0;
+    var idx = 0;
     while idx < len {
       let val = self(idx);
       if fct(val) {
@@ -90,7 +90,7 @@ impl[T] Array[T] {
   @pub fun reject(fct: (T): Bool): Array[T] {
     let result = List[T]::new();
     let len = self.size();
-    let mut idx = 0;
+    var idx = 0;
     while idx < len {
       let val = self(idx);
       if fct(val).not() {
@@ -111,7 +111,7 @@ impl[T] Array[T] {
 
   @pub @static fun fill(len: Int64, value: T): Array[T] {
     let array = Array[T]::unsafeNew(len);
-    let mut i = 0i64;
+    var i = 0i64;
 
     while i < len {
       array(i) = value;
@@ -122,7 +122,7 @@ impl[T] Array[T] {
   }
 
   @pub @static fun copy(src: Array[T], srcPos: Int64, dest: Array[T], destPos: Int64, len: Int64): Unit {
-    let mut i = 0i64;
+    var i = 0i64;
 
     while i < len {
       dest.set(destPos+i, src.get(srcPos+i));
@@ -134,7 +134,7 @@ impl[T] Array[T] {
 impl[T: Default] Array[T] {
   @pub @static fun newDefault(len: Int64): Array[T] {
     let array = Array[T]::unsafeNew(len);
-    let mut i = 0i64;
+    var i = 0i64;
     let value = T::default();
 
     while i < len {
@@ -211,10 +211,10 @@ impl[T: Sortable] Array[T] {
   // a stable in-place sort, currently implemented by insertion sort
   @pub @static
   fun sortStable(array: Array[T]): Unit {
-    let mut i = 1i64;
+    var i = 1i64;
     while i < array.size() {
-      let mut temp: T = array.get(i);
-      let mut j = i;
+      var temp: T = array.get(i);
+      var j = i;
       while j > 0i64 && array(j - 1i64).sortsAfter(temp) {
         array(j) = array(j - 1i64);
         j = j - 1i64;
@@ -230,7 +230,7 @@ impl[T: Equals] Array[T] {
     if self.size() != other.size() {
       return false;
     }
-    let mut i = 0i64;
+    var i = 0i64;
     while i < self.size() {
       if self(i).equals(other(i)).not() {
         return false;
@@ -241,7 +241,7 @@ impl[T: Equals] Array[T] {
   }
 
   @pub fun contains(value: T): Bool {
-    let mut i = 0i64;
+    var i = 0i64;
 
     while i < self.size() {
       let x = self.get(i);
@@ -264,7 +264,7 @@ impl[T: Equals] Array[T] {
       return false;
     }
 
-    let mut i = 0i64;
+    var i = 0i64;
 
     while i < len {
       if a(aPos+i).equals(b(bPos+i)).not() {
@@ -279,7 +279,7 @@ impl[T: Equals] Array[T] {
 
 impl[T: Identity] Array[T] {
   @pub fun has(value: T): Bool {
-    let mut i = 0i64;
+    var i = 0i64;
 
     while i < self.size() {
       if self.get(i).identicalTo(value) {
@@ -298,7 +298,7 @@ impl[T: Stringable] Array[T] {
     sb.append("Array(");
     let size = self.size();
     if size != 0i64 {
-      let mut i = 0i64;
+      var i = 0i64;
       while i < size - 1i64 {
         sb.append(self.get(i).toString());
         sb.append(", ");
@@ -348,7 +348,7 @@ impl BitSet {
     }
 
     let entry_idx = idx / 32i64;
-    let mut value = self.data.get(entry_idx);
+    var value = self.data.get(entry_idx);
     let value_idx = idx - entry_idx;
 
     value = value | 1i32.shiftLeft(value_idx.toInt32());
@@ -362,7 +362,7 @@ impl BitSet {
     }
 
     let entry_idx = idx / 32i64;
-    let mut value = self.data.get(entry_idx);
+    var value = self.data.get(entry_idx);
     let value_idx = idx - entry_idx;
 
     value = value & 1i32.shiftLeft(value_idx.toInt32()).not();
@@ -404,7 +404,7 @@ impl BitVec {
     self.ensureCapacity(idx+1i64);
 
     let entry_idx = idx / 32i64;
-    let mut value = self.data.get(entry_idx);
+    var value = self.data.get(entry_idx);
     let value_idx = idx - entry_idx;
 
     value = value | 1i32.shiftLeft(value_idx.toInt32());
@@ -422,7 +422,7 @@ impl BitVec {
     }
 
     let entry_idx = idx / 32i64;
-    let mut value = self.data.get(entry_idx);
+    var value = self.data.get(entry_idx);
     let value_idx = idx - entry_idx;
 
     value = value & 1i32.shiftLeft(value_idx.toInt32()).not();
@@ -552,9 +552,9 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
         self.ensureCapacity(1i64);
         assert(self.entries < self.cap);
 
-        let mut hash = key.hash();
-        let mut idx = hash.toInt64() & (self.cap - 1i64);
-        let mut insert_idx = None[Int64];
+        var hash = key.hash();
+        var idx = hash.toInt64() & (self.cap - 1i64);
+        var insert_idx = None[Int64];
 
         while true {
             if self.isLive(idx) {
@@ -599,8 +599,8 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
             return false;
         }
 
-        let mut hash = key.hash();
-        let mut idx = hash.toInt64() & (self.cap - 1i64);
+        var hash = key.hash();
+        var idx = hash.toInt64() & (self.cap - 1i64);
 
         while true {
             if self.isLive(idx) {
@@ -628,8 +628,8 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
             return Option[V]::None;
         }
 
-        let mut hash = key.hash();
-        let mut idx = hash.toInt64() & (self.cap - 1i64);
+        var hash = key.hash();
+        var idx = hash.toInt64() & (self.cap - 1i64);
 
         while true {
             if self.isLive(idx) {
@@ -653,8 +653,8 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
     @pub fun remove(key: K): Option[V] {
         self.shrink();
 
-        let mut hash = key.hash();
-        let mut idx = hash.toInt64() & (self.cap - 1i64);
+        var hash = key.hash();
+        var idx = hash.toInt64() & (self.cap - 1i64);
 
         while true {
             if self.isLive(idx) {
@@ -689,7 +689,7 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
             }
         }
 
-        let mut new_capacity = 4i64;
+        var new_capacity = 4i64;
         let old_capacity = self.cap;
 
         if old_capacity > 0i64 {
@@ -727,7 +727,7 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
         new_map.entries = 0i64;
         new_map.cap = new_capacity;
 
-        let mut idx = 0i64;
+        var idx = 0i64;
 
         while idx < old_capacity {
             if self.isLive(idx) {
@@ -939,7 +939,7 @@ impl[T] List[T] {
     }
 
     // not Array::copy as source and target could be aliased
-    let mut i = self.len - 1i64;
+    var i = self.len - 1i64;
     while idx <= i {
       targetArray.set(i + 1i64, self.array.get(i));
       i = i - 1i64;
@@ -994,8 +994,8 @@ impl[T] List[T] {
 
   @pub fun remove(value: T): Unit {
     let len = self.len;
-    let mut destIdx = 0i64;
-    let mut srcIdx = 0i64;
+    var destIdx = 0i64;
+    var srcIdx = 0i64;
 
     while srcIdx < len {
       let current = self.array(srcIdx);
@@ -1017,7 +1017,7 @@ impl[T] List[T] {
   }
 
   @pub fun removeAt(ind: Int64): T {
-    let mut ind = ind;
+    var ind = ind;
     assert(ind < self.len);
     let temp = self.get(ind);
     let len = self.len;
@@ -1035,8 +1035,8 @@ impl[T] List[T] {
 
   @pub fun removeIf(fct: (T): Bool): Unit {
     let len = self.len;
-    let mut destIdx = 0i64;
-    let mut srcIdx = 0i64;
+    var destIdx = 0i64;
+    var srcIdx = 0i64;
 
     while srcIdx < len {
       let current = self.array(srcIdx);
@@ -1058,7 +1058,7 @@ impl[T] List[T] {
   }
 
   @pub fun all(fct: (T): Bool): Bool {
-    let mut idx = 0;
+    var idx = 0;
     while idx < self.len {
       if fct(self.array(idx)).not() {
         return false;
@@ -1069,7 +1069,7 @@ impl[T] List[T] {
   }
 
   @pub fun any(fct: (T): Bool): Bool {
-    let mut idx = 0;
+    var idx = 0;
     while idx < self.len {
       if fct(self.array(idx)) {
         return true;
@@ -1080,7 +1080,7 @@ impl[T] List[T] {
   }
 
   @pub fun each(fct: (T): Unit): Unit {
-    let mut idx = 0;
+    var idx = 0;
     while idx < self.len {
       fct(self.array(idx));
       idx = idx + 1;
@@ -1089,7 +1089,7 @@ impl[T] List[T] {
 
   @pub fun map[U](fct: (T): U): List[U] {
     let result = Array[U]::unsafeNew(self.size());
-    let mut idx = 0;
+    var idx = 0;
     while idx < self.len {
       result.set(idx, fct(self.array(idx)));
       idx = idx + 1;
@@ -1099,7 +1099,7 @@ impl[T] List[T] {
 
   @pub fun retain(fct: (T): Bool): List[T] {
     let result = List[T]::new();
-    let mut idx = 0;
+    var idx = 0;
     while idx < self.len {
       let val = self.array(idx);
       if fct(val) {
@@ -1112,7 +1112,7 @@ impl[T] List[T] {
 
   @pub fun reject(fct: (T): Bool): List[T] {
     let result = List[T]::new();
-    let mut idx = 0;
+    var idx = 0;
     while idx < self.len {
       let val = self.array(idx);
       if fct(val).not() {
@@ -1196,7 +1196,7 @@ impl[T: Equals] List[T] {
     if self.size() != other.size() {
       return false;
     }
-    let mut i = 0i64;
+    var i = 0i64;
     while i < self.size() {
       if self(i).equals(other(i)).not() {
         return false;
@@ -1207,7 +1207,7 @@ impl[T: Equals] List[T] {
   }
 
   @pub fun contains(value: T): Bool {
-    let mut i = 0i64;
+    var i = 0i64;
 
     while i < self.size() {
       let x = self.get(i);
@@ -1221,7 +1221,7 @@ impl[T: Equals] List[T] {
   }
 
   @pub fun removeEquals(elem: T): Unit {
-    let mut i = 0i64;
+    var i = 0i64;
 
     while i < self.size() {
       if self(i).equals(elem) {
@@ -1235,7 +1235,7 @@ impl[T: Equals] List[T] {
 
 impl[T: Identity] List[T] {
   @pub fun has(value: T): Bool {
-    let mut i = 0i64;
+    var i = 0i64;
 
     while i < self.size() {
       if self.get(i).identicalTo(value) {
@@ -1254,7 +1254,7 @@ impl[T: Stringable] List[T] {
     sb.append("List(");
     let size = self.len;
     if size != 0i64 {
-      let mut i = 0i64;
+      var i = 0i64;
       while i < size - 1i64 {
         sb.append(self.array(i).toString());
         sb.append(", ");
