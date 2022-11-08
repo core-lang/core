@@ -1325,85 +1325,17 @@ impl<'a> Parser<'a> {
         Ok(branches)
     }
 
-    fn parse_match(&mut self) -> ExprResult {
-        let start = self.token.span.start();
-        let pos = self.expect_token(TokenKind::Match)?.position;
-
-        let expr = self.parse_expression()?;
-        let mut cases = Vec::new();
-        let mut comma = true;
-
-        self.expect_token(TokenKind::LBrace)?;
-
-        while !self.token.is(TokenKind::RBrace) && !self.token.is_eof() {
-            if !comma {
-                return Err(ParseErrorAndPos::new(
-                    self.token.position,
-                    ParseError::ExpectedToken(TokenKind::Comma.name().into(), self.token.name()),
-                ));
-            }
-
-            let case = self.parse_match_case()?;
-            cases.push(case);
-
-            comma = self.token.is(TokenKind::Comma);
-
-            if comma {
-                self.advance_token()?;
-            }
-        }
-
-        self.expect_token(TokenKind::RBrace)?;
-        let span = self.span_from(start);
-
-        Ok(Box::new(Expr::create_match(
-            self.generate_id(),
-            pos,
-            span,
-            expr,
-            cases,
-        )))
-    }
-
-    fn parse_match_case(&mut self) -> Result<MatchCaseType, ParseErrorAndPos> {
-        let start = self.token.span.start();
-        let pos = self.token.position;
-        let mut patterns = Vec::new();
-        patterns.push(self.parse_match_pattern()?);
-
-        while self.token.is(TokenKind::Or) {
-            self.advance_token()?;
-            patterns.push(self.parse_match_pattern()?);
-        }
-
-        self.expect_token(TokenKind::DoubleArrow)?;
-
-        let value = self.parse_expression()?;
-        let span = self.span_from(start);
-
-        Ok(MatchCaseType {
-            id: self.generate_id(),
-            pos,
-            span,
-            patterns,
-            value,
-        })
-    }
-
-    fn parse_match_pattern(&mut self) -> Result<MatchPattern, ParseErrorAndPos> {
+    fn parse_is_pattern(&mut self) -> Result<IsPattern, ParseErrorAndPos> {
         let start = self.token.span.start();
         let pos = self.token.position;
 
-        let data = if self.token.is(TokenKind::Underscore) {
-            self.expect_token(TokenKind::Underscore)?;
-            MatchPatternData::Underscore
-        } else {
+        let data = {
             let path = self.parse_path()?;
 
             let params = if self.token.is(TokenKind::LParen) {
                 self.expect_token(TokenKind::LParen)?;
                 let params = self.parse_list(TokenKind::Comma, TokenKind::RParen, |this| {
-                    this.parse_match_pattern_param()
+                    this.parse_is_pattern_param()
                 })?;
 
                 Some(params)
@@ -1416,7 +1348,7 @@ impl<'a> Parser<'a> {
 
         let span = self.span_from(start);
 
-        Ok(MatchPattern {
+        Ok(IsPattern {
             id: self.generate_id(),
             pos,
             span,
@@ -1424,7 +1356,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_match_pattern_param(&mut self) -> Result<MatchPatternParam, ParseErrorAndPos> {
+    fn parse_is_pattern_param(&mut self) -> Result<IsPatternParam, ParseErrorAndPos> {
         let start = self.token.span.start();
         let pos = self.token.position;
 
@@ -1438,7 +1370,7 @@ impl<'a> Parser<'a> {
 
         let span = self.span_from(start);
 
-        Ok(MatchPatternParam {
+        Ok(IsPatternParam {
             id: self.generate_id(),
             pos,
             span,
@@ -1506,7 +1438,7 @@ impl<'a> Parser<'a> {
         let result = match self.token.kind {
             TokenKind::LBrace => self.parse_block(),
             TokenKind::If => self.parse_if(),
-            TokenKind::Match => self.parse_match(),
+            TokenKind::Is => panic!("parse_expression IS"),
             _ => self.parse_binary(0),
         };
 
@@ -1532,7 +1464,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::NeEqEq => 4,
                 TokenKind::Add | TokenKind::Sub | TokenKind::Or | TokenKind::Caret => 5,
                 TokenKind::Mul | TokenKind::Div | TokenKind::And => 6,
-                TokenKind::As => 7,
+                TokenKind::Is | TokenKind::As => 7,
                 _ => {
                     return Ok(left);
                 }
@@ -1545,6 +1477,14 @@ impl<'a> Parser<'a> {
             let tok = self.advance_token()?;
 
             left = match tok.kind {
+                TokenKind::Is => {
+                    let span = self.span_from(start);
+                    let pattern = Box::new(self.parse_is_pattern()?);
+                    let expr =
+                        Expr::create_is(self.generate_id(), tok.position, span, left, pattern);
+
+                    Box::new(expr)
+                }
                 TokenKind::As => {
                     let right = Box::new(self.parse_type()?);
                     let span = self.span_from(start);
@@ -3581,6 +3521,15 @@ mod tests {
             .as_ref()
             .unwrap()
             .is_lit_int())
+    }
+
+    #[test]
+    fn parse_if_is_pattern() {
+        let (expr, _) = parse_expr(
+            "if true
+          ... is Ok (_) { 1 }
+          ... is Err(_) { 2 };",
+        );
     }
 
     #[test]

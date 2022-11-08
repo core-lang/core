@@ -1889,178 +1889,142 @@ fn test_enum() {
 }
 
 #[test]
-fn test_enum_match() {
+fn test_enum_if_is() {
     ok("
         enum A { V1, V2 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1 => 0i32,
-                A::V2 => 1i32
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1 { 0i32 }
+          ... is A::V2 { 1i32 };
     ");
 
     err(
         "
         enum A { V1, V2 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1 => 0i32,
-                A::V2 => \"foo\"
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1 { 0i32 }
+          ... is A::V2 { \"foo\" };
     ",
-        pos(6, 26),
-        ErrorMessage::MatchBranchTypesIncompatible("Int32".into(), "String".into()),
+        pos(3, 30),
+        ErrorMessage::IfBranchTypesIncompatible("Int32".into(), "String".into()),
     );
 }
 
 #[test]
-fn test_enum_match_with_parens() {
+fn test_enum_if_is_with_parens() {
     err(
         "
         enum A { V1, V2 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1() => 0i32,
-                A::V2 => 1i32
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1() { 0i32 }
+          ... is A::V2   { 1i32 };
     ",
-        pos(5, 17),
-        ErrorMessage::MatchPatternNoParens,
+        pos(4, 18),
+        ErrorMessage::IsPatternNoParens,
     );
 }
 
 #[test]
-fn test_enum_match_wrong_number_params() {
+fn test_enum_if_is_wrong_number_params() {
     err(
         "
         enum A { V1(Int32), V2 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1 => 0i32,
-                A::V2 => 1i32
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1 { 0i32 }
+          ... is A::V2 { 1i32 };
     ",
-        pos(5, 17),
-        ErrorMessage::MatchPatternWrongNumberOfParams(0, 1),
+        pos(4, 18),
+        ErrorMessage::IsPatternWrongNumberOfParams(0, 1),
     );
 
     err(
         "
         enum A { V1(Int32, Float32, Bool), V2 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1(a, b, c, d) => 0i32,
-                A::V2 => 1i32
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1(a, b, c, d) { 0i32 }
+          ... is A::V2             { 1i32 };
     ",
-        pos(5, 17),
-        ErrorMessage::MatchPatternWrongNumberOfParams(4, 3),
+        pos(4, 18),
+        ErrorMessage::IsPatternWrongNumberOfParams(4, 3),
     );
 }
 
 #[test]
-fn test_enum_match_params() {
+fn test_enum_if_is_params() {
     ok("
         enum A { V1(Int32, Int32, Int32), V2 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1(a, _, c) => a + c,
-                A::V2 => 1i32
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1(a, _, c) { a + c }
+          ... is A::V2          { 1i32 };
     ");
 
     err(
         "
         enum A { V1(Int32, Int32, Int32), V2 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1(a, _, c) => a + c,
-                A::V2 => a
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1(a, _, c) { a + c }
+          ... is A::V2          { a };
     ",
-        pos(6, 26),
+        pos(5, 35),
         ErrorMessage::UnknownIdentifier("a".into()),
     );
 
     err(
         "
         enum A { V1(Int32, Int32), V2 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1(a, a) => a + a,
-                A::V2 => 1i32
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1(a, a) { a + a }
+          ... is A::V2       { 1i32 };
     ",
-        pos(5, 26),
+        pos(4, 27),
         ErrorMessage::VarAlreadyInPattern,
     );
 }
 
-#[test]
-fn test_enum_match_missing_variants() {
+//#[test]
+fn test_enum_if_is_missing_variants() {
     err(
         "
         enum A { V1(Int32, Int32, Int32), V2, V3 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1(a, _, c) => a + c,
-                A::V2 => 1i32,
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1(a, _, c) { a + c }
+          ... is A::V2          { 1i32  };
     ",
         pos(4, 13),
-        ErrorMessage::MatchUncoveredVariant,
+        ErrorMessage::UncoveredIsPatternVariant,
     );
 
     err(
         "
         enum A { V1(Int32, Int32, Int32), V2, V3 }
-        fun f(x: A): Int32 {
-            match x {
-                A::V1(a, _, c) => a + c,
-                A::V2 => 1i32,
-                A::V3 => 2i32,
-                A::V2 => 4i32,
-            }
-        }
+        fun f(x: A): Int32 = if x
+          ... is A::V1(a, _, c) { a + c }
+          ... is A::V2          { 1i32 }
+          ... is A::V3          { 2i32 }
+          ... is A::V2          { 4i32 };
     ",
         pos(8, 17),
-        ErrorMessage::MatchUnreachablePattern,
+        ErrorMessage::UnreachableIsPattern,
     );
 }
 
-#[test]
-fn test_enum_match_underscore() {
+//#[test]
+fn test_enum_if_is_underscore() {
     ok("
         enum A { V1, V2, V3 }
-        fun f(x: A): Bool {
-            match x {
-                A::V1 => true,
-                _ => false,
-            }
-        }
+        fun f(x: A): Bool = if x
+          ... is A::V1 { true }
+          else         { false };
     ");
 
     err(
         "
         enum A { V1, V2, V3 }
-        fun f(x: A): Bool {
-            match x {
-                _ => false,
-                A::V1 => true,
-            }
-        }
+        fun f(x: A): Bool = if x
+          ... is A::V1 { true };
+          ... is A::V1 { true };
     ",
         pos(6, 17),
-        ErrorMessage::MatchUnreachablePattern,
+        ErrorMessage::UnreachableIsPattern,
     );
 }
 
@@ -2068,19 +2032,15 @@ fn test_enum_match_underscore() {
 fn test_enum_equals() {
     ok("
         enum A { V1, V2 }
-        fun f(x: A, y: A): Bool {
-            x == y
-        }
+        fun f(x: A, y: A): Bool = x == y;
     ");
 
     err(
         "
         enum A { V1(Int32), V2 }
-        fun f(x: A, y: A): Bool {
-            x == y
-        }
+        fun f(x: A, y: A): Bool = x == y;
     ",
-        pos(4, 15),
+        pos(3, 37),
         ErrorMessage::BinOpType("==".into(), "A".into(), "A".into()),
     );
 }

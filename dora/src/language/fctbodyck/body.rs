@@ -8,7 +8,6 @@ use option_ext::OptionExt;
 
 use dora_parser::ast;
 use dora_parser::ast::visit::Visitor;
-use dora_parser::ast::Expr;
 use dora_parser::interner::Name;
 use dora_parser::lexer::position::Position;
 use dora_parser::lexer::token::{FloatSuffix, IntBase, IntSuffix};
@@ -636,12 +635,8 @@ impl<'a> TypeCheck<'a> {
         ty
     }
 
-    fn check_expr_match(
-        &mut self,
-        node: &ast::ExprMatchType,
-        expected_ty: SourceType,
-    ) -> SourceType {
-        let expr_type = self.check_expr(&node.expr, SourceType::Any);
+    fn check_expr_is(&mut self, node: &ast::ExprIsType, _expected_ty: SourceType) -> SourceType {
+        let expr_type = self.check_expr(&node.value, SourceType::Any);
         let mut result_type = SourceType::Error;
 
         if !expr_type.is_enum() {
@@ -663,25 +658,8 @@ impl<'a> TypeCheck<'a> {
 
         let mut used_variants = FixedBitSet::with_capacity(enum_variants);
 
-        for case in &node.cases {
-            self.symtable.push_level();
-
-            debug_assert_eq!(case.patterns.len(), 1);
-            let pattern = case.patterns.first().expect("no pattern");
-
-            match pattern.data {
-                ast::MatchPatternData::Underscore => {
-                    let mut negated_used_variants = used_variants.clone();
-                    negated_used_variants.toggle_range(..);
-
-                    if negated_used_variants.count_ones(..) == 0 {
-                        let msg = ErrorMessage::MatchUnreachablePattern;
-                        self.sa.diag.lock().report(self.file_id, case.pos, msg);
-                    }
-
-                    used_variants.insert_range(..);
-                }
-
+        for case in vec![&node.pattern] {
+            match case.data {
                 ast::MatchPatternData::Ident(ref ident) => {
                     let sym = self.read_path(&ident.path);
 
@@ -691,13 +669,13 @@ impl<'a> TypeCheck<'a> {
                         Ok(Sym::EnumVariant(enum_id, variant_idx)) => {
                             if Some(enum_id) == expr_enum_id {
                                 if used_variants.contains(variant_idx) {
-                                    let msg = ErrorMessage::MatchUnreachablePattern;
+                                    let msg = ErrorMessage::UnreachableIsPattern;
                                     self.sa.diag.lock().report(self.file_id, case.pos, msg);
                                 }
 
                                 used_variants.insert(variant_idx);
                                 self.analysis.map_idents.insert(
-                                    pattern.id,
+                                    case.id,
                                     IdentType::EnumValue(
                                         enum_id,
                                         expr_type_params.clone(),
@@ -716,14 +694,14 @@ impl<'a> TypeCheck<'a> {
                                 };
 
                                 if given_params == 0 && ident.params.is_some() {
-                                    let msg = ErrorMessage::MatchPatternNoParens;
+                                    let msg = ErrorMessage::IsPatternNoParens;
                                     self.sa.diag.lock().report(self.file_id, case.pos, msg);
                                 }
 
                                 let expected_params = variant.types.len();
 
                                 if given_params != expected_params {
-                                    let msg = ErrorMessage::MatchPatternWrongNumberOfParams(
+                                    let msg = ErrorMessage::IsPatternWrongNumberOfParams(
                                         given_params,
                                         expected_params,
                                     );
@@ -779,6 +757,7 @@ impl<'a> TypeCheck<'a> {
                 }
             }
 
+            /*
             let case_ty = self.check_expr(&case.value, expected_ty.clone());
 
             if result_type.is_error() {
@@ -795,16 +774,17 @@ impl<'a> TypeCheck<'a> {
                     .lock()
                     .report(self.file_id, case.value.pos(), msg);
             }
+            */
 
-            self.symtable.pop_level();
+            //self.symtable.pop_level();
         }
 
         used_variants.toggle_range(..);
 
-        if used_variants.count_ones(..) != 0 {
+        /*if used_variants.count_ones(..) != 0 {
             let msg = ErrorMessage::MatchUncoveredVariant;
             self.sa.diag.lock().report(self.file_id, node.pos, msg);
-        }
+        }*/
 
         self.analysis.set_ty(node.id, result_type.clone());
 
@@ -817,6 +797,8 @@ impl<'a> TypeCheck<'a> {
         let mut branch_types = Vec::new();
         let mut require_cond_head_is_bool = false;
         for branch in &expr.branches {
+            self.symtable.push_level();
+
             if branch.cond_tail.is_some() {
                 let cond_tail = branch.cond_tail.as_ref().unwrap();
                 let cond_tail_type = self.check_expr(&cond_tail, expected_ty.clone());
@@ -830,6 +812,7 @@ impl<'a> TypeCheck<'a> {
                 self.check_expr(&branch.then_block, SourceType::Any),
                 expr_always_returns(&branch.then_block),
             ));
+            self.symtable.pop_level();
         }
         if require_cond_head_is_bool {
             let cond_expr = let_stmt.expr.as_ref().unwrap();
@@ -853,7 +836,15 @@ impl<'a> TypeCheck<'a> {
                 })
                 .0
         } else {
-            SourceType::Unit
+            branch_types
+                .iter()
+                .fold((SourceType::Error, true), |t1, t2| {
+                    (
+                        self.merge_branch_types(expr, t1.0, t1.1, t2.clone().0, t2.1),
+                        false,
+                    )
+                })
+                .0
         };
 
         self.analysis.set_ty(expr.id, merged_type.clone());
@@ -861,7 +852,7 @@ impl<'a> TypeCheck<'a> {
         merged_type
     }
 
-    fn check_if_condition_is_bool(&mut self, cond_type: SourceType, cond: &Box<Expr>) {
+    fn check_if_condition_is_bool(&mut self, cond_type: SourceType, cond: &Box<ast::Expr>) {
         if !cond_type.is_bool() && !cond_type.is_error() {
             let expr_type = cond_type.name_fct(self.sa, self.fct);
             let msg = ErrorMessage::IfCondType(expr_type);
@@ -3394,7 +3385,7 @@ impl<'a> TypeCheck<'a> {
             ast::Expr::If(ref expr) => self.check_expr_if(expr, expected_ty),
             ast::Expr::Tuple(ref expr) => self.check_expr_tuple(expr, expected_ty),
             ast::Expr::Paren(ref expr) => self.check_expr_paren(expr, expected_ty),
-            ast::Expr::Match(ref expr) => self.check_expr_match(expr, expected_ty),
+            ast::Expr::Is(ref expr) => self.check_expr_is(expr, expected_ty),
         }
     }
 }

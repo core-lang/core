@@ -1180,7 +1180,7 @@ pub enum Expr {
     If(ExprIfType),
     Tuple(ExprTupleType),
     Paren(ExprParenType),
-    Match(ExprMatchType),
+    Is(ExprIsType),
 }
 
 impl Expr {
@@ -1220,19 +1220,19 @@ impl Expr {
         })
     }
 
-    pub fn create_match(
+    pub fn create_is(
         id: NodeId,
         pos: Position,
         span: Span,
-        expr: Box<Expr>,
-        cases: Vec<MatchCaseType>,
+        value: Box<Expr>,
+        pattern: Box<IsPattern>,
     ) -> Expr {
-        Expr::Match(ExprMatchType {
+        Expr::Is(ExprIsType {
             id,
             pos,
             span,
-            expr,
-            cases,
+            value,
+            pattern,
         })
     }
 
@@ -1755,7 +1755,7 @@ impl Expr {
         match self {
             &Expr::Block(_) => false,
             &Expr::If(_) => false,
-            &Expr::Match(_) => false,
+            &Expr::Is(_) => false,
             _ => true,
         }
     }
@@ -1782,7 +1782,7 @@ impl Expr {
             Expr::If(ref val) => val.pos,
             Expr::Tuple(ref val) => val.pos,
             Expr::Paren(ref val) => val.pos,
-            Expr::Match(ref val) => val.pos,
+            Expr::Is(ref val) => val.pos,
         }
     }
 
@@ -1808,7 +1808,7 @@ impl Expr {
             Expr::If(ref val) => val.span,
             Expr::Tuple(ref val) => val.span,
             Expr::Paren(ref val) => val.span,
-            Expr::Match(ref val) => val.span,
+            Expr::Is(ref val) => val.span,
         }
     }
 
@@ -1834,7 +1834,7 @@ impl Expr {
             Expr::If(ref val) => val.id,
             Expr::Tuple(ref val) => val.id,
             Expr::Paren(ref val) => val.id,
-            Expr::Match(ref val) => val.id,
+            Expr::Is(ref val) => val.id,
         }
     }
 }
@@ -2025,27 +2025,17 @@ pub struct ExprParenType {
 }
 
 #[derive(Clone, Debug)]
-pub struct ExprMatchType {
+pub struct ExprIsType {
     pub id: NodeId,
     pub pos: Position,
     pub span: Span,
 
-    pub expr: Box<Expr>,
-    pub cases: Vec<MatchCaseType>,
-}
-
-#[derive(Clone, Debug)]
-pub struct MatchCaseType {
-    pub id: NodeId,
-    pub pos: Position,
-    pub span: Span,
-
-    pub patterns: Vec<MatchPattern>,
     pub value: Box<Expr>,
+    pub pattern: Box<IsPattern>,
 }
 
 #[derive(Clone, Debug)]
-pub struct MatchPattern {
+pub struct IsPattern {
     pub id: NodeId,
     pub pos: Position,
     pub span: Span,
@@ -2054,18 +2044,17 @@ pub struct MatchPattern {
 
 #[derive(Clone, Debug)]
 pub enum MatchPatternData {
-    Underscore,
     Ident(MatchPatternIdent),
 }
 
 #[derive(Clone, Debug)]
 pub struct MatchPatternIdent {
     pub path: Path,
-    pub params: Option<Vec<MatchPatternParam>>,
+    pub params: Option<Vec<IsPatternParam>>,
 }
 
 #[derive(Clone, Debug)]
-pub struct MatchPatternParam {
+pub struct IsPatternParam {
     pub id: NodeId,
     pub pos: Position,
     pub span: Span,

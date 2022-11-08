@@ -638,7 +638,7 @@ impl<'a> AstBytecodeGen<'a> {
             ast::Expr::Conv(ref conv) => self.visit_expr_conv(conv, dest),
             ast::Expr::Tuple(ref tuple) => self.visit_expr_tuple(tuple, dest),
             ast::Expr::Paren(ref paren) => self.visit_expr(&paren.expr, dest),
-            ast::Expr::Match(ref expr) => self.visit_expr_match(expr, dest),
+            ast::Expr::Is(ref expr) => self.visit_expr_is(expr, dest),
             ast::Expr::Lambda(ref node) => self.visit_expr_lambda(node, dest),
         }
     }
@@ -810,9 +810,9 @@ impl<'a> AstBytecodeGen<'a> {
         dest
     }
 
-    fn visit_expr_match(&mut self, node: &ast::ExprMatchType, dest: DataDest) -> Register {
+    fn visit_expr_is(&mut self, node: &ast::ExprIsType, dest: DataDest) -> Register {
         let result_ty = self.ty(node.id);
-        let enum_ty = self.ty(node.expr.id());
+        let enum_ty = self.ty(node.value.id());
         let enum_id = enum_ty.enum_id().expect("enum expected");
 
         let dest = if result_ty.is_unit() {
@@ -825,7 +825,7 @@ impl<'a> AstBytecodeGen<'a> {
 
         let end_lbl = self.builder.create_label();
 
-        let expr_reg = self.visit_expr(&node.expr, DataDest::Alloc);
+        let expr_reg = self.visit_expr(&node.value, DataDest::Alloc);
 
         let variant_reg = self.alloc_temp(BytecodeType::Int32);
         let idx = self.builder.add_const_enum(enum_id, enum_ty.type_params());
@@ -834,9 +834,10 @@ impl<'a> AstBytecodeGen<'a> {
 
         let mut next_lbl = self.builder.create_label();
 
-        for (idx, case) in node.cases.iter().enumerate() {
-            debug_assert_eq!(case.patterns.len(), 1);
-            let pattern = case.patterns.first().expect("pattern missing");
+        /*
+        for (idx, case) in vec![node.right].iter().enumerate() {
+            //debug_assert_eq!(case.patterns.len(), 1);
+            let pattern = case; //.patterns.first().expect("pattern missing");
             match pattern.data {
                 ast::MatchPatternData::Underscore => {
                     self.builder.bind_label(next_lbl);
@@ -865,7 +866,7 @@ impl<'a> AstBytecodeGen<'a> {
                     self.builder.bind_label(next_lbl);
                     next_lbl = self.builder.create_label();
 
-                    if idx != node.cases.len() - 1 {
+                    if idx != node.right.len() - 1 {
                         let tmp_reg = self.alloc_temp(BytecodeType::Int32);
                         let cmp_reg = self.alloc_temp(BytecodeType::Bool);
                         self.builder.emit_const_int32(tmp_reg, variant_idx);
@@ -916,6 +917,7 @@ impl<'a> AstBytecodeGen<'a> {
                 }
             }
         }
+        */
 
         self.builder.bind_label(end_lbl);
         self.free_temp(variant_reg);

@@ -338,8 +338,8 @@ pub fn walk_expr<V: Visitor>(v: &mut V, e: &Expr) {
             v.visit_expr(&value.expr);
         }
 
-        Expr::Match(ref value) => {
-            v.visit_expr(&value.expr);
+        Expr::Is(ref value) => {
+            v.visit_expr(&value.value);
         }
 
         Expr::This(_) => {}

@@ -470,7 +470,7 @@ impl<'a> AstDumper<'a> {
             Expr::If(ref expr) => self.dump_expr_if(expr),
             Expr::Tuple(ref expr) => self.dump_expr_tuple(expr),
             Expr::Paren(ref expr) => self.dump_expr_paren(expr),
-            Expr::Match(ref expr) => self.dump_expr_match(expr),
+            Expr::Is(ref expr) => self.dump_expr_is(expr),
         }
     }
 
@@ -505,15 +505,16 @@ impl<'a> AstDumper<'a> {
         dump!(self, "if @ {} {}", expr.pos, expr.id);
 
         self.indent(|d| {
-            d.indent(|d| {
-                d.dump_expr(&expr.cond_head.expr.as_ref().unwrap());
-            });
+            d.dump_expr(&expr.cond_head.expr.as_ref().unwrap());
             for branch in &expr.branches {
-                dump!(d, "then");
                 d.indent(|d| {
                     if let Some(cond_tail) = &branch.cond_tail {
                         d.dump_expr(cond_tail);
                     }
+                    dump!(d, "then");
+                    d.indent(|d| {
+                        d.dump_expr(&branch.then_block);
+                    });
                 });
             }
             if let Some(else_block) = &expr.else_block {
@@ -646,11 +647,12 @@ impl<'a> AstDumper<'a> {
         });
     }
 
-    fn dump_expr_match(&mut self, expr: &ExprMatchType) {
-        dump!(self, "match @ {} {}", expr.pos, expr.id);
+    fn dump_expr_is(&mut self, expr: &ExprIsType) {
+        dump!(self, "is @ {} {}", expr.pos, expr.id);
         self.indent(|d| {
-            d.dump_expr(&expr.expr);
+            d.dump_expr(&expr.value);
         });
+        dump!(self, "  <PATTERN>");
     }
 
     fn dump_expr_type_param(&mut self, expr: &ExprTypeParamType) {

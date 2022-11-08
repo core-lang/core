@@ -1,13 +1,10 @@
 enum Foo { A(Int32, ()), B }
 
 fun main(): Unit {
-    assert(value(Foo::A(2i32, ())) == 2i32);
-    assert(value(Foo::B) == 0i32);
+  assert(value(Foo::A(2i32, ())) == 2i32);
+  assert(value(Foo::B) == 0i32);
 }
 
-fun value(foo: Foo): Int32 {
-    match foo {
-        Foo::A(a, b) => a,
-        Foo::B => 0
-    }
-}
+fun value(foo: Foo): Int32 = if foo
+  ... Foo::A(a, b) { a }
+  ... Foo::B { 0 };

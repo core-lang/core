@@ -44,12 +44,12 @@ pub enum ErrorMessage {
     EnumArgsIncompatible(String, String, Vec<String>, Vec<String>),
     StructArgsIncompatible(String, Vec<String>, Vec<String>),
     EnumArgsNoParens(String, String),
-    MatchPatternNoParens,
-    MatchPatternWrongNumberOfParams(usize, usize),
+    IsPatternNoParens,
+    IsPatternWrongNumberOfParams(usize, usize),
     EnumExpected,
     EnumVariantExpected,
-    MatchUncoveredVariant,
-    MatchUnreachablePattern,
+    UncoveredIsPatternVariant,
+    UnreachableIsPattern,
     VarNeedsTypeInfo(String),
     ParamTypesIncompatible(String, Vec<String>, Vec<String>),
     ArgumentNameMismatch(String, Vec<String>, Vec<String>),
@@ -154,7 +154,6 @@ pub enum ErrorMessage {
     InvalidUseOfTypeParams,
     NameOfStaticMethodExpected,
     IfBranchTypesIncompatible(String, String),
-    MatchBranchTypesIncompatible(String, String),
     VarAlreadyInPattern,
     NameExpected,
     IndexExpected,
@@ -286,8 +285,8 @@ impl ErrorMessage {
             ErrorMessage::EnumArgsNoParens(ref name, ref variant) => {
                 format!("{}::{} needs to be used without parens.", name, variant)
             }
-            ErrorMessage::MatchPatternNoParens => "pattern should be used without parens.".into(),
-            ErrorMessage::MatchPatternWrongNumberOfParams(given_params, expected_params) => {
+            ErrorMessage::IsPatternNoParens => "pattern should be used without parens.".into(),
+            ErrorMessage::IsPatternWrongNumberOfParams(given_params, expected_params) => {
                 format!(
                     "pattern expects {} params but got {}.",
                     given_params, expected_params
@@ -296,8 +295,10 @@ impl ErrorMessage {
             ErrorMessage::VarAlreadyInPattern => "var is already used in pattern.".into(),
             ErrorMessage::EnumExpected => format!("enum expected."),
             ErrorMessage::EnumVariantExpected => format!("enum variant expected."),
-            ErrorMessage::MatchUncoveredVariant => "not all variants are covered.".into(),
-            ErrorMessage::MatchUnreachablePattern => "not all variants are covered.".into(),
+            ErrorMessage::UncoveredIsPatternVariant => {
+                "not all variants are covered by is patterns.".into()
+            }
+            ErrorMessage::UnreachableIsPattern => "is pattern is unreachable.".into(),
             ErrorMessage::VarNeedsTypeInfo(ref name) => format!(
                 "variable `{}` needs either type declaration or expression.",
                 name
@@ -580,10 +581,6 @@ impl ErrorMessage {
             ErrorMessage::IfBranchTypesIncompatible(ref then_block, ref else_block) => format!(
                 "if-branches have incompatible types `{}` and `{}`.",
                 then_block, else_block
-            ),
-            ErrorMessage::MatchBranchTypesIncompatible(ref expected_ty, ref value_ty) => format!(
-                "match arms have incompatible types `{}` and `{}`.",
-                expected_ty, value_ty
             ),
             ErrorMessage::NameExpected => "name expected for dot-operator.".into(),
             ErrorMessage::IndexExpected => "index expected as right-hand-side for tuple.".into(),
