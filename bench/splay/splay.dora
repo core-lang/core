@@ -300,7 +300,8 @@ impl SplayTree {
 
         var continue = true;
         while continue {
-            if key < current.key {
+            if key
+            ... < current.key {
                 if current.left.isNone() {
                     continue = false;
                 } else if key < current.left.getOrPanic().key {
@@ -320,7 +321,8 @@ impl SplayTree {
                     right = current;
                     current = current.left.getOrPanic();
                 }
-            } else if key > current.key {
+            }
+            ... > current.key {
                 if current.right.isNone() {
                     continue = false;
                 }
@@ -344,9 +346,8 @@ impl SplayTree {
                         current = current.right.getOrPanic();
                     }
                 }
-            } else {
-                continue = false;
             }
+            else { continue = false; }
         }
 
         // Assemble
