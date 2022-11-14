@@ -1937,12 +1937,11 @@ fn test_enum_match_wrong_number_params() {
     err(
         "
         enum A { V1(Int32), V2 }
-        fun f(x: A): Int32 {
+        fun f(x: A): Int32 =
             match x {
                 A::V1 => 0i32,
                 A::V2 => 1i32
-            }
-        }
+            };
     ",
         pos(5, 17),
         ErrorMessage::MatchPatternWrongNumberOfParams(0, 1),
@@ -1951,12 +1950,11 @@ fn test_enum_match_wrong_number_params() {
     err(
         "
         enum A { V1(Int32, Float32, Bool), V2 }
-        fun f(x: A): Int32 {
+        fun f(x: A): Int32 =
             match x {
                 A::V1(a, b, c, d) => 0i32,
                 A::V2 => 1i32
-            }
-        }
+            };
     ",
         pos(5, 17),
         ErrorMessage::MatchPatternWrongNumberOfParams(4, 3),
@@ -1967,23 +1965,21 @@ fn test_enum_match_wrong_number_params() {
 fn test_enum_match_params() {
     ok("
         enum A { V1(Int32, Int32, Int32), V2 }
-        fun f(x: A): Int32 {
+        fun f(x: A): Int32 =
             match x {
                 A::V1(a, _, c) => a + c,
-                A::V2 => 1i32
-            }
-        }
+                A::V2 => 1i32,
+            };
     ");
 
     err(
         "
         enum A { V1(Int32, Int32, Int32), V2 }
-        fun f(x: A): Int32 {
+        fun f(x: A): Int32 =
             match x {
                 A::V1(a, _, c) => a + c,
-                A::V2 => a
-            }
-        }
+                A::V2 => a,
+            };
     ",
         pos(6, 26),
         ErrorMessage::UnknownIdentifier("a".into()),
@@ -1992,12 +1988,11 @@ fn test_enum_match_params() {
     err(
         "
         enum A { V1(Int32, Int32), V2 }
-        fun f(x: A): Int32 {
+        fun f(x: A): Int32 =
             match x {
                 A::V1(a, a) => a + a,
-                A::V2 => 1i32
-            }
-        }
+                A::V2 => 1i32,
+            };
     ",
         pos(5, 26),
         ErrorMessage::VarAlreadyInPattern,
@@ -2009,12 +2004,11 @@ fn test_enum_match_missing_variants() {
     err(
         "
         enum A { V1(Int32, Int32, Int32), V2, V3 }
-        fun f(x: A): Int32 {
+        fun f(x: A): Int32 =
             match x {
                 A::V1(a, _, c) => a + c,
                 A::V2 => 1i32,
-            }
-        }
+            };
     ",
         pos(4, 13),
         ErrorMessage::MatchUncoveredVariant,
@@ -2023,14 +2017,13 @@ fn test_enum_match_missing_variants() {
     err(
         "
         enum A { V1(Int32, Int32, Int32), V2, V3 }
-        fun f(x: A): Int32 {
+        fun f(x: A): Int32 =
             match x {
                 A::V1(a, _, c) => a + c,
                 A::V2 => 1i32,
                 A::V3 => 2i32,
                 A::V2 => 4i32,
-            }
-        }
+            };
     ",
         pos(8, 17),
         ErrorMessage::MatchUnreachablePattern,
@@ -2041,23 +2034,21 @@ fn test_enum_match_missing_variants() {
 fn test_enum_match_underscore() {
     ok("
         enum A { V1, V2, V3 }
-        fun f(x: A): Bool {
+        fun f(x: A): Bool =
             match x {
                 A::V1 => true,
                 _ => false,
-            }
-        }
+            };
     ");
 
     err(
         "
         enum A { V1, V2, V3 }
-        fun f(x: A): Bool {
+        fun f(x: A): Bool =
             match x {
                 _ => false,
                 A::V1 => true,
-            }
-        }
+            };
     ",
         pos(6, 17),
         ErrorMessage::MatchUnreachablePattern,
@@ -2068,19 +2059,15 @@ fn test_enum_match_underscore() {
 fn test_enum_equals() {
     ok("
         enum A { V1, V2 }
-        fun f(x: A, y: A): Bool {
-            x == y
-        }
+        fun f(x: A, y: A): Bool = x == y;
     ");
 
     err(
         "
         enum A { V1(Int32), V2 }
-        fun f(x: A, y: A): Bool {
-            x == y
-        }
+        fun f(x: A, y: A): Bool = x == y;
     ",
-        pos(4, 15),
+        pos(3, 37),
         ErrorMessage::BinOpType("==".into(), "A".into(), "A".into()),
     );
 }
@@ -2561,13 +2548,9 @@ fn impl_struct_with_method_overload() {
     ok("
         struct Foo(value: Int32)
         impl Foo {
-            fun plus(other: Foo): Foo {
-                Foo(self.value + other.value)
-            }
+            fun plus(other: Foo): Foo = Foo(self.value + other.value);
         }
-        fun f(a: Foo, b: Foo): Foo {
-            a + b
-        }
+        fun f(a: Foo, b: Foo): Foo = a + b;
     ");
 }
 
@@ -2685,7 +2668,7 @@ fn for_with_array() {
         for i in x {
             result = result + i;
         }
-        result
+        return result;
     }");
 
     ok("fun f(x: Array[Float32]): Float32 {
@@ -2693,7 +2676,7 @@ fn for_with_array() {
         for i in x {
             result = result + i;
         }
-        result
+        return result;
     }");
 }
 
@@ -2704,7 +2687,7 @@ fn for_with_list() {
         for i in x.iterator() {
             result = result + i;
         }
-        result
+        return result;
     }");
 
     ok("fun f(x: List[Int32]): Int32 {
@@ -2712,7 +2695,7 @@ fn for_with_list() {
         for i in x {
             result = result + i;
         }
-        result
+        return result;
     }");
 
     ok("fun f(x: List[Float32]): Float32 {
@@ -2720,7 +2703,7 @@ fn for_with_list() {
         for i in x.iteratorReverse() {
             result = result + i;
         }
-        result
+        return result;
     }");
 
     ok("fun f(x: List[Float32]): Float32 {
@@ -2728,7 +2711,7 @@ fn for_with_list() {
         for i in x {
             result = result + i;
         }
-        result
+        return result;
     }");
 }
 
@@ -3184,7 +3167,7 @@ fn mod_class_new() {
 
     err(
         "
-        fun f(): Unit { foo::Foo(1i32); }
+        fun f(): Unit = foo::Foo(1i32);
         mod foo {
             class Foo(f: Int32)
         }
@@ -3195,7 +3178,7 @@ fn mod_class_new() {
 
     err(
         "
-        fun f(): Unit { foo::Foo(1i32); }
+        fun f(): Unit = foo::Foo(1i32);
         mod foo {
             class Foo(@pub f: Int32)
         }
@@ -3206,7 +3189,7 @@ fn mod_class_new() {
 
     err(
         "
-        fun f(): Unit { foo::Foo(1i32); }
+        fun f(): Unit = foo::Foo(1i32);
         mod foo {
             @pub class Foo(f: Int32)
         }
@@ -3608,28 +3591,26 @@ fn trait_object_cast() {
         trait Foo { fun bar(): Int32; }
         class Bar
         impl Foo for Bar {
-            fun bar(): Int32 { 1i32 }
+            fun bar(): Int32 = 1i32;
         }
-        fun f(x: Foo): Int32 { x.bar() }
-        fun g(): Int32 {
-            f(Bar() as Foo)
-        }
+        fun f(x: Foo): Int32 = x.bar();
+        fun g(): Int32 = f(Bar() as Foo);
     ");
 
     ok("
         trait Foo { fun bar(): Int32; }
         class Bar
         impl Foo for Bar {
-            fun bar(): Int32 { 1i32 }
+            fun bar(): Int32 = 1i32;
         }
-        fun f(): Foo { Bar() as Foo }
+        fun f(): Foo = Bar() as Foo;
     ");
 
     ok("
         trait Foo { fun bar(): Int32; }
         fun f(x: Foo): Foo {
             let y = x;
-            y
+            return y;
         }
     ");
 
@@ -3638,20 +3619,16 @@ fn trait_object_cast() {
         trait Foo { fun bar(): Int32; }
         class Bar
         fun f(x: Foo): Unit {}
-        fun g(): Unit {
-            f(Bar() as Foo)
-        }
+        fun g(): Unit { f(Bar() as Foo) }
     ",
-        pos(6, 21),
+        pos(5, 33),
         ErrorMessage::TypeNotImplementingTrait("Bar".into(), "Foo".into()),
     );
 }
 
 #[test]
 fn infer_enum_type() {
-    ok("fun f(): Option[Int32] {
-        None
-    }");
+    ok("fun f(): Option[Int32] = None;");
 
     ok("
         class X {
@@ -3670,9 +3647,7 @@ fn infer_enum_type() {
         var y: Option[Int32] = Some(10i32); y = None;
     }");
 
-    ok("fun f(): Option[Int32] {
-        Some(10i32)
-    }");
+    ok("fun f(): Option[Int32] = Some(10i32);");
 }
 
 #[test]
@@ -3683,34 +3658,26 @@ fn method_call_type_mismatch_with_type_params() {
         impl Foo {
             fun f(a: String): Unit {}
         }
-        fun g[T](foo: Foo, value: T): Unit {
-            foo.f(value);
-        }
+        fun g[T](foo: Foo, value: T): Unit = foo.f(value);
     ",
-        pos(7, 18),
+        pos(6, 51),
         ErrorMessage::ParamTypesIncompatible("f".into(), vec!["String".into()], vec!["T".into()]),
     );
 }
 
 #[test]
 fn basic_lambda() {
-    ok("fun f(foo: (Int32): Int32): Int32 {
-        foo(1i32)
-    }");
+    ok("fun f(foo: (Int32): Int32): Int32 = foo(1i32);");
 
     err(
-        "fun f(foo: (Int32): Int32): Bool {
-        foo(1i32)
-    }",
-        pos(1, 34),
+        "fun f(foo: (Int32): Int32): Bool = foo(1i32);",
+        pos(1, 39),
         ErrorMessage::ReturnType("Bool".into(), "Int32".into()),
     );
 
     err(
-        "fun f(foo: (Int32, Int32): Int32): Int32 {
-        foo(1i32)
-    }",
-        pos(2, 12),
+        "fun f(foo: (Int32, Int32): Int32): Int32 = foo(1i32);",
+        pos(1, 47),
         ErrorMessage::LambdaParamTypesIncompatible(
             vec!["Int32".into(), "Int32".into()],
             vec!["Int32".into()],

@@ -430,9 +430,7 @@ mod tests {
         ok("
             struct Foo { f1: Int32, f2: Int32 }
             impl Foo {
-                fun sum(): Int32 {
-                    self.f1 + self.f2
-                }
+                fun sum(): Int32 = self.f1 + self.f2;
             }
             fun test(x: Foo): Int32 { x.sum() }
         ");
@@ -444,9 +442,7 @@ mod tests {
             struct Foo[T](value: T)
             trait MyTrait { fun bar(): Int32; }
             impl[X: MyTrait] Foo[X] {
-                fun getmyhash(): Int32 {
-                    self.value.bar()
-                }
+                fun getmyhash(): Int32 = self.value.bar();
             }
         ");
     }
