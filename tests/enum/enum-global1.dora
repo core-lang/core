@@ -8,7 +8,7 @@ fun main(): Unit {
     match foo_value {
         Foo::A(_, _, _) => unreachable[()](),
         Foo::B => (),
-    }
+    };
 
     foo_value = Foo::A(112i32, "abc", 17.5f32);
     std::forceCollect();

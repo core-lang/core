@@ -445,7 +445,7 @@ impl ErrorMessage {
                 )
             }
             ErrorMessage::ExpectedTopLevelElement(ref token) => {
-                format!("expected function or class but got {}.", token)
+                format!("expected a top-level element (`class`, `struct`, `trait`, `impl`, `enum`, `fun`, `let` or `var`), but got {}.", token)
             }
             ErrorMessage::ExpectedClassElement(ref token) => {
                 format!("field or method expected but got {}.", token)

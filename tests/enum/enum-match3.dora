@@ -9,13 +9,13 @@ fun main(): Unit {
 fun value1(x: Option[Int32]): Int32 {
     match x {
         Some(a) => a,
-        None => 0i32
+        None => 0i32,
     }
 }
 
 fun value2(x: Option[Int32]): Int32 {
     match x {
         None => 0i32,
-        Some(a) => a
+        Some(a) => a,
     }
 }

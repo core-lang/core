@@ -14,6 +14,7 @@ use crate::lexer::*;
 
 pub struct Parser<'a> {
     lexer: Lexer,
+    token_previous: Token,
     token: Token,
     id_generator: NodeIdGenerator,
     interner: &'a mut Interner,
@@ -48,7 +49,8 @@ impl<'a> Parser<'a> {
 
         let parser = Parser {
             lexer,
-            token,
+            token_previous: token.clone(),
+            token: token,
             id_generator: NodeIdGenerator::new(),
             interner,
             param_idx: 0,
@@ -83,6 +85,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_top_level_element(&mut self) -> Result<Elem, ParseErrorAndPos> {
+        self.skip_semicolon_and_newline();
         let modifiers = self.parse_annotation_usages()?;
 
         match self.token.kind {
@@ -103,65 +106,76 @@ impl<'a> Parser<'a> {
             TokenKind::Class => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Internal, Modifier::Pub])?;
                 let class = self.parse_class(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Class(Arc::new(class)))
             }
 
             TokenKind::Struct => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub, Modifier::Internal])?;
                 let struc = self.parse_struct(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Struct(Arc::new(struc)))
             }
 
             TokenKind::Trait => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub])?;
                 let trait_ = self.parse_trait(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Trait(Arc::new(trait_)))
             }
 
             TokenKind::Impl => {
                 self.ban_modifiers(&modifiers)?;
                 let impl_ = self.parse_impl()?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Impl(Arc::new(impl_)))
             }
 
             TokenKind::Annotation => {
                 let annotation = self.parse_annotation(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Annotation(Arc::new(annotation)))
             }
 
             TokenKind::Alias => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub])?;
                 let alias = self.parse_alias(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Alias(Arc::new(alias)))
             }
 
             TokenKind::Let | TokenKind::Var => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub])?;
                 let global = self.parse_global(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Global(Arc::new(global)))
             }
 
             TokenKind::Const => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub])?;
                 let const_ = self.parse_const(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Const(Arc::new(const_)))
             }
 
             TokenKind::Enum => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub])?;
                 let enum_ = self.parse_enum(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Enum(Arc::new(enum_)))
             }
 
             TokenKind::Mod => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub])?;
                 let module = self.parse_module(&modifiers)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Module(Arc::new(module)))
             }
 
             TokenKind::Use => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub])?;
                 let use_stmt = self.parse_use()?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Elem::Use(Arc::new(use_stmt)))
             }
 
@@ -175,7 +189,6 @@ impl<'a> Parser<'a> {
     fn parse_use(&mut self) -> Result<Use, ParseErrorAndPos> {
         self.expect_token(TokenKind::Use)?;
         let use_declaration = self.parse_use_inner()?;
-        self.expect_semicolon()?;
 
         Ok(use_declaration)
     }
@@ -303,6 +316,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_module(&mut self, modifiers: &Modifiers) -> Result<Module, ParseErrorAndPos> {
+        self.skip_semicolon_and_newline()?;
         let start = self.token.span.start();
         let pos = self.expect_token(TokenKind::Mod)?.position;
         let name = self.expect_identifier()?;
@@ -319,9 +333,9 @@ impl<'a> Parser<'a> {
             self.expect_token(TokenKind::RBrace)?;
             Some(elements)
         } else {
-            self.expect_token(TokenKind::Semicolon)?;
             None
         };
+        self.skip_semicolon_and_newline()?;
 
         let span = self.span_from(start);
 
@@ -366,7 +380,6 @@ impl<'a> Parser<'a> {
         let ty = self.parse_type()?;
         self.expect_token(TokenKind::Eq)?;
         let expr = self.parse_expression()?;
-        self.expect_semicolon()?;
         let span = self.span_from(start);
 
         Ok(Const {
@@ -441,7 +454,6 @@ impl<'a> Parser<'a> {
             None
         };
 
-        self.expect_semicolon()?;
         let span = self.span_from(start);
 
         let mut global = Global {
@@ -682,7 +694,6 @@ impl<'a> Parser<'a> {
         let name = self.expect_identifier()?;
         self.expect_token(TokenKind::Eq)?;
         let ty = self.parse_type()?;
-        self.expect_semicolon()?;
         let span = self.span_from(start);
 
         Ok(Alias {
@@ -808,6 +819,7 @@ impl<'a> Parser<'a> {
         let return_type = self.parse_function_type()?;
         let block = self.parse_function_block()?;
         let span = self.span_from(start);
+        self.skip_semicolon_and_newline()?;
 
         Ok(Function {
             id: self.generate_id(),
@@ -920,15 +932,11 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_function_block(&mut self) -> Result<Option<Box<ExprBlockType>>, ParseErrorAndPos> {
-        if self.token.is(TokenKind::Semicolon) {
-            self.advance_token()?;
-
-            Ok(None)
-        } else if self.token.is(TokenKind::Eq) {
+        if self.token.is(TokenKind::Eq) {
             let expr = self.parse_function_block_expression()?;
 
             Ok(Some(expr))
-        } else {
+        } else if self.token.is(TokenKind::LBrace) {
             let block = self.parse_block()?;
 
             if let Expr::Block(block_type) = *block {
@@ -936,6 +944,10 @@ impl<'a> Parser<'a> {
             } else {
                 unreachable!()
             }
+        } else {
+            self.skip_semicolon_and_newline();
+
+            Ok(None)
         }
     }
 
@@ -956,7 +968,7 @@ impl<'a> Parser<'a> {
 
             _ => {
                 let expr = self.parse_expression()?;
-                self.expect_token(TokenKind::Semicolon)?;
+                self.skip_semicolon_and_newline()?;
                 Ok(Box::new(ExprBlockType {
                     id: self.generate_id(),
                     pos: expr.pos(),
@@ -1070,7 +1082,7 @@ impl<'a> Parser<'a> {
             StmtOrExpr::Stmt(stmt) => Ok(stmt),
             StmtOrExpr::Expr(expr) => {
                 if expr.needs_semicolon() {
-                    Err(self.expect_semicolon().unwrap_err())
+                    Err(self.skip_semicolon_and_newline().unwrap_err())
                 } else {
                     Ok(Box::new(Stmt::create_expr(
                         self.generate_id(),
@@ -1098,7 +1110,7 @@ impl<'a> Parser<'a> {
         let data_type = self.parse_var_type()?;
         let expr = self.parse_var_assignment()?;
 
-        self.expect_semicolon()?;
+        self.skip_semicolon_and_newline()?;
         let span = self.span_from(start);
 
         Ok(Box::new(Stmt::create_let(
@@ -1178,6 +1190,7 @@ impl<'a> Parser<'a> {
 
     fn parse_block_stmt(&mut self) -> StmtResult {
         let block = self.parse_block()?;
+        self.skip_semicolon_and_newline();
         Ok(Box::new(Stmt::create_expr(
             self.generate_id(),
             block.pos(),
@@ -1263,6 +1276,8 @@ impl<'a> Parser<'a> {
 
         let cond = self.parse_expression()?;
 
+        self.skip_semicolon_and_newline()?;
+
         let branches = self.parse_branches()?;
 
         let else_block = if self.token.is(TokenKind::Else) {
@@ -1276,6 +1291,7 @@ impl<'a> Parser<'a> {
         } else {
             None
         };
+        self.skip_semicolon_and_newline();
 
         let span = self.span_from(start);
 
@@ -1310,6 +1326,7 @@ impl<'a> Parser<'a> {
             while self.token.is(TokenKind::DotDotDot) {
                 let cond_tail = Some(self.parse_expression()?);
                 let then_block = self.parse_block()?;
+                //self.expect_semicolon_or_newline()?;
                 branches.push(Branch {
                     cond_tail,
                     then_block,
@@ -1491,7 +1508,7 @@ impl<'a> Parser<'a> {
             Some(expr)
         };
 
-        self.expect_semicolon()?;
+        self.skip_semicolon_and_newline()?;
         let span = self.span_from(start);
 
         Ok(Box::new(Stmt::create_return(
@@ -1859,9 +1876,9 @@ impl<'a> Parser<'a> {
         let tok = self.advance_token()?;
         let pos = tok.position;
 
-        let (value, base, suffix) = match tok.kind {
+        let (value, base, suffix) = match tok.clone().kind {
             TokenKind::LitInt(value, base, suffix) => (value, base, suffix),
-            _ => unreachable!(),
+            _ => unreachable!("{:?}", tok),
         };
 
         let filtered = value.chars().filter(|&ch| ch != '\'').collect::<String>();
@@ -2066,8 +2083,22 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn expect_semicolon(&mut self) -> Result<Token, ParseErrorAndPos> {
-        self.expect_token(TokenKind::Semicolon)
+    fn skip_semicolon_and_newline(&mut self) -> Result<Token, ParseErrorAndPos> {
+        if self.token.is(TokenKind::Semicolon) || self.token.is(TokenKind::NewLine) {
+            //println!("FOUND semi or nl: {:?}, advancing", self.token);
+            self.advance_token()
+        } else {
+            //println!("NOT found semi or nl: {:?}", self.token);
+            Ok(self.token.clone())
+        }
+    }
+
+    fn expect_semicolon_or_newline(&mut self) -> Result<Token, ParseErrorAndPos> {
+        if self.token.is(TokenKind::NewLine) {
+            self.expect_token(TokenKind::NewLine)
+        } else {
+            self.expect_token(TokenKind::Semicolon)
+        }
     }
 
     fn expect_token(&mut self, kind: TokenKind) -> Result<Token, ParseErrorAndPos> {
@@ -2085,7 +2116,50 @@ impl<'a> Parser<'a> {
 
     fn advance_token(&mut self) -> Result<Token, ParseErrorAndPos> {
         let token = self.lexer.read_token()?;
-        Ok(self.advance_token_with(token))
+
+        self.last_end = if self.token.span.is_valid() {
+            Some(self.token.span.end())
+        } else {
+            None
+        };
+
+        self.token_previous = self.token.clone();
+        let mut token = mem::replace(&mut self.token, token);
+
+        if self.token.is(TokenKind::NewLine) {
+            if self.continues_before_newline(&self.token_previous) || {
+                let token_next = self.lexer.peek_next_token();
+                self.continues_after_newline(&token_next?)
+            } {
+                let continues_due_to_before = self.continues_before_newline(&self.token_previous);
+                let next_token = self.lexer.peek_next_token();
+                let continues_due_to_after = self.continues_after_newline(&next_token?);
+                //let new_token = self.lexer.read_token()?;
+                //token = mem::replace(&mut self.token, new_token);
+                self.last_end = if self.token.span.is_valid() {
+                    Some(self.token.span.end())
+                } else {
+                    None
+                };
+                /*println!(
+                    "skipped {} (without inserting SEMI) due to before={} for {} || due to after={} for {} at {}",
+                    self.token,
+                    continues_due_to_before,
+                    self.token_previous,
+                    continues_due_to_after,
+                    self.lexer.peek_next_token()?,
+                    self.token_previous.position,
+                );*/
+                token = self.expect_token(TokenKind::NewLine)?
+            } else {
+                let next_token = self.lexer.peek_next_token()?;
+                /*println!(
+                    "replacing newline with SEMI at {} due to previous token {:?}, current token {:?}, next token {:?}",
+                    self.token_previous.position, &self.token_previous.kind, self.token.kind, next_token.kind
+                );*/
+            }
+        }
+        Ok(token)
     }
 
     fn advance_token_with(&mut self, token: Token) -> Token {
@@ -2094,8 +2168,79 @@ impl<'a> Parser<'a> {
         } else {
             None
         };
-
+        self.token_previous = self.token.clone();
         mem::replace(&mut self.token, token)
+    }
+
+    // token before line ending indicates that no ; should be inserted
+    fn continues_before_newline(&self, token: &Token) -> bool {
+        match token.kind {
+            TokenKind::Else
+            | TokenKind::Add
+            | TokenKind::Sub
+            | TokenKind::Mul
+            | TokenKind::Div
+            | TokenKind::Or
+            | TokenKind::And
+            | TokenKind::Caret
+            | TokenKind::AndAnd
+            | TokenKind::OrOr
+            | TokenKind::EqEq
+            | TokenKind::NotEq
+            | TokenKind::EqEqEq
+            | TokenKind::NeEqEq
+            | TokenKind::Lt
+            | TokenKind::Le
+            | TokenKind::Gt
+            | TokenKind::Ge
+            | TokenKind::Eq
+            | TokenKind::Comma
+            | TokenKind::Dot
+            | TokenKind::DotDotDot
+            | TokenKind::Colon
+            | TokenKind::ColonColon
+            | TokenKind::At
+            | TokenKind::LParen
+            | TokenKind::LBracket
+            | TokenKind::LBrace
+            | TokenKind::Semicolon => true,
+            _ => false,
+        }
+    }
+
+    // token after line ending indicates that no ; should be inserted
+    fn continues_after_newline(&mut self, token: &Token) -> bool {
+        match token.kind {
+            TokenKind::Else
+            | TokenKind::Add
+            | TokenKind::Sub
+            | TokenKind::Mul
+            | TokenKind::Div
+            | TokenKind::Or
+            | TokenKind::And
+            | TokenKind::Caret
+            | TokenKind::AndAnd
+            | TokenKind::OrOr
+            | TokenKind::EqEq
+            | TokenKind::NotEq
+            | TokenKind::EqEqEq
+            | TokenKind::NeEqEq
+            | TokenKind::Lt
+            | TokenKind::Le
+            | TokenKind::Gt
+            | TokenKind::Ge
+            | TokenKind::Eq
+            | TokenKind::Comma
+            | TokenKind::Dot
+            | TokenKind::DotDotDot
+            | TokenKind::Colon
+            | TokenKind::ColonColon
+            | TokenKind::RParen
+            | TokenKind::RBracket
+            | TokenKind::RBrace
+            | TokenKind::NewLine => true,
+            _ => false,
+        }
     }
 
     fn span_from(&self, start: u32) -> Span {
@@ -2816,12 +2961,7 @@ mod tests {
 
     #[test]
     fn parse_expr_stmt_without_semicolon() {
-        err_stmt(
-            "1",
-            ParseError::ExpectedToken(";".into(), "<<EOF>>".into()),
-            1,
-            2,
-        );
+        parse_expr("1");
     }
 
     #[test]
@@ -3646,12 +3786,7 @@ mod tests {
 
     #[test]
     fn parse_use_declaration() {
-        parse_err(
-            "use foo::bar{a, b, c}",
-            ParseError::ExpectedToken(";".into(), "{".into()),
-            1,
-            13,
-        );
+        parse("use foo::bar::{a, b, c}");
 
         parse_err(
             "use ::foo;",

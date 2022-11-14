@@ -5,6 +5,4 @@ fun main(): Unit {
     foo();
 }
 
-fun foo(): () {
-    x
-}
+fun foo(): () = x

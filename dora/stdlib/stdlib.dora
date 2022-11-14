@@ -1,69 +1,65 @@
-@pub use collections::{Array, BitSet, BitVec, HashMap, HashSet, List, Queue};
+@pub use collections::{Array, BitSet, BitVec, HashMap, HashSet, List, Queue}
 @pub use traits::{Comparable, Default, Equals, Hash, Iterator, Zero};
-@pub use primitives::{Unit, Bool, Char, Float32, Float64, Int32, Int64, Option, range, Result};
-@pub use rand::Random;
+@pub use primitives::{Unit, Bool, Char, Float32, Float64, Int32, Int64, Option, range, Result}
+@pub use rand::Random
 @pub use string::{CodepointIterator, String, StringBuffer, Stringable};
-@pub use thread::{AtomicInt32, AtomicInt64, Condition, Mutex, Thread};
+@pub use thread::{AtomicInt32, AtomicInt64, Condition, Mutex, Thread}
 
-@pub mod annotations;
+@pub mod annotations
 @pub mod collections;
-@pub mod primitives;
-@pub mod rand;
+@pub mod primitives
+@pub mod rand
 @pub mod string;
-@pub mod thread;
+@pub mod thread
 @pub mod traits;
 
-@pub @internal fun fatalError(msg: String): Unit;
+@pub @internal fun fatalError(msg: String): Unit
 @pub @internal fun abort(): Unit;
-@pub @internal fun exit(status: Int32): Unit;
-@pub @internal fun unreachable[T](): T;
+@pub @internal fun exit(status: Int32): Unit
+@pub @internal fun unreachable[T](): T
 
-@pub fun unimplemented(): Unit = fatalError("not yet implemented");
+@pub fun unimplemented(): Unit { fatalError("not yet implemented") }
+@pub fun unimplemented2(): Unit = fatalError("not yet implemented");
 
-@pub @internal fun print(text: String): Unit;
-@pub @internal fun println(text: String): Unit;
-@pub @internal fun assert(val: Bool): Unit;
-@pub @internal fun debug(): Unit;
-@pub @internal fun argc(): Int32;
-@pub @internal fun argv(idx: Int32): String;
-@pub @internal fun forceCollect(): Unit;
-@pub @internal fun forceMinorCollect(): Unit;
+@pub @internal fun print(text: String): Unit
+@pub @internal fun println(text: String): Unit
+@pub @internal fun assert(val: Bool): Unit
+@pub @internal fun debug(): Unit
+@pub @internal fun argc(): Int32
+@pub @internal fun argv(idx: Int32): String
+@pub @internal fun forceCollect(): Unit
+@pub @internal fun forceMinorCollect(): Unit
 
-@pub @internal fun timestamp(): Int64;
+@pub @internal fun timestamp(): Int64
 
 fun isValidUtf8(data: Array[UInt8]): Bool {
-  var i = 0i64;
+  var i = 0i64
 
   while i < data.size() {
-    let by = data(i).toInt32();
-    var codepoint = 0i32;
+    let by = data(i).toInt32()
+    var codepoint = 0i32
     var bytes = 0i32;
-    var min = 0i32;
-    var max = 0i32;
+    var min = 0i32
+    var max = 0i32
 
     if by & 0x80i32 == 0i32 {
       bytes = 0;
       i = i + 1i64;
-
     } else {
-      if by
-      ... & 0xC0i32 == 0x80i32 {
+      if by ... & 0xC0i32 == 0x80i32 {
         return false;
-
       }
       ... & 0xE0i32 == 0xC0i32 {
         codepoint = by & 0x1Fi32;
         bytes = 1;
         min = 0x80;
         max = 0x7FFi32;
-
       }
       ... & 0xF0i32 == 0xE0i32 {
         codepoint = by & 0xFi32;
         bytes = 2i32;
         min = 0x800i32;
         max = 0xFFFFi32;
-
       }
       ... & 0xF8i32 == 0xF0i32 {
         codepoint = by & 0x7i32;
@@ -113,7 +109,7 @@ impl Stacktrace {
   @pub @static fun new(): Stacktrace {
     let trace = Stacktrace(None[Array[Int32]], None[Array[StacktraceElement]]);
     trace.retrieveStacktrace();
-    trace
+    return trace;
   }
 
   @pub fun getStacktrace(): Array[StacktraceElement] {

@@ -7,22 +7,22 @@ fun main(): Unit {
 
 fun tpl1(): Float64 {
     let x = Doubles(1.0, 2.0, 3.0);
-    x.f1
+    return x.f1;
 }
 
 fun tpl2(): Float64 {
     let x = Doubles(1.0, 2.0, 3.0);
-    x.f2
+    return x.f2;
 }
 
 fun tpl3(): Float64 {
     let x = Doubles(1.0, 2.0, 3.0);
-    x.f3
+    return x.f3;
 }
 
 fun tplsum(): Float64 {
     let x = Doubles(1.0, 2.0, 3.0);
-    x.f1 + x.f2 + x.f3
+    return x.f1 + x.f2 + x.f3;
 }
 
 struct Doubles(f1: Float64, f2: Float64, f3: Float64)

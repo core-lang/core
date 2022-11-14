@@ -7,7 +7,7 @@ fun main(): Unit {
     match tuple.0 {
         Foo::A(_, _, _) => {},
         Foo::B => unreachable[()](),
-    }
+    };
     std::forceCollect();
     match tuple.0 {
         Foo::A(_, _, _) => {},

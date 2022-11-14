@@ -45,33 +45,33 @@ impl String {
 
   @pub fun toInt32(): Option[Int32] {
     if self.toInt32Success() {
-      Option[Int32]::Some(self.toInt32OrZero())
+      return Option[Int32]::Some(self.toInt32OrZero());
     } else {
-      Option[Int32]::None
+      return Option[Int32]::None;
     }
   }
 
   @pub fun toInt64(): Option[Int64] {
     if self.toInt64Success() {
-      Option[Int64]::Some(self.toInt64OrZero())
+      return Option[Int64]::Some(self.toInt64OrZero());
     } else {
-      Option[Int64]::None
+      return Option[Int64]::None;
     }
   }
 
   @pub fun toFloat32(): Option[Float32] {
     if self.toFloat32Success() {
-      Option[Float32]::Some(self.toFloat32OrZero())
+      return Option[Float32]::Some(self.toFloat32OrZero());
     } else {
-      Option[Float32]::None
+      return Option[Float32]::None;
     }
   }
 
   @pub fun toFloat64(): Option[Float64] {
     if self.toFloat64Success() {
-      Option[Float64]::Some(self.toFloat64OrZero())
+      return Option[Float64]::Some(self.toFloat64OrZero());
     } else {
-      Option[Float64]::None
+      return Option[Float64]::None;
     }
   }
 
@@ -295,11 +295,11 @@ impl StringBuffer {
     let c2 = len * 2i64;
 
     if c1 > c2 {
-      c1
+      return c1;
     } else if c2 - c1 > 32i64 {
-      c1
+      return c1;
     } else {
-      c2
+      return c2;
     }
   }
 
@@ -369,18 +369,18 @@ impl CodepointIterator {
     }
 
     if ch <= 0xEFu8 {
-      let cp = (ch.toInt32() & 0xFi32).shiftLeft(12i32) |
-            (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(6i32) |
-            (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32);
+      let cp = (ch.toInt32() & 0xFi32).shiftLeft(12i32)
+        | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(6i32)
+        | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32);
       self.start = self.start + 3i64;
       return cp.toCharUnchecked();
     }
 
     if ch <= 0xF7u8 {
-      let cp = (ch.toInt32() & 0x03i32).shiftLeft(18i32) |
-            (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(12i32) |
-            (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32).shiftLeft(6i32) |
-            (self.value.getByte(self.start + 3i64).toInt32() & 0x3Fi32);
+      let cp = (ch.toInt32() & 0x03i32).shiftLeft(18i32)
+        | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(12i32)
+        | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32).shiftLeft(6i32)
+        | (self.value.getByte(self.start + 3i64).toInt32() & 0x3Fi32);
       self.start = self.start + 4i64;
       return cp.toCharUnchecked();
     }
@@ -406,17 +406,17 @@ impl CodepointIterator {
     }
 
     if ch <= 0xEFu8 {
-      let cp = (ch.toInt32() & 0xFi32).shiftLeft(12i32) |
-            (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(6i32) |
-            (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32);
+      let cp = (ch.toInt32() & 0xFi32).shiftLeft(12i32)
+        | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(6i32)
+        | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32);
       return cp.toCharUnchecked();
     }
 
     if ch <= 0xF7u8 {
-      let cp = (ch.toInt32() & 0x03i32).shiftLeft(18i32) |
-            (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(12i32) |
-            (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32).shiftLeft(6i32) |
-            (self.value.getByte(self.start + 3i64).toInt32() & 0x3Fi32);
+      let cp = (ch.toInt32() & 0x03i32).shiftLeft(18i32)
+        | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(12i32)
+        | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32).shiftLeft(6i32)
+        | (self.value.getByte(self.start + 3i64).toInt32() & 0x3Fi32);
       return cp.toCharUnchecked();
     }
 

@@ -14,5 +14,5 @@ fun sum_args(x: (Int32, Int32)...): Int32 {
         idx = idx + 1i64;
     }
 
-    result
+    return result;
 }

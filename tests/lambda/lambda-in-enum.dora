@@ -10,6 +10,4 @@ fun main(): Unit {
     std::forceCollect();
 }
 
-fun myoption(lambda: Option[(): Int64]): Option[(): Int64] {
-    lambda
-}
+fun myoption(lambda: Option[(): Int64]): Option[(): Int64] = lambda

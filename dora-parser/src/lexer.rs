@@ -29,12 +29,15 @@ impl Lexer {
 
     pub fn read_token(&mut self) -> Result<Token, ParseErrorAndPos> {
         loop {
-            self.skip_white();
+            let newline_occurred = self.skip_white();
 
             let pos = self.reader.pos();
             let idx = self.reader.idx();
             let ch = self.curr();
 
+            if newline_occurred {
+                return Ok(Token::new(TokenKind::NewLine, pos, Span::at(idx)));
+            }
             if let None = ch {
                 return Ok(Token::new(TokenKind::End, pos, Span::at(idx)));
             }
@@ -71,16 +74,23 @@ impl Lexer {
         token_next
     }
 
-    fn skip_white(&mut self) {
+    /// returns whether a newline was found while skipping whitespace
+    fn skip_white(&mut self) -> bool {
+        let mut found_newline = false;
         while is_whitespace(self.curr()) {
+            if is_newline(self.curr()) {
+                found_newline = true;
+            }
             self.read_char();
         }
+        found_newline
     }
 
     fn read_comment(&mut self) -> Result<(), ParseErrorAndPos> {
         while !self.curr().is_none() && !is_newline(self.curr()) {
             self.read_char();
         }
+        self.read_char(); // \n
 
         Ok(())
     }
@@ -99,8 +109,9 @@ impl Lexer {
             return Err(ParseErrorAndPos::new(pos, ParseError::UnclosedComment));
         }
 
-        self.read_char();
-        self.read_char();
+        self.read_char(); // *
+        self.read_char(); // /
+        self.read_char(); // \n
 
         Ok(())
     }
@@ -595,9 +606,9 @@ mod tests {
 
     fn assert_tok(reader: &mut Lexer, kind: TokenKind, l: u32, c: u32) {
         let tok = reader.read_token().unwrap();
-        assert_eq!(kind, tok.kind);
-        assert_eq!(l, tok.position.line);
-        assert_eq!(c, tok.position.column);
+        assert_eq!(kind, tok.kind, "token kind differs");
+        assert_eq!(l, tok.position.line, "position line differs");
+        assert_eq!(c, tok.position.column, "position column differs");
     }
 
     fn assert_peek(reader: &mut Lexer, kind: TokenKind, l: u32, c: u32) {
@@ -646,6 +657,7 @@ mod tests {
             1,
             3,
         );
+        assert_tok(&mut reader, TokenKind::NewLine, 2, 1);
         assert_tok(
             &mut reader,
             TokenKind::LitInt("0123".into(), IntBase::Dec, IntSuffix::None),
@@ -725,20 +737,20 @@ mod tests {
 
     #[test]
     fn test_unfinished_line_comment() {
-        let mut reader = Lexer::from_str("//abc");
-        assert_end(&mut reader, 1, 6);
+        let mut reader = Lexer::from_str("//abc\n");
+        assert_end(&mut reader, 2, 1);
     }
 
     #[test]
     fn test_skip_multi_comment() {
-        let mut reader = Lexer::from_str("/*test*/1");
+        let mut reader = Lexer::from_str("/*test*/ 1");
         assert_tok(
             &mut reader,
             TokenKind::LitInt("1".into(), IntBase::Dec, IntSuffix::None),
             1,
-            9,
+            10,
         );
-        assert_end(&mut reader, 1, 10);
+        assert_end(&mut reader, 1, 11);
     }
 
     #[test]
@@ -892,12 +904,14 @@ mod tests {
             1,
             1,
         );
+        assert_tok(&mut reader, TokenKind::NewLine, 2, 1);
         assert_tok(
             &mut reader,
             TokenKind::LitInt("2".into(), IntBase::Dec, IntSuffix::None),
             2,
             1,
         );
+        assert_tok(&mut reader, TokenKind::NewLine, 3, 1);
         assert_tok(
             &mut reader,
             TokenKind::LitInt("3".into(), IntBase::Dec, IntSuffix::None),
@@ -949,6 +963,7 @@ mod tests {
             1,
             9,
         );
+        assert_tok(&mut reader, TokenKind::NewLine, 2, 1);
         assert_tok(
             &mut reader,
             TokenKind::LitInt("1234567".into(), IntBase::Dec, IntSuffix::None),
@@ -961,6 +976,7 @@ mod tests {
             2,
             9,
         );
+        assert_tok(&mut reader, TokenKind::NewLine, 3, 1);
         assert_tok(
             &mut reader,
             TokenKind::LitInt("12345678".into(), IntBase::Dec, IntSuffix::None),
@@ -1107,5 +1123,88 @@ mod tests {
         let mut reader = Lexer::from_str("_::");
         assert_tok(&mut reader, TokenKind::Underscore, 1, 1);
         assert_tok(&mut reader, TokenKind::ColonColon, 1, 2);
+    }
+
+    // move these to parser
+    #[test]
+    fn test_semicolon_inference1() {
+        let mut reader = Lexer::from_str("let x: Int64 =\n2");
+        assert_tok(&mut reader, TokenKind::Let, 1, 1);
+        assert_tok(&mut reader, TokenKind::Identifier("x".into()), 1, 5);
+        assert_tok(&mut reader, TokenKind::Colon, 1, 6);
+        assert_tok(&mut reader, TokenKind::Identifier("Int64".into()), 1, 8);
+        assert_tok(&mut reader, TokenKind::Eq, 1, 14);
+        assert_tok(&mut reader, TokenKind::NewLine, 2, 1);
+        assert_tok(
+            &mut reader,
+            TokenKind::LitInt("2".into(), IntBase::Dec, IntSuffix::None),
+            2,
+            1,
+        );
+    }
+
+    #[test]
+    fn test_semicolon_inference2() {
+        let mut reader = Lexer::from_str("let x: Int64\n = 2");
+        assert_tok(&mut reader, TokenKind::Let, 1, 1);
+        assert_tok(&mut reader, TokenKind::Identifier("x".into()), 1, 5);
+        assert_tok(&mut reader, TokenKind::Colon, 1, 6);
+        assert_tok(&mut reader, TokenKind::Identifier("Int64".into()), 1, 8);
+        assert_tok(&mut reader, TokenKind::NewLine, 2, 2);
+        assert_tok(&mut reader, TokenKind::Eq, 2, 2);
+        assert_tok(
+            &mut reader,
+            TokenKind::LitInt("2".into(), IntBase::Dec, IntSuffix::None),
+            2,
+            4,
+        );
+    }
+
+    #[test]
+    fn test_semicolon_inference3() {
+        let mut reader = Lexer::from_str("let x: Int64 = 2 +\n1");
+        assert_tok(&mut reader, TokenKind::Let, 1, 1);
+        assert_tok(&mut reader, TokenKind::Identifier("x".into()), 1, 5);
+        assert_tok(&mut reader, TokenKind::Colon, 1, 6);
+        assert_tok(&mut reader, TokenKind::Identifier("Int64".into()), 1, 8);
+        assert_tok(&mut reader, TokenKind::Eq, 1, 14);
+        assert_tok(
+            &mut reader,
+            TokenKind::LitInt("2".into(), IntBase::Dec, IntSuffix::None),
+            1,
+            16,
+        );
+        assert_tok(&mut reader, TokenKind::Add, 1, 18);
+        assert_tok(&mut reader, TokenKind::NewLine, 2, 1);
+        assert_tok(
+            &mut reader,
+            TokenKind::LitInt("1".into(), IntBase::Dec, IntSuffix::None),
+            2,
+            1,
+        );
+    }
+
+    #[test]
+    fn test_semicolon_inference4() {
+        let mut reader = Lexer::from_str("let x: Int64 = 2\n+ 1");
+        assert_tok(&mut reader, TokenKind::Let, 1, 1);
+        assert_tok(&mut reader, TokenKind::Identifier("x".into()), 1, 5);
+        assert_tok(&mut reader, TokenKind::Colon, 1, 6);
+        assert_tok(&mut reader, TokenKind::Identifier("Int64".into()), 1, 8);
+        assert_tok(&mut reader, TokenKind::Eq, 1, 14);
+        assert_tok(
+            &mut reader,
+            TokenKind::LitInt("2".into(), IntBase::Dec, IntSuffix::None),
+            1,
+            16,
+        );
+        assert_tok(&mut reader, TokenKind::NewLine, 2, 1);
+        assert_tok(&mut reader, TokenKind::Add, 2, 1);
+        assert_tok(
+            &mut reader,
+            TokenKind::LitInt("1".into(), IntBase::Dec, IntSuffix::None),
+            2,
+            3,
+        );
     }
 }

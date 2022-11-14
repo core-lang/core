@@ -13,5 +13,5 @@ fun main(): Unit {
 
 fun foo(): Int32 {
     println("foo");
-    17
+    return 17;
 }
