@@ -219,14 +219,14 @@ fn path_for_type(sa: &SemAnalysis, ty: SourceType) -> String {
         let cls = sa.classes.idx(cls_id);
         let cls = cls.read();
         cls.name(sa)
-    } else if let Some(struct_id) = ty.struct_id() {
-        let struct_ = sa.structs.idx(struct_id);
-        let struct_ = struct_.read();
-        struct_.name(sa)
-    } else if let Some(struct_id) = ty.primitive_struct_id(sa) {
-        let struct_ = sa.structs.idx(struct_id);
-        let struct_ = struct_.read();
-        struct_.name(sa)
+    } else if let Some(value_id) = ty.value_id() {
+        let value = sa.values.idx(value_id);
+        let value = value.read();
+        value.name(sa)
+    } else if let Some(value_id) = ty.primitive_value_id(sa) {
+        let value = sa.values.idx(value_id);
+        let value = value.read();
+        value.name(sa)
     } else if ty.is_tuple_or_unit() {
         unimplemented!()
     } else {
