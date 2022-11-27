@@ -174,34 +174,18 @@ pub fn implements_trait(
                 return true;
             }
 
-            let struct_id = check_ty
-                .primitive_struct_id(sa)
-                .expect("primitive expected");
-            let struct_ = sa.structs.idx(struct_id);
-            let struct_ = struct_.read();
+            let value_id = check_ty.primitive_value_id(sa).expect("primitive expected");
+            let value = sa.values.idx(value_id);
+            let value = value.read();
 
-            check_impls(
-                sa,
-                check_ty,
-                check_type_param_defs,
-                trait_ty,
-                &struct_.impls,
-            )
-            .is_some()
+            check_impls(sa, check_ty, check_type_param_defs, trait_ty, &value.impls).is_some()
         }
 
-        SourceType::Struct(struct_id, _) => {
-            let struct_ = sa.structs.idx(struct_id);
-            let struct_ = struct_.read();
+        SourceType::Value(value_id, _) => {
+            let value = sa.values.idx(value_id);
+            let value = value.read();
 
-            check_impls(
-                sa,
-                check_ty,
-                check_type_param_defs,
-                trait_ty,
-                &struct_.impls,
-            )
-            .is_some()
+            check_impls(sa, check_ty, check_type_param_defs, trait_ty, &value.impls).is_some()
         }
 
         SourceType::Class(_, _) => {
@@ -249,32 +233,18 @@ pub fn find_impl(
         | SourceType::Int64
         | SourceType::Float32
         | SourceType::Float64 => {
-            let struct_id = check_ty
-                .primitive_struct_id(sa)
-                .expect("primitive expected");
-            let struct_ = sa.structs.idx(struct_id);
-            let struct_ = struct_.read();
+            let value_id = check_ty.primitive_value_id(sa).expect("primitive expected");
+            let value = sa.values.idx(value_id);
+            let value = value.read();
 
-            check_impls(
-                sa,
-                check_ty,
-                check_type_param_defs,
-                trait_ty,
-                &struct_.impls,
-            )
+            check_impls(sa, check_ty, check_type_param_defs, trait_ty, &value.impls)
         }
 
-        SourceType::Struct(struct_id, _) => {
-            let struct_ = sa.structs.idx(struct_id);
-            let struct_ = struct_.read();
+        SourceType::Value(value_id, _) => {
+            let value = sa.values.idx(value_id);
+            let value = value.read();
 
-            check_impls(
-                sa,
-                check_ty,
-                check_type_param_defs,
-                trait_ty,
-                &struct_.impls,
-            )
+            check_impls(sa, check_ty, check_type_param_defs, trait_ty, &value.impls)
         }
 
         SourceType::Class(_, _) => {

@@ -18,7 +18,7 @@ use crate::gc::Address;
 use crate::language::generator::register_bty_from_ty;
 use crate::language::sem_analysis::{
     find_trait_impl, EnumDefinitionId, FctDefinitionId, GlobalDefinitionId, Intrinsic,
-    StructDefinitionId,
+    ValueDefinitionId,
 };
 use crate::language::ty::{SourceType, SourceTypeArray};
 use crate::masm::{CodeDescriptor, CondCode, Label, Mem};
@@ -30,9 +30,9 @@ use crate::stdlib;
 use crate::vm::{
     get_concrete_tuple_array, get_concrete_tuple_bytecode_ty, get_concrete_tuple_ty,
     specialize_class_id_params, specialize_enum_class, specialize_enum_id_params,
-    specialize_lambda, specialize_struct_id_params, specialize_trait_object,
-    specialize_tuple_array, specialize_tuple_bty, specialize_tuple_ty, specialize_type,
-    specialize_type_list, EnumLayout, GcPoint, LazyCompilationSite, Trap, VM,
+    specialize_lambda, specialize_trait_object, specialize_tuple_array, specialize_tuple_bty,
+    specialize_tuple_ty, specialize_type, specialize_type_list, specialize_value_id_params,
+    EnumLayout, GcPoint, LazyCompilationSite, Trap, VM,
 };
 use crate::vtable::VTable;
 
@@ -228,13 +228,13 @@ impl<'a> CannonCodeGen<'a> {
                     }
                 }
 
-                BytecodeType::Struct(struct_id, type_params) => {
+                BytecodeType::Value(value_id, type_params) => {
                     let offset = self.register_offset(Register(idx));
-                    let struct_instance_id =
-                        specialize_struct_id_params(self.vm, struct_id, type_params);
-                    let struct_instance = self.vm.struct_instances.idx(struct_instance_id);
+                    let value_instance_id =
+                        specialize_value_id_params(self.vm, value_id, type_params);
+                    let value_instance = self.vm.value_instances.idx(value_instance_id);
 
-                    for &ref_offset in &struct_instance.ref_fields {
+                    for &ref_offset in &value_instance.ref_fields {
                         self.references.push(offset + ref_offset);
                     }
                 }
@@ -329,13 +329,13 @@ impl<'a> CannonCodeGen<'a> {
                     );
                 }
 
-                SourceType::Struct(struct_id, type_params) => {
-                    self.store_params_on_stack_struct(
+                SourceType::Value(value_id, type_params) => {
+                    self.store_params_on_stack_value(
                         &mut reg_idx,
                         &mut freg_idx,
                         &mut sp_offset,
                         dest,
-                        struct_id,
+                        value_id,
                         type_params,
                     );
                 }
@@ -422,13 +422,13 @@ impl<'a> CannonCodeGen<'a> {
         }
     }
 
-    fn store_params_on_stack_struct(
+    fn store_params_on_stack_value(
         &mut self,
         reg_idx: &mut usize,
         _freg_idx: &mut usize,
         sp_offset: &mut i32,
         dest: Register,
-        struct_id: StructDefinitionId,
+        value_id: ValueDefinitionId,
         type_params: SourceTypeArray,
     ) {
         let dest_offset = self.reg(dest);
@@ -439,8 +439,8 @@ impl<'a> CannonCodeGen<'a> {
                 REG_TMP1.into(),
                 REG_PARAMS[*reg_idx].into(),
             );
-            self.copy_struct(
-                struct_id,
+            self.copy_value(
+                value_id,
                 type_params,
                 dest_offset,
                 RegOrOffset::Reg(REG_TMP1),
@@ -449,8 +449,8 @@ impl<'a> CannonCodeGen<'a> {
         } else {
             self.asm
                 .load_mem(MachineMode::Ptr, REG_TMP1.into(), Mem::Local(*sp_offset));
-            self.copy_struct(
-                struct_id,
+            self.copy_value(
+                value_id,
                 type_params,
                 dest_offset,
                 RegOrOffset::Reg(REG_TMP1),
@@ -1304,17 +1304,17 @@ impl<'a> CannonCodeGen<'a> {
         }
     }
 
-    fn copy_struct(
+    fn copy_value(
         &mut self,
-        struct_id: StructDefinitionId,
+        value_id: ValueDefinitionId,
         type_params: SourceTypeArray,
         dest: RegOrOffset,
         src: RegOrOffset,
     ) {
-        let struct_instance_id = specialize_struct_id_params(self.vm, struct_id, type_params);
-        let struct_instance = self.vm.struct_instances.idx(struct_instance_id);
+        let value_instance_id = specialize_value_id_params(self.vm, value_id, type_params);
+        let value_instance = self.vm.value_instances.idx(value_instance_id);
 
-        for field in &struct_instance.fields {
+        for field in &value_instance.fields {
             let src = src.offset(field.offset);
             let dest = dest.offset(field.offset);
             self.copy_ty(field.ty.clone(), dest, src);
@@ -1331,8 +1331,8 @@ impl<'a> CannonCodeGen<'a> {
                 // do nothing
             }
 
-            SourceType::Struct(struct_id, type_params) => {
-                self.copy_struct(struct_id, type_params, dest, src);
+            SourceType::Value(value_id, type_params) => {
+                self.copy_value(value_id, type_params, dest, src);
             }
 
             SourceType::Enum(enum_id, type_params) => {
@@ -1396,8 +1396,8 @@ impl<'a> CannonCodeGen<'a> {
                 self.asm.store_mem(mode, dest.mem(), REG_RESULT.into());
             }
 
-            BytecodeType::Struct(struct_id, type_params) => {
-                self.copy_struct(struct_id, type_params, dest, src);
+            BytecodeType::Value(value_id, type_params) => {
+                self.copy_value(value_id, type_params, dest, src);
             }
 
             BytecodeType::TypeParam(_) => unreachable!(),
@@ -1477,7 +1477,7 @@ impl<'a> CannonCodeGen<'a> {
             | SourceType::Error
             | SourceType::Any
             | SourceType::This
-            | SourceType::Struct(_, _)
+            | SourceType::Value(_, _)
             | SourceType::Lambda(_, _) => unreachable!(),
         }
     }
@@ -1528,32 +1528,31 @@ impl<'a> CannonCodeGen<'a> {
             | SourceType::Error
             | SourceType::Any
             | SourceType::This
-            | SourceType::Struct(_, _)
+            | SourceType::Value(_, _)
             | SourceType::Lambda(_, _) => unreachable!(),
         }
     }
 
-    fn emit_load_struct_field(&mut self, dest: Register, obj: Register, field_idx: ConstPoolIdx) {
-        let (struct_id, type_params, field_id) = match self.bytecode.const_pool(field_idx) {
-            ConstPoolEntry::StructField(struct_id, type_params, field_id) => {
-                (*struct_id, type_params.clone(), *field_id)
+    fn emit_load_value_field(&mut self, dest: Register, obj: Register, field_idx: ConstPoolIdx) {
+        let (value_id, type_params, field_id) = match self.bytecode.const_pool(field_idx) {
+            ConstPoolEntry::ValueField(value_id, type_params, field_id) => {
+                (*value_id, type_params.clone(), *field_id)
             }
             _ => unreachable!(),
         };
 
         debug_assert_eq!(
             self.bytecode.register_type(obj),
-            BytecodeType::Struct(struct_id, type_params.clone())
+            BytecodeType::Value(value_id, type_params.clone())
         );
 
         let type_params = specialize_type_list(self.vm, &type_params, self.type_params);
         debug_assert!(type_params.iter().all(|ty| ty.is_concrete_type(self.vm)));
 
-        let struct_instance_id =
-            specialize_struct_id_params(self.vm, struct_id, type_params.clone());
-        let struct_instance = self.vm.struct_instances.idx(struct_instance_id);
+        let value_instance_id = specialize_value_id_params(self.vm, value_id, type_params.clone());
+        let value_instance = self.vm.value_instances.idx(value_instance_id);
 
-        let field = &struct_instance.fields[field_id.to_usize()];
+        let field = &value_instance.fields[field_id.to_usize()];
 
         let bytecode_type = self.specialize_register_type(dest);
         assert_eq!(bytecode_type, register_bty_from_ty(field.ty.clone()));
@@ -1653,19 +1652,19 @@ impl<'a> CannonCodeGen<'a> {
                     get_concrete_tuple_bytecode_ty(self.vm, &ty).contains_references()
             }
 
-            BytecodeType::Struct(struct_id, type_params) => {
+            BytecodeType::Value(value_id, type_params) => {
                 let src_offset = self.register_offset(value);
-                self.copy_struct(
-                    *struct_id,
+                self.copy_value(
+                    *value_id,
                     type_params.clone(),
                     RegOrOffset::RegWithOffset(obj_reg, offset),
                     RegOrOffset::Offset(src_offset),
                 );
 
-                let struct_instance_id =
-                    specialize_struct_id_params(self.vm, *struct_id, type_params.clone());
-                let struct_instance = self.vm.struct_instances.idx(struct_instance_id);
-                needs_write_barrier = struct_instance.contains_references();
+                let value_instance_id =
+                    specialize_value_id_params(self.vm, *value_id, type_params.clone());
+                let value_instance = self.vm.value_instances.idx(value_instance_id);
+                needs_write_barrier = value_instance.contains_references();
             }
 
             BytecodeType::Enum(enum_id, type_params) => {
@@ -1892,7 +1891,7 @@ impl<'a> CannonCodeGen<'a> {
 
             BytecodeType::Class(_, _)
             | BytecodeType::TypeParam(_)
-            | BytecodeType::Struct(_, _)
+            | BytecodeType::Value(_, _)
             | BytecodeType::Lambda(_, _) => {
                 unreachable!()
             }
@@ -2004,7 +2003,7 @@ impl<'a> CannonCodeGen<'a> {
                 );
             }
 
-            BytecodeType::Struct(struct_id, type_params) => {
+            BytecodeType::Value(value_id, type_params) => {
                 let src_offset = self.register_offset(src);
 
                 self.asm.load_mem(
@@ -2013,8 +2012,8 @@ impl<'a> CannonCodeGen<'a> {
                     Mem::Local(result_address_offset()),
                 );
 
-                self.copy_struct(
-                    struct_id,
+                self.copy_value(
+                    value_id,
                     type_params.clone(),
                     RegOrOffset::Reg(REG_TMP1),
                     RegOrOffset::Offset(src_offset),
@@ -2218,7 +2217,7 @@ impl<'a> CannonCodeGen<'a> {
         let array_header_size = Header::size() as usize + mem::ptr_width_usize();
 
         let alloc_size = match class_instance.size {
-            InstanceSize::PrimitiveArray(size) | InstanceSize::StructArray(size) => {
+            InstanceSize::PrimitiveArray(size) | InstanceSize::ValueArray(size) => {
                 assert_ne!(size, 0);
                 self.asm
                     .determine_array_size(REG_TMP1, REG_TMP1, size, true);
@@ -2277,7 +2276,7 @@ impl<'a> CannonCodeGen<'a> {
         );
 
         match class_instance.size {
-            InstanceSize::PrimitiveArray(size) | InstanceSize::StructArray(size) => {
+            InstanceSize::PrimitiveArray(size) | InstanceSize::ValueArray(size) => {
                 self.emit_array_initialization(REG_RESULT, REG_TMP1, size);
             }
             InstanceSize::ObjArray => {
@@ -2461,28 +2460,28 @@ impl<'a> CannonCodeGen<'a> {
     }
 
     fn emit_new_struct(&mut self, dest: Register, idx: ConstPoolIdx) {
-        let (struct_id, type_params) = match self.bytecode.const_pool(idx) {
-            ConstPoolEntry::Struct(struct_id, type_params) => (*struct_id, type_params.clone()),
+        let (value_id, type_params) = match self.bytecode.const_pool(idx) {
+            ConstPoolEntry::Value(value_id, type_params) => (*value_id, type_params.clone()),
             _ => unreachable!(),
         };
 
         let type_params = specialize_type_list(self.vm, &type_params, self.type_params);
         debug_assert!(type_params.iter().all(|ty| ty.is_concrete_type(self.vm)));
 
-        let struct_instance_id = specialize_struct_id_params(self.vm, struct_id, type_params);
-        let struct_instance = self.vm.struct_instances.idx(struct_instance_id);
+        let value_instance_id = specialize_value_id_params(self.vm, value_id, type_params);
+        let value_instance = self.vm.value_instances.idx(value_instance_id);
 
         let arguments = self.argument_stack.drain(..).collect::<Vec<_>>();
 
         let dest_offset = self.register_offset(dest);
         self.asm.lea(REG_TMP1, Mem::Local(dest_offset));
 
-        assert_eq!(arguments.len(), struct_instance.fields.len());
+        assert_eq!(arguments.len(), value_instance.fields.len());
 
         for (field_idx, &arg) in arguments.iter().enumerate() {
             let ty = self.specialize_register_type(arg);
-            let field = &struct_instance.fields[field_idx];
-            comment!(self, format!("NewStruct: store register {} in struct", arg));
+            let field = &value_instance.fields[field_idx];
+            comment!(self, format!("NewValue: store register {} in value", arg));
 
             let dest = RegOrOffset::RegWithOffset(REG_TMP1, field.offset);
             let src = self.reg(arg);
@@ -2716,23 +2715,23 @@ impl<'a> CannonCodeGen<'a> {
                 }
             }
 
-            BytecodeType::Struct(struct_id, type_params) => {
-                let struct_instance_id =
-                    specialize_struct_id_params(self.vm, struct_id, type_params.clone());
-                let struct_instance = self.vm.struct_instances.idx(struct_instance_id);
+            BytecodeType::Value(value_id, type_params) => {
+                let value_instance_id =
+                    specialize_value_id_params(self.vm, value_id, type_params.clone());
+                let value_instance = self.vm.value_instances.idx(value_instance_id);
 
                 self.asm
-                    .array_address(REG_TMP1, REG_RESULT, REG_TMP1, struct_instance.size);
+                    .array_address(REG_TMP1, REG_RESULT, REG_TMP1, value_instance.size);
                 let src_offset = self.register_offset(src);
 
-                self.copy_struct(
-                    struct_id,
+                self.copy_value(
+                    value_id,
                     type_params,
                     RegOrOffset::Reg(REG_TMP1),
                     RegOrOffset::Offset(src_offset),
                 );
 
-                let needs_write_barrier = struct_instance.contains_references();
+                let needs_write_barrier = value_instance.contains_references();
 
                 if self.vm.gc.needs_write_barrier() && needs_write_barrier {
                     let card_table_offset = self.vm.gc.card_table_offset();
@@ -2860,18 +2859,18 @@ impl<'a> CannonCodeGen<'a> {
                 );
             }
 
-            BytecodeType::Struct(struct_id, type_params) => {
-                let struct_instance_id =
-                    specialize_struct_id_params(self.vm, struct_id, type_params.clone());
-                let struct_instance = self.vm.struct_instances.idx(struct_instance_id);
+            BytecodeType::Value(value_id, type_params) => {
+                let value_instance_id =
+                    specialize_value_id_params(self.vm, value_id, type_params.clone());
+                let value_instance = self.vm.value_instances.idx(value_instance_id);
 
-                let element_size = struct_instance.size;
+                let element_size = value_instance.size;
                 self.asm
                     .array_address(REG_TMP1, REG_RESULT, REG_TMP1, element_size);
                 let dest_offset = self.register_offset(dest);
 
-                self.copy_struct(
-                    struct_id,
+                self.copy_value(
+                    value_id,
                     type_params,
                     RegOrOffset::Offset(dest_offset),
                     RegOrOffset::Reg(REG_TMP1),
@@ -3284,7 +3283,7 @@ impl<'a> CannonCodeGen<'a> {
         bytecode_type: BytecodeType,
     ) -> (AnyReg, Option<MachineMode>) {
         match bytecode_type {
-            BytecodeType::Struct(_, _) => (REG_RESULT.into(), None),
+            BytecodeType::Value(_, _) => (REG_RESULT.into(), None),
             BytecodeType::Tuple(_) => (REG_RESULT.into(), None),
             BytecodeType::Unit => (REG_RESULT.into(), None),
             bytecode_type => (
@@ -4253,7 +4252,7 @@ impl<'a> CannonCodeGen<'a> {
                 self.zero_refs_tuple(subtypes, RegOrOffset::Reg(REG_TMP1));
             }
 
-            BytecodeType::Struct(_struct_id, _type_params) => unimplemented!(),
+            BytecodeType::Value(_, _) => unimplemented!(),
 
             BytecodeType::Enum(_, _) => unimplemented!(),
 
@@ -4356,7 +4355,7 @@ impl<'a> CannonCodeGen<'a> {
             match bytecode_type {
                 BytecodeType::Unit => {}
 
-                BytecodeType::Tuple(_) | BytecodeType::Struct(_, _) => {
+                BytecodeType::Tuple(_) | BytecodeType::Value(_, _) => {
                     if reg_idx < REG_PARAMS.len() {
                         let reg = REG_PARAMS[reg_idx];
                         self.asm.lea(reg, Mem::Local(offset));
@@ -4505,8 +4504,8 @@ impl<'a> CannonCodeGen<'a> {
                 specialize_type_list(self.vm, &type_params, &self.type_params),
             ),
 
-            BytecodeType::Struct(struct_id, type_params) => BytecodeType::Struct(
-                struct_id,
+            BytecodeType::Value(value_id, type_params) => BytecodeType::Value(
+                value_id,
                 specialize_type_list(self.vm, &type_params, &self.type_params),
             ),
 
@@ -4525,7 +4524,7 @@ impl<'a> BytecodeVisitor for CannonCodeGen<'a> {
         }
 
         // Ensure that PushRegister instructions are only followed by InvokeXXX,
-        // NewTuple, NewEnum or NewStruct.
+        // NewTuple, NewEnum or NewValue.
         if !self.argument_stack.is_empty() {
             let opcode = self.bytecode.read_opcode(offset);
             assert!(
@@ -4533,7 +4532,7 @@ impl<'a> BytecodeVisitor for CannonCodeGen<'a> {
                     || opcode.is_push_register()
                     || opcode.is_new_tuple()
                     || opcode.is_new_enum()
-                    || opcode.is_new_struct()
+                    || opcode.is_new_value()
                     || opcode.is_new_object_initialized()
                     || opcode.is_new_lambda()
             );
@@ -4678,31 +4677,31 @@ impl<'a> BytecodeVisitor for CannonCodeGen<'a> {
         self.emit_load_enum_variant(dest, src, idx);
     }
 
-    fn visit_load_struct_field(&mut self, dest: Register, obj: Register, field_idx: ConstPoolIdx) {
+    fn visit_load_value_field(&mut self, dest: Register, obj: Register, field_idx: ConstPoolIdx) {
         comment!(self, {
-            let (struct_id, type_params, field_id) = match self.bytecode.const_pool(field_idx) {
-                ConstPoolEntry::StructField(struct_id, type_params, field_id) => {
-                    (*struct_id, type_params, *field_id)
+            let (value_id, type_params, field_id) = match self.bytecode.const_pool(field_idx) {
+                ConstPoolEntry::ValueField(value_id, type_params, field_id) => {
+                    (*value_id, type_params, *field_id)
                 }
                 _ => unreachable!(),
             };
-            let struct_ = self.vm.structs.idx(struct_id);
-            let struct_ = struct_.read();
-            let struct_name = struct_.name_with_params(self.vm, type_params);
+            let value = self.vm.values.idx(value_id);
+            let value = value.read();
+            let value_name = value.name_with_params(self.vm, type_params);
 
-            let field = &struct_.fields[field_id.to_usize()];
+            let field = &value.fields[field_id.to_usize()];
             let fname = self.vm.interner.str(field.name);
 
             format!(
-                "LoadStructField {}, {}, ConstPoolIdx({}) # {}.{}",
+                "LoadValueField {}, {}, ConstPoolIdx({}) # {}.{}",
                 dest,
                 obj,
                 field_idx.to_usize(),
-                struct_name,
+                value_name,
                 fname
             )
         });
-        self.emit_load_struct_field(dest, obj, field_idx);
+        self.emit_load_value_field(dest, obj, field_idx);
     }
 
     fn visit_load_field(&mut self, dest: Register, obj: Register, field_idx: ConstPoolIdx) {
@@ -5208,20 +5207,20 @@ impl<'a> BytecodeVisitor for CannonCodeGen<'a> {
         self.emit_new_enum(dest, idx);
     }
 
-    fn visit_new_struct(&mut self, dest: Register, idx: ConstPoolIdx) {
+    fn visit_new_value(&mut self, dest: Register, idx: ConstPoolIdx) {
         comment!(self, {
-            let (struct_id, type_params) = match self.bytecode.const_pool(idx) {
-                ConstPoolEntry::Struct(enum_id, type_params) => (*enum_id, type_params),
+            let (value_id, type_params) = match self.bytecode.const_pool(idx) {
+                ConstPoolEntry::Value(enum_id, type_params) => (*enum_id, type_params),
                 _ => unreachable!(),
             };
-            let struct_ = self.vm.structs.idx(struct_id);
-            let struct_ = struct_.read();
-            let struct_name = struct_.name_with_params(self.vm, type_params);
+            let value = self.vm.values.idx(value_id);
+            let value = value.read();
+            let value_name = value.name_with_params(self.vm, type_params);
             format!(
-                "NewStruct {}, ConstPoolIdx({}) # {}",
+                "NewValue {}, ConstPoolIdx({}) # {}",
                 dest,
                 idx.to_usize(),
-                struct_name,
+                value_name,
             )
         });
         self.emit_new_struct(dest, idx);
@@ -5372,7 +5371,7 @@ pub fn mode(vm: &VM, ty: BytecodeType) -> MachineMode {
                 EnumLayout::Ptr | EnumLayout::Tagged => MachineMode::Ptr,
             }
         }
-        BytecodeType::Struct(_, _)
+        BytecodeType::Value(_, _)
         | BytecodeType::Class(_, _)
         | BytecodeType::Unit
         | BytecodeType::Lambda(_, _) => {
@@ -5403,11 +5402,11 @@ pub fn size(vm: &VM, ty: BytecodeType) -> i32 {
                 EnumLayout::Ptr | EnumLayout::Tagged => mem::ptr_width(),
             }
         }
-        BytecodeType::Struct(struct_id, type_params) => {
-            let sdef_id = specialize_struct_id_params(vm, struct_id, type_params);
-            let sdef = vm.struct_instances.idx(sdef_id);
+        BytecodeType::Value(value_id, type_params) => {
+            let vdef_id = specialize_value_id_params(vm, value_id, type_params);
+            let vdef = vm.value_instances.idx(vdef_id);
 
-            sdef.size
+            vdef.size
         }
         BytecodeType::Class(_, _) | BytecodeType::Lambda(_, _) => {
             unreachable!()

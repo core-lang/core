@@ -124,26 +124,26 @@ fn check_enums(sa: &SemAnalysis) {
 }
 
 fn check_structs(sa: &SemAnalysis) {
-    for struct_ in sa.structs.iter() {
+    for value in sa.values.iter() {
         let type_param_definition;
 
         {
-            let struct_ = struct_.read();
-            let mut symtable = ModuleSymTable::new(sa, struct_.module_id);
+            let value = value.read();
+            let mut symtable = ModuleSymTable::new(sa, value.module_id);
             symtable.push_level();
 
             type_param_definition = read_type_param_definition(
                 sa,
-                struct_.ast.type_params.as_ref(),
+                value.ast.type_params.as_ref(),
                 &mut symtable,
-                struct_.file_id,
-                struct_.pos,
+                value.file_id,
+                value.pos,
             );
 
             symtable.pop_level();
         }
 
-        struct_.write().type_params = Some(type_param_definition);
+        value.write().type_params = Some(type_param_definition);
     }
 }
 

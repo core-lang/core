@@ -291,14 +291,14 @@ mod matching {
                 true
             }
 
-            SourceType::Struct(check_struct_id, _) => {
-                let ext_struct_id = if let Some(struct_id) = ext_ty.struct_id() {
-                    struct_id
+            SourceType::Value(check_value_id, _) => {
+                let ext_value_id = if let Some(value_id) = ext_ty.value_id() {
+                    value_id
                 } else {
                     return false;
                 };
 
-                if check_struct_id != ext_struct_id {
+                if check_value_id != ext_value_id {
                     return false;
                 }
 

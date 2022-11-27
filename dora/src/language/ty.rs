@@ -3,8 +3,8 @@ use std::sync::Arc;
 
 use crate::language::sem_analysis::{
     ClassDefinition, ClassDefinitionId, EnumDefinition, EnumDefinitionId, FctDefinition,
-    SemAnalysis, StructDefinition, StructDefinitionId, TraitDefinitionId, TypeParamDefinition,
-    TypeParamId,
+    SemAnalysis, TraitDefinitionId, TypeParamDefinition, TypeParamId, ValueDefinition,
+    ValueDefinitionId,
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -37,7 +37,7 @@ pub enum SourceType {
     Class(ClassDefinitionId, SourceTypeArray),
 
     // some struct
-    Struct(StructDefinitionId, SourceTypeArray),
+    Value(ValueDefinitionId, SourceTypeArray),
 
     // some tuple
     Tuple(SourceTypeArray),
@@ -153,7 +153,7 @@ impl SourceType {
 
     pub fn is_struct(&self) -> bool {
         match self {
-            &SourceType::Struct(_, _) => true,
+            &SourceType::Value(_, _) => true,
             _ => false,
         }
     }
@@ -193,16 +193,16 @@ impl SourceType {
         }
     }
 
-    pub fn primitive_struct_id(&self, sa: &SemAnalysis) -> Option<StructDefinitionId> {
+    pub fn primitive_value_id(&self, sa: &SemAnalysis) -> Option<ValueDefinitionId> {
         match self {
-            SourceType::Unit => Some(sa.known.structs.unit()),
-            SourceType::Bool => Some(sa.known.structs.bool()),
-            SourceType::UInt8 => Some(sa.known.structs.uint8()),
-            SourceType::Char => Some(sa.known.structs.char()),
-            SourceType::Int32 => Some(sa.known.structs.int32()),
-            SourceType::Int64 => Some(sa.known.structs.int64()),
-            SourceType::Float32 => Some(sa.known.structs.float32()),
-            SourceType::Float64 => Some(sa.known.structs.float64()),
+            SourceType::Unit => Some(sa.known.values.unit()),
+            SourceType::Bool => Some(sa.known.values.bool()),
+            SourceType::UInt8 => Some(sa.known.values.uint8()),
+            SourceType::Char => Some(sa.known.values.char()),
+            SourceType::Int32 => Some(sa.known.values.int32()),
+            SourceType::Int64 => Some(sa.known.values.int64()),
+            SourceType::Float32 => Some(sa.known.values.float32()),
+            SourceType::Float64 => Some(sa.known.values.float64()),
             _ => None,
         }
     }
@@ -218,9 +218,9 @@ impl SourceType {
         }
     }
 
-    pub fn struct_id(&self) -> Option<StructDefinitionId> {
+    pub fn value_id(&self) -> Option<ValueDefinitionId> {
         match self {
-            SourceType::Struct(struct_id, _) => Some(*struct_id),
+            SourceType::Value(value_id, _) => Some(*value_id),
             _ => None,
         }
     }
@@ -236,7 +236,7 @@ impl SourceType {
         match self {
             SourceType::Class(_, params)
             | SourceType::Enum(_, params)
-            | SourceType::Struct(_, params)
+            | SourceType::Value(_, params)
             | SourceType::Trait(_, params) => params.clone(),
             _ => SourceTypeArray::empty(),
         }
@@ -305,10 +305,10 @@ impl SourceType {
         writer.name(self.clone())
     }
 
-    pub fn name_struct(&self, sa: &SemAnalysis, struct_: &StructDefinition) -> String {
+    pub fn name_value(&self, sa: &SemAnalysis, value: &ValueDefinition) -> String {
         let writer = SourceTypePrinter {
             sa,
-            type_params: Some(struct_.type_params()),
+            type_params: Some(value.type_params()),
         };
 
         writer.name(self.clone())
@@ -359,7 +359,7 @@ impl SourceType {
             | SourceType::Bool
             | SourceType::UInt8
             | SourceType::Char
-            | SourceType::Struct(_, _)
+            | SourceType::Value(_, _)
             | SourceType::Enum(_, _)
             | SourceType::Trait(_, _) => *self == other,
             SourceType::Int32 | SourceType::Int64 | SourceType::Float32 | SourceType::Float64 => {
@@ -431,7 +431,7 @@ impl SourceType {
             | SourceType::TypeParam(_) => true,
             SourceType::Enum(_, params)
             | SourceType::Class(_, params)
-            | SourceType::Struct(_, params) => {
+            | SourceType::Value(_, params) => {
                 for param in params.iter() {
                     if !param.is_defined_type(sa) {
                         return false;
@@ -466,7 +466,7 @@ impl SourceType {
             | SourceType::Ptr => true,
             SourceType::Class(_, params)
             | SourceType::Enum(_, params)
-            | SourceType::Struct(_, params)
+            | SourceType::Value(_, params)
             | SourceType::Trait(_, params) => {
                 for param in params.iter() {
                     if !param.is_concrete_type(sa) {
@@ -689,10 +689,10 @@ impl<'a> SourceTypePrinter<'a> {
                     format!("{}[{}]", base, params)
                 }
             }
-            SourceType::Struct(sid, type_params) => {
-                let struc = self.sa.structs.idx(sid);
-                let struc = struc.read();
-                let name = struc.name;
+            SourceType::Value(value_id, type_params) => {
+                let value = self.sa.values.idx(value_id);
+                let value = value.read();
+                let name = value.name;
                 let name = self.sa.interner.str(name).to_string();
 
                 if type_params.len() == 0 {

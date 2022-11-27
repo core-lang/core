@@ -8,7 +8,7 @@ use crate::bytecode::{
 };
 use crate::language::generator::generate_fct;
 use crate::language::sem_analysis::{
-    create_tuple, GlobalDefinitionId, SemAnalysis, StructDefinitionFieldId, TypeParamId,
+    create_tuple, GlobalDefinitionId, SemAnalysis, TypeParamId, ValueDefinitionFieldId,
 };
 use crate::language::test;
 use crate::language::ty::{SourceType, SourceTypeArray};
@@ -45,11 +45,11 @@ fn code_method_with_class_name(code: &'static str, class_name: &'static str) -> 
     })
 }
 
-fn code_method_with_struct_name(code: &'static str, struct_name: &'static str) -> Vec<Bytecode> {
+fn code_method_with_value_name(code: &'static str, value_name: &'static str) -> Vec<Bytecode> {
     test::check_valid(code, |sa| {
         let fct_id = sa
-            .struct_method_by_name(struct_name, "f", false)
-            .unwrap_or_else(|| panic!("no function `f` in Class `{}`.", struct_name));
+            .value_method_by_name(value_name, "f", false)
+            .unwrap_or_else(|| panic!("no function `f` in value type `{}`.", value_name));
         let fct = generate_fct(sa, fct_id);
         build(&fct)
     })
@@ -2286,48 +2286,48 @@ fn gen_method_call_ptr_with_3_args() {
 fn gen_new_struct() {
     gen_fct(
         "
-        struct Foo { f1: Int32, f2: Bool }
+        value Foo { f1: Int32, f2: Bool }
         fun f(): Foo { Foo(10i32, false) }
     ",
         |sa, code, fct| {
-            let struct_id = sa.struct_by_name("Foo");
+            let value_id = sa.value_by_name("Foo");
             let expected = vec![
                 ConstInt32(r(0), 10),
                 ConstFalse(r(1)),
                 PushRegister(r(0)),
                 PushRegister(r(1)),
-                NewStruct(r(2), ConstPoolIdx(1)),
+                NewValue(r(2), ConstPoolIdx(1)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
 
             assert_eq!(
                 fct.const_pool(ConstPoolIdx(1)),
-                &ConstPoolEntry::Struct(struct_id, SourceTypeArray::empty())
+                &ConstPoolEntry::Value(value_id, SourceTypeArray::empty())
             );
         },
     );
 
     gen_fct(
         "
-        struct Foo[T] { f1: T, f2: Bool }
+        value Foo[T] { f1: T, f2: Bool }
         fun f[T](val: T): Foo[T] { Foo[T](val, false) }
     ",
         |sa, code, fct| {
-            let struct_id = sa.struct_by_name("Foo");
+            let value_id = sa.value_by_name("Foo");
             let expected = vec![
                 ConstFalse(r(1)),
                 PushRegister(r(0)),
                 PushRegister(r(1)),
-                NewStruct(r(2), ConstPoolIdx(0)),
+                NewValue(r(2), ConstPoolIdx(0)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
 
             assert_eq!(
                 fct.const_pool(ConstPoolIdx(0)),
-                &ConstPoolEntry::Struct(
-                    struct_id,
+                &ConstPoolEntry::Value(
+                    value_id,
                     SourceTypeArray::single(SourceType::TypeParam(TypeParamId(0)))
                 )
             );
@@ -2339,7 +2339,7 @@ fn gen_new_struct() {
 fn gen_move_struct() {
     let result = code(
         "
-        struct Foo { f1: Int32, f2: Bool }
+        value Foo { f1: Int32, f2: Bool }
         fun f(x: Foo): Foo { let y = x; y }
     ",
     );
@@ -2348,22 +2348,22 @@ fn gen_move_struct() {
 }
 
 #[test]
-fn gen_struct_field() {
+fn gen_value_field() {
     gen_fct(
         "
-        struct Foo { f1: Int32, f2: Bool }
+        value Foo { f1: Int32, f2: Bool }
         fun f(x: Foo): Int32 { x.f1 }
     ",
         |sa, code, fct| {
-            let struct_id = sa.struct_by_name("Foo");
-            let expected = vec![LoadStructField(r(1), r(0), ConstPoolIdx(0)), Ret(r(1))];
+            let value_id = sa.value_by_name("Foo");
+            let expected = vec![LoadValueField(r(1), r(0), ConstPoolIdx(0)), Ret(r(1))];
             assert_eq!(expected, code);
             assert_eq!(
                 fct.const_pool(ConstPoolIdx(0)),
-                &ConstPoolEntry::StructField(
-                    struct_id,
+                &ConstPoolEntry::ValueField(
+                    value_id,
                     SourceTypeArray::empty(),
-                    StructDefinitionFieldId(0)
+                    ValueDefinitionFieldId(0)
                 )
             );
         },
@@ -2371,19 +2371,19 @@ fn gen_struct_field() {
 
     gen_fct(
         "
-        struct Foo[T] { f1: T, f2: Bool }
+        value Foo[T] { f1: T, f2: Bool }
         fun f(x: Foo[Int32]): Int32 { x.f1 }
     ",
         |sa, code, fct| {
-            let struct_id = sa.struct_by_name("Foo");
-            let expected = vec![LoadStructField(r(1), r(0), ConstPoolIdx(0)), Ret(r(1))];
+            let value_id = sa.value_by_name("Foo");
+            let expected = vec![LoadValueField(r(1), r(0), ConstPoolIdx(0)), Ret(r(1))];
             assert_eq!(expected, code);
             assert_eq!(
                 fct.const_pool(ConstPoolIdx(0)),
-                &ConstPoolEntry::StructField(
-                    struct_id,
+                &ConstPoolEntry::ValueField(
+                    value_id,
                     SourceTypeArray::single(SourceType::Int32),
-                    StructDefinitionFieldId(0)
+                    ValueDefinitionFieldId(0)
                 )
             );
         },
@@ -2391,10 +2391,10 @@ fn gen_struct_field() {
 }
 
 #[test]
-fn gen_struct_array() {
+fn gen_value_array() {
     let result = code(
         "
-        struct Foo { f1: Int32, f2: Bool }
+        value Foo { f1: Int32, f2: Bool }
         fun f(x: Array[Foo], idx: Int64): Foo { x(idx) }
     ",
     );
@@ -2403,7 +2403,7 @@ fn gen_struct_array() {
 
     let result = code(
         "
-        struct Foo { f1: Int32, f2: Bool }
+        value Foo { f1: Int32, f2: Bool }
         fun f(x: Array[Foo], idx: Int64, value: Foo): Unit { x(idx) = value; }
     ",
     );
@@ -2909,7 +2909,7 @@ fn gen_position_new_object_with_multiple_args() {
 
 #[test]
 fn gen_self_for_bool() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Self; }
             impl MyId for Bool { fun f(): Bool { return self; } }
             ",
@@ -2921,7 +2921,7 @@ fn gen_self_for_bool() {
 
 #[test]
 fn gen_self_for_uint8() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Self; }
             impl MyId for UInt8 { fun f(): UInt8 { return self; } }
             ",
@@ -2933,7 +2933,7 @@ fn gen_self_for_uint8() {
 
 #[test]
 fn gen_self_for_int() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Self; }
             impl MyId for Int32 { fun f(): Int32 { return self; } }
             ",
@@ -2945,7 +2945,7 @@ fn gen_self_for_int() {
 
 #[test]
 fn gen_self_for_int64() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Self; }
             impl MyId for Int64 { fun f(): Int64 { return self; } }
             ",
@@ -2957,7 +2957,7 @@ fn gen_self_for_int64() {
 
 #[test]
 fn gen_self_for_float32() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Self; }
             impl MyId for Float32 { fun f(): Float32 { return self; } }
             ",
@@ -2969,7 +2969,7 @@ fn gen_self_for_float32() {
 
 #[test]
 fn gen_self_for_float64() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Self; }
             impl MyId for Float64 { fun f(): Float64 { return self; } }
             ",
@@ -2993,7 +2993,7 @@ fn gen_self_for_string() {
 
 #[test]
 fn gen_self_assign_for_bool() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Unit; }
             impl MyId for Bool { fun f(): Unit { let x = self; } }
             ",
@@ -3005,7 +3005,7 @@ fn gen_self_assign_for_bool() {
 
 #[test]
 fn gen_self_assign_for_uint8() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Unit; }
             impl MyId for UInt8 { fun f(): Unit { let x = self; } }
             ",
@@ -3017,7 +3017,7 @@ fn gen_self_assign_for_uint8() {
 
 #[test]
 fn gen_self_assign_for_int() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Unit; }
             impl MyId for Int32 { fun f(): Unit { let x = self; } }
             ",
@@ -3029,7 +3029,7 @@ fn gen_self_assign_for_int() {
 
 #[test]
 fn gen_self_assign_for_int64() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Unit; }
             impl MyId for Int64 { fun f(): Unit { let x = self; } }
             ",
@@ -3041,7 +3041,7 @@ fn gen_self_assign_for_int64() {
 
 #[test]
 fn gen_self_assign_for_float32() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Unit; }
             impl MyId for Float32 { fun f(): Unit { let x = self; } }
             ",
@@ -3053,7 +3053,7 @@ fn gen_self_assign_for_float32() {
 
 #[test]
 fn gen_self_assign_for_float64() {
-    let result = code_method_with_struct_name(
+    let result = code_method_with_value_name(
         "trait MyId { fun f(): Unit; }
             impl MyId for Float64 { fun f(): Unit { let x = self; } }
             ",
@@ -3081,7 +3081,7 @@ fn gen_reinterpret_float32_as_int32() {
         "fun f(a: Float32): Int32 { a.asInt32() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Float32", "asInt32", false)
+                .value_method_by_name("Float32", "asInt32", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3103,7 +3103,7 @@ fn gen_reinterpret_int32_as_float32() {
         "fun f(a: Int32): Float32 { a.asFloat32() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Int32", "asFloat32", false)
+                .value_method_by_name("Int32", "asFloat32", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3125,7 +3125,7 @@ fn gen_reinterpret_float64_as_int64() {
         "fun f(a: Float64): Int64 { a.asInt64() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Float64", "asInt64", false)
+                .value_method_by_name("Float64", "asInt64", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3147,7 +3147,7 @@ fn gen_reinterpret_int64_as_float64() {
         "fun f(a: Int64): Float64 { a.asFloat64() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Int64", "asFloat64", false)
+                .value_method_by_name("Int64", "asFloat64", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3205,7 +3205,7 @@ fn gen_convert_int32_to_float32() {
         "fun f(a: Int32): Float32 { a.toFloat32() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Int32", "toFloat32", false)
+                .value_method_by_name("Int32", "toFloat32", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3227,7 +3227,7 @@ fn gen_convert_int32_to_float64() {
         "fun f(a: Int32): Float64 { a.toFloat64() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Int32", "toFloat64", false)
+                .value_method_by_name("Int32", "toFloat64", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3249,7 +3249,7 @@ fn gen_convert_int64_to_float32() {
         "fun f(a: Int64): Float32 { a.toFloat32() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Int64", "toFloat32", false)
+                .value_method_by_name("Int64", "toFloat32", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3271,7 +3271,7 @@ fn gen_convert_int64_to_float64() {
         "fun f(a: Int64): Float64 { a.toFloat64() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Int64", "toFloat64", false)
+                .value_method_by_name("Int64", "toFloat64", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3293,7 +3293,7 @@ fn gen_truncate_float32_to_int32() {
         "fun f(a: Float32): Int32 { a.toInt32() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Float32", "toInt32", false)
+                .value_method_by_name("Float32", "toInt32", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3315,7 +3315,7 @@ fn gen_truncate_float32_to_int64() {
         "fun f(a: Float32): Int64 { a.toInt64() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Float32", "toInt64", false)
+                .value_method_by_name("Float32", "toInt64", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3337,7 +3337,7 @@ fn gen_truncate_float64_to_int32() {
         "fun f(a: Float64): Int32 { a.toInt32() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Float64", "toInt32", false)
+                .value_method_by_name("Float64", "toInt32", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3359,7 +3359,7 @@ fn gen_truncate_float64_to_int64() {
         "fun f(a: Float64): Int64 { a.toInt64() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Float64", "toInt64", false)
+                .value_method_by_name("Float64", "toInt64", false)
                 .unwrap();
             let expected = vec![
                 PushRegister(r(0)),
@@ -3534,7 +3534,7 @@ fn gen_bool_to_string() {
         "fun f(a: Bool): String { a.toString() }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Bool", "toString", false)
+                .value_method_by_name("Bool", "toString", false)
                 .expect("Bool::toString not found");
             let expected = vec![
                 PushRegister(r(0)),
@@ -3676,7 +3676,7 @@ fn gen_compare_to_method() {
         "fun f(a: Int64, b: Int64): Int32 { a.compareTo(b) }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Int64", "compareTo", false)
+                .value_method_by_name("Int64", "compareTo", false)
                 .expect("Int64::compareTo not found");
             let expected = vec![
                 PushRegister(r(0)),
@@ -3696,7 +3696,7 @@ fn gen_compare_to_method() {
         "fun f(a: Int32, b: Int32): Int32 { a.compareTo(b) }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Int32", "compareTo", false)
+                .value_method_by_name("Int32", "compareTo", false)
                 .expect("Int32::compareTo not found");
             let expected = vec![
                 PushRegister(r(0)),
@@ -3716,7 +3716,7 @@ fn gen_compare_to_method() {
         "fun f(a: Float32, b: Float32): Int32 { a.compareTo(b) }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Float32", "compareTo", false)
+                .value_method_by_name("Float32", "compareTo", false)
                 .expect("Float32::compareTo not found");
             let expected = vec![
                 PushRegister(r(0)),
@@ -3736,7 +3736,7 @@ fn gen_compare_to_method() {
         "fun f(a: Float64, b: Float64): Int32 { a.compareTo(b) }",
         |sa, code, fct| {
             let fct_id = sa
-                .struct_method_by_name("Float64", "compareTo", false)
+                .value_method_by_name("Float64", "compareTo", false)
                 .expect("Float64::compareTo not found");
             let expected = vec![
                 PushRegister(r(0)),
@@ -4082,7 +4082,7 @@ pub enum Bytecode {
     Mov(Register, Register),
 
     LoadTupleElement(Register, Register, ConstPoolIdx),
-    LoadStructField(Register, Register, ConstPoolIdx),
+    LoadValueField(Register, Register, ConstPoolIdx),
 
     LoadField(Register, Register, ConstPoolIdx),
     StoreField(Register, Register, ConstPoolIdx),
@@ -4128,7 +4128,7 @@ pub enum Bytecode {
     NewArray(Register, ConstPoolIdx, Register),
     NewTuple(Register, ConstPoolIdx),
     NewEnum(Register, ConstPoolIdx),
-    NewStruct(Register, ConstPoolIdx),
+    NewValue(Register, ConstPoolIdx),
     NewTraitObject(Register, ConstPoolIdx, Register),
     NewLambda(Register, ConstPoolIdx),
 
@@ -4262,8 +4262,8 @@ impl<'a> BytecodeVisitor for BytecodeArrayBuilder<'a> {
         self.emit(Bytecode::LoadTupleElement(src, dest, idx));
     }
 
-    fn visit_load_struct_field(&mut self, dest: Register, obj: Register, idx: ConstPoolIdx) {
-        self.emit(Bytecode::LoadStructField(dest, obj, idx));
+    fn visit_load_value_field(&mut self, dest: Register, obj: Register, idx: ConstPoolIdx) {
+        self.emit(Bytecode::LoadValueField(dest, obj, idx));
     }
 
     fn visit_load_field(&mut self, dest: Register, obj: Register, idx: ConstPoolIdx) {
@@ -4430,8 +4430,8 @@ impl<'a> BytecodeVisitor for BytecodeArrayBuilder<'a> {
     fn visit_new_enum(&mut self, dest: Register, idx: ConstPoolIdx) {
         self.emit(Bytecode::NewEnum(dest, idx));
     }
-    fn visit_new_struct(&mut self, dest: Register, idx: ConstPoolIdx) {
-        self.emit(Bytecode::NewStruct(dest, idx));
+    fn visit_new_value(&mut self, dest: Register, idx: ConstPoolIdx) {
+        self.emit(Bytecode::NewValue(dest, idx));
     }
     fn visit_new_trait_object(&mut self, dest: Register, idx: ConstPoolIdx, src: Register) {
         self.emit(Bytecode::NewTraitObject(dest, idx, src));

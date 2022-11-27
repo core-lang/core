@@ -5,7 +5,7 @@ use crate::gc::Address;
 use crate::language::sem_analysis::{
     AnnotationDefinitionId, ClassDefinition, ClassDefinitionId, EnumDefinitionId,
     ExtensionDefinitionId, FctDefinitionId, Field, FieldId, Intrinsic, ModuleDefinition,
-    ModuleDefinitionId, SemAnalysis, StructDefinitionId, TraitDefinitionId, Visibility,
+    ModuleDefinitionId, SemAnalysis, TraitDefinitionId, ValueDefinitionId, Visibility,
 };
 use crate::language::sym::Sym;
 use crate::language::ty::SourceType;
@@ -52,52 +52,52 @@ pub fn resolve_internal_annotations(sa: &mut SemAnalysis) {
 pub fn resolve_internal_classes(sa: &mut SemAnalysis) {
     let stdlib_id = sa.stdlib_module_id();
 
-    sa.known.structs.unit = Some(internal_struct(
+    sa.known.values.unit = Some(internal_value(
         sa,
         stdlib_id,
         "primitives::Unit",
         Some(SourceType::Unit),
     ));
 
-    sa.known.structs.bool = Some(internal_struct(
+    sa.known.values.bool = Some(internal_value(
         sa,
         stdlib_id,
         "primitives::Bool",
         Some(SourceType::Bool),
     ));
 
-    sa.known.structs.uint8 = Some(internal_struct(
+    sa.known.values.uint8 = Some(internal_value(
         sa,
         stdlib_id,
         "primitives::UInt8",
         Some(SourceType::UInt8),
     ));
-    sa.known.structs.char = Some(internal_struct(
+    sa.known.values.char = Some(internal_value(
         sa,
         stdlib_id,
         "primitives::Char",
         Some(SourceType::Char),
     ));
-    sa.known.structs.int32 = Some(internal_struct(
+    sa.known.values.int32 = Some(internal_value(
         sa,
         stdlib_id,
         "primitives::Int32",
         Some(SourceType::Int32),
     ));
-    sa.known.structs.int64 = Some(internal_struct(
+    sa.known.values.int64 = Some(internal_value(
         sa,
         stdlib_id,
         "primitives::Int64",
         Some(SourceType::Int64),
     ));
 
-    sa.known.structs.float32 = Some(internal_struct(
+    sa.known.values.float32 = Some(internal_value(
         sa,
         stdlib_id,
         "primitives::Float32",
         Some(SourceType::Float32),
     ));
-    sa.known.structs.float64 = Some(internal_struct(
+    sa.known.values.float64 = Some(internal_value(
         sa,
         stdlib_id,
         "primitives::Float64",
@@ -292,24 +292,24 @@ fn internal_class(
     cls_id
 }
 
-fn internal_struct(
+fn internal_value(
     sa: &mut SemAnalysis,
     module_id: ModuleDefinitionId,
     name: &str,
     ty: Option<SourceType>,
-) -> StructDefinitionId {
-    let struct_id = resolve_name(sa, name, module_id)
-        .to_struct()
-        .expect("struct expected");
+) -> ValueDefinitionId {
+    let value_id = resolve_name(sa, name, module_id)
+        .to_value()
+        .expect("value type expected");
 
-    let struct_ = sa.structs.idx(struct_id);
-    let mut struct_ = struct_.write();
+    let value = sa.values.idx(value_id);
+    let mut value = value.write();
 
-    assert!(struct_.internal);
-    struct_.primitive_ty = ty;
-    struct_.internal_resolved = true;
+    assert!(value.internal);
+    value.primitive_ty = ty;
+    value.internal_resolved = true;
 
-    struct_id
+    value_id
 }
 
 fn resolve_name(sa: &SemAnalysis, name: &str, module_id: ModuleDefinitionId) -> Sym {
@@ -1825,12 +1825,12 @@ fn common_method(
             internal_class_method(sa, cls_id, method_name, is_static, implementation)
         }
 
-        Sym::Struct(struct_id) => {
-            let struct_ = sa.structs.idx(struct_id);
-            let struct_ = struct_.read();
+        Sym::Value(value_id) => {
+            let value = sa.values.idx(value_id);
+            let value = value.read();
             internal_extension_method(
                 sa,
-                &struct_.extensions,
+                &value.extensions,
                 method_name,
                 is_static,
                 implementation,

@@ -114,7 +114,7 @@ impl<'x> ImplCheck<'x> {
                 self.sa.diag.lock().report(
                     self.file_id,
                     self.ast.extended_type.pos(),
-                    ErrorMessage::ClassEnumStructExpected,
+                    ErrorMessage::ClassEnumValueExpected,
                 );
             }
         }
@@ -134,19 +134,19 @@ impl<'x> ImplCheck<'x> {
                 | SourceType::Int64
                 | SourceType::Float32
                 | SourceType::Float64 => {
-                    let struct_id = impl_
+                    let value_id = impl_
                         .extended_ty
-                        .primitive_struct_id(self.sa)
+                        .primitive_value_id(self.sa)
                         .expect("primitive expected");
-                    let struct_ = self.sa.structs.idx(struct_id);
-                    let mut struct_ = struct_.write();
-                    struct_.impls.push(impl_.id());
+                    let value = self.sa.values.idx(value_id);
+                    let mut value = value.write();
+                    value.impls.push(impl_.id());
                 }
 
-                SourceType::Struct(struct_id, _) => {
-                    let struct_ = self.sa.structs.idx(struct_id);
-                    let mut struct_ = struct_.write();
-                    struct_.impls.push(impl_.id());
+                SourceType::Value(value_id, _) => {
+                    let value = self.sa.values.idx(value_id);
+                    let mut value = value.write();
+                    value.impls.push(impl_.id());
                 }
 
                 SourceType::Class(cls_id, _) => {
@@ -248,7 +248,7 @@ mod tests {
         err(
             "trait Foo {} trait A {} impl Foo for A {}",
             pos(1, 38),
-            ErrorMessage::ClassEnumStructExpected,
+            ErrorMessage::ClassEnumValueExpected,
         );
     }
 
@@ -261,21 +261,21 @@ mod tests {
     }
 
     #[test]
-    fn impl_struct() {
+    fn impl_value() {
         ok("
             trait Foo {}
-            struct A(x: Int32)
+            value A(x: Int32)
             impl Foo for A {}
         ");
         ok("
             trait Foo {}
-            struct A[T](x: Int32)
+            value A[T](x: Int32)
             impl Foo for A[Int32] {}
             impl Foo for A[Float32] {}
         ");
         ok("
             trait Foo {}
-            struct A[T](x: Int32)
+            value A[T](x: Int32)
             impl[T] Foo for A[T] {}
         ");
     }
@@ -309,7 +309,7 @@ mod tests {
     fn impl_unconstrained_type_param() {
         err(
             "
-            struct MyFoo[T]
+            value MyFoo[T]
             trait MyTrait {}
             impl[T] MyTrait for MyFoo[Int32] {}
         ",
