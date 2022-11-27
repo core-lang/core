@@ -1,7 +1,7 @@
 use crate::language::error::msg::ErrorMessage;
 use crate::language::fctbodyck::body::{arg_names_valid, args_compatible_fct};
 use crate::language::sem_analysis::{
-    find_methods_in_class, find_methods_in_enum, find_methods_in_struct, FctDefinition,
+    find_methods_in_class, find_methods_in_enum, find_methods_in_value, FctDefinition,
     FctDefinitionId, SemAnalysis, SourceFileId, TraitDefinitionId, TypeParamDefinition,
 };
 use crate::language::specialize::replace_type_param;
@@ -322,8 +322,8 @@ impl<'a> MethodLookup<'a> {
                 name,
                 is_static,
             )
-        } else if object_type.is_struct() || object_type.is_primitive() {
-            find_methods_in_struct(
+        } else if object_type.is_value() || object_type.is_primitive() {
+            find_methods_in_value(
                 self.sa,
                 object_type,
                 self.type_param_defs.unwrap(),
