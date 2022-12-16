@@ -355,7 +355,7 @@ mod tests {
             use foo::bar::Foo;
             mod foo {
                 mod bar {
-                    class Foo
+                    class Foo;
                 }
             }
         ",
@@ -371,7 +371,7 @@ mod tests {
             use foo::bar::Foo;
             mod foo {
                 @pub mod bar {
-                    class Foo
+                    class Foo;
                 }
             }
         ",

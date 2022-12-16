@@ -47,7 +47,7 @@ impl[T] SharedQueue[T] {
         });
 
         self.conditionNonFull.notifyAll();
-        value
+        return value;
     }
 }
 

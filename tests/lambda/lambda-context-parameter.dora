@@ -10,8 +10,8 @@ fun create_lambda(value: Int64, increment: Int64): (): Int64 {
     let lambda = ||: Int64 {
         let result = value;
         value = value + increment;
-        result
+        return result;
     };
 
-    lambda
+    return lambda;
 }

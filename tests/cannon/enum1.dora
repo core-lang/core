@@ -18,5 +18,5 @@ fun ne(x: Foo, y: Foo): Bool {
 
 enum Foo {
     A,
-    B
+    B,
 }

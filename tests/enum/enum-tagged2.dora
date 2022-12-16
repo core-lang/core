@@ -1,7 +1,7 @@
 struct Data {
     x: Int32,
     y: Int32,
-    z: String
+    z: String,
 }
 
 enum Foo { A(Int32, String, Data, (Int32, Int32), Float64), B }

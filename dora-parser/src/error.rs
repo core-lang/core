@@ -37,7 +37,10 @@ impl ParseError {
 
             // Parser errors
             ParseError::ExpectedTopLevelElement(ref token) => {
-                format!("expected function or class but got {}.", token)
+                format!(
+                    "expected a top-level element (`class`, `struct`, `trait`, `impl`, `enum`, `fun`, `let` or `var`), but got {}.",
+                    token
+                )
             }
             ParseError::MisplacedAnnotation(ref modifier) => {
                 format!("misplaced annotation `{}`.", modifier)

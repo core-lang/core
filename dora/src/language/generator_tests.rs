@@ -3395,7 +3395,7 @@ fn gen_enum_mov_generic() {
         "enum MyEnum { A(Int32), B }
         fun f(x: MyEnum): MyEnum {
             let tmp = x;
-            tmp
+            return tmp;
         }",
     );
     let expected = vec![Mov(r(1), r(0)), Ret(r(1))];

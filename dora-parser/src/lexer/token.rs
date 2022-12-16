@@ -3,7 +3,7 @@ use std::result::Result;
 
 use crate::lexer::position::{Position, Span};
 
-#[derive(PartialEq, Eq, Debug, Clone)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum TokenKind {
     // literals
     StringTail(String),
@@ -75,7 +75,6 @@ pub enum TokenKind {
     // basic syntax
     Eq,
     Comma,
-    Semicolon,
     Dot,
     DotDotDot,
     Colon,
@@ -90,6 +89,10 @@ pub enum TokenKind {
     RBracket,
     LBrace,
     RBrace,
+
+    // line/statement/expression termination
+    NewLine,
+    Semicolon,
 
     // unused
     Type,
@@ -178,7 +181,6 @@ impl TokenKind {
             // basic syntax
             TokenKind::Eq => "=",
             TokenKind::Comma => ",",
-            TokenKind::Semicolon => ";",
             TokenKind::Dot => ".",
             TokenKind::DotDotDot => "...",
             TokenKind::Colon => ":",
@@ -193,6 +195,10 @@ impl TokenKind {
             TokenKind::RBracket => "]",
             TokenKind::LBrace => "{",
             TokenKind::RBrace => "}",
+
+            // line/statement/expression termination
+            TokenKind::NewLine => "\\n",
+            TokenKind::Semicolon => ";",
 
             // unused
             TokenKind::Type => "type",
@@ -220,7 +226,7 @@ pub enum FloatSuffix {
     Float64,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Token {
     pub kind: TokenKind,
     pub position: Position,

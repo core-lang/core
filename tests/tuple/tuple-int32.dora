@@ -7,20 +7,20 @@ fun main(): Unit {
 
 fun tpl1(): Int32 {
     let x = (1i32, 2i32, 3i32);
-    x.0
+    return x.0;
 }
 
 fun tpl2(): Int32 {
     let x = (1i32, 2i32, 3i32);
-    x.1
+    return x.1;
 }
 
 fun tpl3(): Int32 {
     let x = (1i32, 2i32, 3i32);
-    x.2
+    return x.2;
 }
 
 fun tplsum(): Int32 {
     let x = (1i32, 2i32, 3i32);
-    x.0 + x.1 + x.2
+    return x.0 + x.1 + x.2;
 }

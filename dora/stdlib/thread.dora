@@ -4,9 +4,7 @@
 }
 
 impl Thread {
-    @pub fun id(): Int64 {
-        self.id
-    }
+    @pub fun id(): Int64 = self.id;
 
     @pub @static @internal fun current(): Thread;
 
@@ -61,7 +59,7 @@ impl Mutex {
         self.lockOp();
         let result = fct();
         self.unlockOp();
-        result
+        return result;
     }
 
     fun lockOp(): Unit {
@@ -91,9 +89,8 @@ impl Mutex {
         }
     }
 
-    fun transitionToLockedContended(): Bool {
-        self.data.compareExchange(LOCKED, LOCKED_CONTENDED) != UNLOCKED
-    }
+    fun transitionToLockedContended(): Bool =
+        self.data.compareExchange(LOCKED, LOCKED_CONTENDED) != UNLOCKED;
 
     fun unlockOp(): Unit {
         assert(self.owner_thread_id == Thread::current().id());

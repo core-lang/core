@@ -7,12 +7,12 @@ fun main(): Unit {
     match object(0i64) {
         Foo::A(a, b, c) => unreachable[()](),
         Foo::B => (),
-    }
+    };
     std::forceCollect();
     match object(0i64) {
         Foo::A(a, b, c) => unreachable[()](),
         Foo::B => (),
-    }
+    };
     updateArray(object);
     std::forceMinorCollect();
     match object(0i64) {

@@ -8,6 +8,6 @@ fun main(): Unit {
 fun value(foo: Foo): Int32 {
     match foo {
         Foo::A(a, b) => a + b,
-        Foo::B => 0
+        Foo::B => 0,
     }
 }

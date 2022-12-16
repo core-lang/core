@@ -61,5 +61,5 @@ class Foo2 {
   e: Int32,
   f: Int32,
   g: Int32,
-  h: Int32
+  h: Int32,
 }

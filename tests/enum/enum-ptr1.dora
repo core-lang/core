@@ -8,7 +8,7 @@ fun main(): Unit {
             assert(str == "abc");
         },
         Foo::B => unreachable[()](),
-    }
+    };
 
     let value = Foo[String]::B;
     match value {
@@ -19,5 +19,5 @@ fun main(): Unit {
 
 fun foo(x: Foo[String]): Foo[String] {
     let y = x;
-    y
+    return y;
 }

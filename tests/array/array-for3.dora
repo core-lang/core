@@ -9,5 +9,5 @@ fun mysum(x: Array[Int32]): Int32 {
     for val in x {
         entries = entries + val;
     }
-    entries
+    return entries;
 }

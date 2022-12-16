@@ -1,6 +1,5 @@
 fun main(): Unit {
-  let x = if "abc"
-    ... == "bcd" { 1 }
+  let x = if "abc" ... == "bcd" { 1 }
     ... != "abc" { 2 }
     ... .size() == 3 { 3 }
     else { -1 };

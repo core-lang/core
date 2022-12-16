@@ -41,8 +41,7 @@ fun check_iterator1(map: HashMap[Int32, String]): Unit {
     let set = BitSet::new(3i64);
 
     for (key, value) in map {
-        if key
-        ... == 1i32 {
+        if key ... == 1i32 {
             assert(value == "a");
             assert(set.contains(0i64).not());
             set.insert(0i64);
@@ -69,8 +68,7 @@ fun check_iterator2(map: HashMap[Int32, String]): Unit {
     let set = BitSet::new(3i64);
 
     for (key, value) in map {
-        if key
-        ... == 1i32 {
+        if key ... == 1i32 {
             assert(value == "a");
             assert(set.contains(0i64).not());
             set.insert(0i64);

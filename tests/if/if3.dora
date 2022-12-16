@@ -1,6 +1,5 @@
 fun main(): Unit {
-  let x = if true
-    ... == false { 1 }
+  let x = if true ... == false { 1 }
     ... == true { 2 }
     else { -1 };
   assert(x == 2);

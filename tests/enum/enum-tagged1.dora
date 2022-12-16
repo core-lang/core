@@ -10,7 +10,7 @@ fun main(): Unit {
             assert(c == 17.5f32);
         },
         Foo::B => unreachable[()](),
-    }
+    };
 
     let value = Foo::B;
     match value {
@@ -21,5 +21,5 @@ fun main(): Unit {
 
 fun foo(x: Foo): Foo {
     let y = x;
-    y
+    return y;
 }
