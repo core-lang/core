@@ -39,8 +39,7 @@ fn map_jit_flag() -> i32 {
 fn reserve(size: usize, _jitting: bool) -> Address {
     debug_assert!(mem::is_page_aligned(size));
 
-    use winapi::um::memoryapi::VirtualAlloc;
-    use winapi::um::winnt::{MEM_RESERVE, PAGE_NOACCESS};
+    use windows::Win32::System::Memory::{VirtualAlloc, MEM_RESERVE, PAGE_NOACCESS};
 
     let ptr = unsafe { VirtualAlloc(ptr::null_mut(), size, MEM_RESERVE, PAGE_NOACCESS) };
 
@@ -68,8 +67,7 @@ pub fn free(ptr: Address, size: usize) {
     debug_assert!(ptr.is_page_aligned());
     debug_assert!(mem::is_page_aligned(size));
 
-    use winapi::um::memoryapi::VirtualFree;
-    use winapi::um::winnt::MEM_RELEASE;
+    use windows::Win32::System::Memory::{VirtualFree, MEM_RELEASE};
 
     let result = unsafe { VirtualFree(ptr.to_mut_ptr(), 0, MEM_RELEASE) };
 
@@ -176,8 +174,9 @@ pub fn commit(size: usize, executable: bool) -> Address {
 pub fn commit(size: usize, executable: bool) -> Address {
     debug_assert!(mem::is_page_aligned(size));
 
-    use winapi::um::memoryapi::VirtualAlloc;
-    use winapi::um::winnt::{MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE, PAGE_READWRITE};
+    use windows::Win32::System::Memory::{
+        VirtualAlloc, MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE, PAGE_READWRITE,
+    };
 
     let prot = if executable {
         PAGE_EXECUTE_READWRITE
@@ -228,10 +227,9 @@ pub fn commit_at(ptr: Address, size: usize, permissions: MemoryPermission) {
     debug_assert!(ptr.is_page_aligned());
     debug_assert!(mem::is_page_aligned(size));
 
-    use winapi::um::memoryapi::VirtualAlloc;
-    use winapi::um::winnt::{
-        MEM_COMMIT, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_NOACCESS, PAGE_READONLY,
-        PAGE_READWRITE,
+    use windows::Win32::System::Memory::{
+        VirtualAlloc, MEM_COMMIT, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_NOACCESS,
+        PAGE_READONLY, PAGE_READWRITE,
     };
 
     let protection = match permissions {
@@ -298,8 +296,7 @@ fn uncommit(ptr: Address, size: usize) {
     debug_assert!(ptr.is_page_aligned());
     debug_assert!(mem::is_page_aligned(size));
 
-    use winapi::um::memoryapi::VirtualFree;
-    use winapi::um::winnt::MEM_DECOMMIT;
+    use windows::Win32::System::Memory::{VirtualFree, MEM_DECOMMIT};
 
     let result = unsafe { VirtualFree(ptr.to_mut_ptr(), size, MEM_DECOMMIT) };
 
@@ -331,8 +328,7 @@ pub fn discard(ptr: Address, size: usize) {
     debug_assert!(ptr.is_page_aligned());
     debug_assert!(mem::is_page_aligned(size));
 
-    use winapi::um::memoryapi::VirtualFree;
-    use winapi::um::winnt::MEM_DECOMMIT;
+    use windows::Win32::System::Memory::{VirtualFree, MEM_DECOMMIT};
 
     let result = unsafe { VirtualFree(ptr.to_mut_ptr(), size, MEM_DECOMMIT) };
 
@@ -371,9 +367,9 @@ pub fn protect(start: Address, size: usize, access: MemoryPermission) {
     debug_assert!(start.is_page_aligned());
     debug_assert!(mem::is_page_aligned(size));
 
-    use winapi::um::memoryapi::VirtualAlloc;
-    use winapi::um::winnt::{
-        MEM_COMMIT, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_READONLY, PAGE_READWRITE,
+    use windows::Win32::System::Memory::{
+        VirtualAlloc, MEM_COMMIT, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_READONLY,
+        PAGE_READWRITE,
     };
 
     if access == MemoryPermission::None {
