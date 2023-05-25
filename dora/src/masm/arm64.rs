@@ -578,19 +578,12 @@ impl MacroAssembler {
         count_one_bits: bool,
     ) {
         if count_one_bits {
-            self.int_not(mode, dest, src);
-
-            match mode {
-                MachineMode::Int32 => self.asm.clz_w(dest.into(), dest.into()),
-                MachineMode::Int64 => self.asm.clz(dest.into(), dest.into()),
-                _ => panic!("unimplemented mode {:?}", mode),
-            }
-        } else {
-            match mode {
-                MachineMode::Int32 => self.asm.clz_w(dest.into(), src.into()),
-                MachineMode::Int64 => self.asm.clz(dest.into(), src.into()),
-                _ => panic!("unimplemented mode {:?}", mode),
-            }
+            self.int_not(mode, src, src);
+        }
+        match mode {
+            MachineMode::Int32 => self.asm.clz_w(dest.into(), src.into()),
+            MachineMode::Int64 => self.asm.clz(dest.into(), src.into()),
+            _ => panic!("unimplemented mode {:?}", mode),
         }
     }
 
@@ -601,23 +594,16 @@ impl MacroAssembler {
         src: Reg,
         count_one_bits: bool,
     ) {
+        if count_one_bits {
+            self.int_not(mode, dest, dest);
+        }
         match mode {
             MachineMode::Int32 => {
                 self.asm.rbit_w(dest.into(), src.into());
-
-                if count_one_bits {
-                    self.int_not(mode, dest, dest);
-                }
-
                 self.asm.clz_w(dest.into(), dest.into());
             }
             MachineMode::Int64 => {
                 self.asm.rbit(dest.into(), src.into());
-
-                if count_one_bits {
-                    self.int_not(mode, dest, dest);
-                }
-
                 self.asm.clz(dest.into(), dest.into());
             }
             _ => panic!("unimplemented mode {:?}", mode),
