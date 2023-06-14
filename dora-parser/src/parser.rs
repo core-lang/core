@@ -804,7 +804,12 @@ impl<'a> Parser<'a> {
         let pos = self.expect_token(TokenKind::Fun)?.position;
         let ident = self.expect_identifier()?;
         let type_params = self.parse_type_params()?;
-        let params = self.parse_function_params()?;
+        let is_nullary = !self.token.is(TokenKind::LParen);
+        let params = if is_nullary {
+            vec![]
+        } else {
+            self.parse_function_params()?
+        };
         let return_type = self.parse_function_type()?;
         let block = self.parse_function_block()?;
         let span = self.span_from(start);
@@ -822,6 +827,7 @@ impl<'a> Parser<'a> {
             internal: modifiers.contains(Modifier::Internal),
             is_constructor: false,
             is_test: modifiers.contains(Modifier::Test),
+            is_nullary,
             params,
             return_type,
             block,
@@ -2023,6 +2029,7 @@ impl<'a> Parser<'a> {
             internal: false,
             is_constructor: false,
             is_test: false,
+            is_nullary: false,
             params,
             return_type: Some(return_type),
             block,

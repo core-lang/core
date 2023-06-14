@@ -90,6 +90,7 @@ impl<'a> BuilderFct {
             internal: false,
             is_constructor: self.is_constructor,
             is_test: false,
+            is_nullary: false,
             params: self.params,
             return_type: self.return_type,
             block: self.block,

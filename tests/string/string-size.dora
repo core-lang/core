@@ -1,5 +1,5 @@
 fun main(): Unit {
-  assert("abc".size() == 3);
+  assert("abc".size == 3);
 
   let x = "abcdef";
   assert(x.size() == 6);

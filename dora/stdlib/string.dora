@@ -29,7 +29,7 @@ impl String {
 
   @pub @internal fun compareTo(rhs: String): Int32;
 
-  @pub @internal fun size(): Int64;
+  @pub @internal fun size: Int64;
 
   @internal fun toInt32Success(): Bool;
   @internal fun toInt64Success(): Bool;

@@ -630,6 +630,7 @@ pub struct Function {
     pub internal: bool,
     pub is_constructor: bool,
 
+    pub is_nullary: bool,
     pub params: Vec<Param>,
 
     pub return_type: Option<Type>,
