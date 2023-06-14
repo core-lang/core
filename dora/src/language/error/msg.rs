@@ -552,7 +552,7 @@ impl ErrorMessage {
             ErrorMessage::ModifierNotAllowedForStaticMethod(ref modifier) => {
                 format!("modifier `{}` not allowed for static method.", modifier)
             }
-            ErrorMessage::InvalidTestAnnotationUsage => "invalid usage of @Test annotation.".into(),
+            ErrorMessage::InvalidTestAnnotationUsage => "invalid usage of @test annotation.".into(),
             ErrorMessage::GlobalInitializerNotSupported => {
                 "global variables do no support initial assignment for now.".into()
             }

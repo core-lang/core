@@ -37,7 +37,7 @@ pub fn resolve_internal_annotations(sa: &mut SemAnalysis) {
     sa.known.annotations.test = Some(internal_annotation(
         sa,
         stdlib_id,
-        "annotations::Test",
+        "annotations::test",
         Modifier::Test,
     ));
 
