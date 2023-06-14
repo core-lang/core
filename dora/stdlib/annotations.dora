@@ -5,4 +5,4 @@ annotation optimizeImmediately
 annotation override
 annotation pub
 annotation static
-annotation Test
+annotation test
