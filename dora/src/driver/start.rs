@@ -160,7 +160,7 @@ fn run_test(vm: &VM, fct: FctDefinitionId) {
 }
 
 fn is_test_fct(fct: &FctDefinition) -> bool {
-    // the function needs to be marked with the @Test annotation
+    // the function needs to be marked with the @test annotation
     fct.is_test
 }
 
