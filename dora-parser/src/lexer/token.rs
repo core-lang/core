@@ -20,6 +20,7 @@ pub enum TokenKind {
     Class,
     Enum,
     Value,
+    Union,
     Trait,
     Impl,
     Annotation,
@@ -50,6 +51,9 @@ pub enum TokenKind {
 
     // casting
     As,
+
+    // union variants
+    Of,
 
     // operators – numbers
     Add,
@@ -124,6 +128,7 @@ impl TokenKind {
             TokenKind::Class => "class",
             TokenKind::Enum => "enum",
             TokenKind::Value => "value",
+            TokenKind::Union => "union",
             TokenKind::Trait => "trait",
             TokenKind::Impl => "impl",
             TokenKind::Annotation => "annotation",
@@ -154,6 +159,9 @@ impl TokenKind {
 
             // casting
             TokenKind::As => "as",
+
+            // union variants
+            TokenKind::Of => "of",
 
             // operators – arithmetic
             TokenKind::Add => "+",
