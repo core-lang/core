@@ -437,6 +437,8 @@ impl UInt8 {
   @pub @static fun minValue(): UInt8 = 0u8;
 }
 
+union A of B, C;
+
 @pub enum Option[T] {
   Some(T),
   None,
