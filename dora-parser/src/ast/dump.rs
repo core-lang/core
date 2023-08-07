@@ -66,6 +66,7 @@ impl<'a> AstDumper<'a> {
             Elem::Function(ref node) => self.dump_fct(node),
             Elem::Class(ref node) => self.dump_class(node),
             Elem::Value(ref node) => self.dump_value(node),
+            Elem::Union(ref node) => self.dump_union(node),
             Elem::Trait(ref node) => self.dump_trait(node),
             Elem::Impl(ref node) => self.dump_impl(node),
             Elem::Annotation(ref node) => self.dump_annotation(node),
@@ -219,6 +220,40 @@ impl<'a> AstDumper<'a> {
             field.id
         );
         self.indent(|d| d.dump_type(&field.data_type));
+    }
+
+    fn dump_union(&mut self, union: &Union) {
+        dump!(
+            self,
+            "union {} @ {} {}",
+            self.str(union.name),
+            union.pos,
+            union.id
+        );
+
+        self.indent(|d| {
+            for variant in &union.variants {
+                d.dump_union_variant(variant);
+            }
+        });
+    }
+
+    fn dump_union_variant(&mut self, variant: &UnionVariant) {
+        dump!(
+            self,
+            "{} {} {}",
+            variant.pos,
+            variant.id,
+            self.str(variant.name)
+        );
+
+        if let Some(ref types) = variant.types {
+            self.indent(|d| {
+                for ty in types {
+                    d.dump_type(ty);
+                }
+            });
+        }
     }
 
     fn dump_trait(&mut self, t: &Trait) {

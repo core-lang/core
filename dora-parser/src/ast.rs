@@ -42,6 +42,11 @@ impl File {
     }
 
     #[cfg(test)]
+    pub fn union0(&self) -> &Union {
+        self.elements[0].to_union().unwrap()
+    }
+
+    #[cfg(test)]
     pub fn enum0(&self) -> &Enum {
         self.elements[0].to_enum().unwrap()
     }
@@ -101,6 +106,7 @@ pub enum Elem {
     Function(Arc<Function>),
     Class(Arc<Class>),
     Value(Arc<Value>),
+    Union(Arc<Union>),
     Trait(Arc<Trait>),
     Impl(Arc<Impl>),
     Annotation(Arc<Annotation>),
@@ -118,6 +124,7 @@ impl Elem {
             &Elem::Function(ref f) => f.id,
             &Elem::Class(ref c) => c.id,
             &Elem::Value(ref s) => s.id,
+            &Elem::Union(ref u) => u.id,
             &Elem::Trait(ref t) => t.id,
             &Elem::Impl(ref i) => i.id,
             &Elem::Annotation(ref a) => a.id,
@@ -140,6 +147,13 @@ impl Elem {
     pub fn to_class(&self) -> Option<&Class> {
         match self {
             &Elem::Class(ref class) => Some(class),
+            _ => None,
+        }
+    }
+
+    pub fn to_union(&self) -> Option<&Union> {
+        match self {
+            &Elem::Union(ref union_) => Some(union_),
             _ => None,
         }
     }
@@ -336,6 +350,26 @@ pub struct ValueField {
     pub span: Span,
     pub data_type: Type,
     pub visibility: Visibility,
+}
+
+#[derive(Clone, Debug)]
+pub struct Union {
+    pub id: NodeId,
+    pub pos: Position,
+    pub span: Span,
+    pub name: Name,
+    pub type_params: Option<Vec<TypeParam>>,
+    pub variants: Vec<UnionVariant>,
+    pub visibility: Visibility,
+}
+
+#[derive(Clone, Debug)]
+pub struct UnionVariant {
+    pub id: NodeId,
+    pub pos: Position,
+    pub span: Span,
+    pub name: Name,
+    pub types: Option<Vec<Type>>,
 }
 
 #[derive(Clone, Debug)]

@@ -25,6 +25,10 @@ pub trait Visitor: Sized {
         walk_value(self, s);
     }
 
+    fn visit_union(&mut self, u: &Arc<Union>) {
+        walk_union(self, u);
+    }
+
     fn visit_annotation(&mut self, a: &Arc<Annotation>) {
         walk_annotation(self, a);
     }
@@ -97,6 +101,7 @@ pub fn walk_elem<V: Visitor>(v: &mut V, e: &Elem) {
         Elem::Function(f) => v.visit_fct(f),
         Elem::Class(ref c) => v.visit_class(c),
         Elem::Value(ref s) => v.visit_value(s),
+        Elem::Union(ref u) => v.visit_union(u),
         Elem::Trait(ref t) => v.visit_trait(t),
         Elem::Impl(ref i) => v.visit_impl(i),
         Elem::Annotation(ref a) => v.visit_annotation(a),
@@ -170,6 +175,10 @@ pub fn walk_value<V: Visitor>(v: &mut V, s: &Value) {
 
 pub fn walk_value_field<V: Visitor>(v: &mut V, f: &ValueField) {
     v.visit_type(&f.data_type);
+}
+
+pub fn walk_union<V: Visitor>(_v: &mut V, _u: &Union) {
+    // nothing to do
 }
 
 pub fn walk_field<V: Visitor>(v: &mut V, f: &Field) {

@@ -112,6 +112,12 @@ impl<'a> Parser<'a> {
                 Ok(Elem::Value(Arc::new(value)))
             }
 
+            TokenKind::Union => {
+                self.restrict_modifiers(&modifiers, &[Modifier::Pub, Modifier::Internal])?;
+                let value = self.parse_union(&modifiers)?;
+                Ok(Elem::Union(Arc::new(value)))
+            }
+
             TokenKind::Trait => {
                 self.restrict_modifiers(&modifiers, &[Modifier::Pub])?;
                 let trait_ = self.parse_trait(&modifiers)?;
@@ -551,6 +557,56 @@ impl<'a> Parser<'a> {
             span,
             data_type: ty,
             visibility: Visibility::from_modifiers(&modifiers),
+        })
+    }
+
+    fn parse_union(&mut self, modifiers: &Modifiers) -> Result<Union, ParseErrorAndPos> {
+        let start = self.token.span.start();
+        let pos = self.expect_token(TokenKind::Union)?.position;
+        let ident = self.expect_identifier()?;
+        let type_params = self.parse_type_params()?;
+        let variants = if self.token.is(TokenKind::Of) {
+            self.advance_token()?;
+            self.parse_list(TokenKind::Comma, TokenKind::Semicolon, |p| {
+                p.parse_union_variant()
+            })?
+        } else {
+            Vec::new()
+        };
+
+        let span = self.span_from(start);
+
+        Ok(Union {
+            id: self.generate_id(),
+            name: ident,
+            pos,
+            span,
+            visibility: Visibility::from_modifiers(modifiers),
+            type_params,
+            variants,
+        })
+    }
+
+    fn parse_union_variant(&mut self) -> Result<UnionVariant, ParseErrorAndPos> {
+        let start = self.token.span.start();
+        let pos = self.token.position;
+        let name = self.expect_identifier()?;
+
+        let types = if self.token.is(TokenKind::LParen) {
+            self.advance_token()?;
+            Some(self.parse_list(TokenKind::Comma, TokenKind::RParen, |p| p.parse_type())?)
+        } else {
+            None
+        };
+
+        let span = self.span_from(start);
+
+        Ok(UnionVariant {
+            id: self.generate_id(),
+            pos,
+            span,
+            name,
+            types,
         })
     }
 
@@ -2037,7 +2093,9 @@ impl<'a> Parser<'a> {
 
         match tok.kind {
             TokenKind::Identifier(ref value) => Ok(self.interner.intern(value)),
-            TokenKind::Is | TokenKind::Value => Ok(self.interner.intern(tok.kind.name())),
+            TokenKind::Is | TokenKind::Of | TokenKind::Value => {
+                Ok(self.interner.intern(tok.kind.name()))
+            }
             _ => Err(ParseErrorAndPos::new(
                 tok.position,
                 ParseError::ExpectedIdentifier(tok.name()),
@@ -3575,6 +3633,13 @@ mod tests {
 
         let (expr, _) = parse_expr("(1,2,3,4,)");
         assert_eq!(expr.to_tuple().unwrap().values.len(), 4);
+    }
+
+    #[test]
+    fn parse_union() {
+        let (prog, _) = parse("union Foo of A, B, C;");
+        let union_ = prog.union0();
+        assert_eq!(union_.variants.len(), 3);
     }
 
     #[test]
