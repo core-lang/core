@@ -350,7 +350,10 @@ impl Float32 {
   @pub @internal fun isNan(): Bool;
   @pub @internal fun sqrt(): Float32;
 
-  @pub fun hash(): Int32 = self.asInt32();
+  @pub fun hash(): Int32 =
+    // discard the sign, such that 0.0 and -0.0 hash the same, at the cost of all positive numbers
+    // and their negative counterparts hashing the same, but keeping the computation branch-free.
+    self.asInt32() & 0x7FFFFFFFi32;
 
   // should be lets, not funs
   @pub @static fun bits(): Int32 = 32i32;
@@ -405,7 +408,12 @@ impl Float64 {
   @pub @internal fun isNan(): Bool;
   @pub @internal fun sqrt(): Float64;
 
-  @pub fun hash(): Int32 = self.asInt64().toInt32();
+  @pub fun hash(): Int32 {
+    // discard the sign, such that 0.0 and -0.0 hash the same, at the cost of all positive numbers
+    // and their negative counterparts hashing the same, but keeping the computation branch-free.
+    let hash = self.asInt64() & 0x7FFFFFFFFFFFFFFF;
+    (hash ^ hash.shiftRight(31i32)).toInt32()
+  }
 
   // should be lets, not funs
   @pub @static fun bits(): Int32 = 64i32;

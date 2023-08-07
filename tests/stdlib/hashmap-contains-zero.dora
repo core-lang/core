@@ -9,8 +9,8 @@ fun float64(): Unit {
   assert(map.size() == 1);
   assert(map.contains(0.0));
   assert(map.get(0.0).getOrPanic() == "a");
-  assert(map.contains(-0.0)); // FIXME: this only works by coincidence, because the hash function sucks
-  assert(map.get(-0.0).getOrPanic() == "a"); // FIXME: this only works by coincidence, because the hash function sucks
+  assert(map.contains(-0.0));
+  assert(map.get(-0.0).getOrPanic() == "a");
 }
 
 fun float32(): Unit {
@@ -19,6 +19,6 @@ fun float32(): Unit {
   assert(map.size() == 1);
   assert(map.contains(0.0f32));
   assert(map.get(0.0f32).getOrPanic() == "a");
-  assert(map.contains(-0.0f32).not()); // FIXME: should be true instead
-  // assert(map.get(-0.0f32).getOrPanic() == "a"); // FIXME: should be true instead
+  assert(map.contains(-0.0f32));
+  assert(map.get(-0.0f32).getOrPanic() == "a");
 }
