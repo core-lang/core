@@ -8,7 +8,7 @@ fun float64(): Unit {
 
   assert(set.size() == 1);
   assert(set.contains(0.0));
-  assert(set.contains(-0.0)); // FIXME: this only works by coincidence, because the hash function sucks
+  assert(set.contains(-0.0));
 }
 
 fun float32(): Unit {
@@ -16,5 +16,5 @@ fun float32(): Unit {
 
   assert(set.size() == 1);
   assert(set.contains(0.0f32));
-  assert(set.contains(-0.0f32).not()); // FIXME: should be true instead
+  assert(set.contains(-0.0f32));
 }
