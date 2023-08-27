@@ -1,8 +1,7 @@
 use crate::language::ty::SourceType;
 use crate::mem;
 use crate::mode::MachineMode;
-use crate::vm::{get_concrete_tuple_ty, VM};
-use crate::vm::{specialize_enum_id_params, specialize_value_id_params, EnumLayout};
+use crate::vm::{get_concrete_tuple_ty, specialize_enum_id_params, value_instance, EnumLayout, VM};
 
 impl SourceType {
     pub fn size(&self, vm: &VM) -> i32 {
@@ -30,10 +29,8 @@ impl SourceType {
             SourceType::Class(_, _) | SourceType::Lambda(_, _) | SourceType::Ptr => {
                 mem::ptr_width()
             }
-            SourceType::Value(value_id, params) => {
-                let value_instance_id = specialize_value_id_params(vm, *value_id, params.clone());
-                let value_instance = vm.value_instances.idx(value_instance_id);
-
+            SourceType::Value(value_id, type_params) => {
+                let value_instance = value_instance(vm, *value_id, type_params.clone());
                 value_instance.size
             }
             SourceType::Trait(_, _) => mem::ptr_width(),
@@ -67,11 +64,9 @@ impl SourceType {
             SourceType::Class(_, _) | SourceType::Lambda(_, _) | SourceType::Ptr => {
                 mem::ptr_width()
             }
-            SourceType::Value(value_id, params) => {
-                let value_instance_id = specialize_value_id_params(vm, *value_id, params.clone());
-                let value = vm.value_instances.idx(value_instance_id);
-
-                value.align
+            SourceType::Value(value_id, type_params) => {
+                let value_instance = value_instance(vm, *value_id, type_params.clone());
+                value_instance.align
             }
             SourceType::Trait(_, _) => mem::ptr_width(),
             SourceType::TypeParam(_) => panic!("no alignment for type variable."),
