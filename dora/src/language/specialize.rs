@@ -72,6 +72,17 @@ pub fn replace_type_param(
             SourceType::Value(value_id, new_type_params)
         }
 
+        SourceType::Union(union_id, old_type_params) => {
+            let new_type_params = SourceTypeArray::with(
+                old_type_params
+                    .iter()
+                    .map(|p| replace_type_param(sa, p, type_params, self_ty.clone()))
+                    .collect::<Vec<_>>(),
+            );
+
+            SourceType::Union(union_id, new_type_params)
+        }
+
         SourceType::Enum(enum_id, old_type_params) => {
             let new_type_params = SourceTypeArray::with(
                 old_type_params

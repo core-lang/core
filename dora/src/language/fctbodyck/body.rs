@@ -3483,6 +3483,7 @@ fn arg_allows(
         | SourceType::Float32
         | SourceType::Float64
         | SourceType::Enum(_, _)
+        | SourceType::Union(_, _)
         | SourceType::Trait(_, _) => def == arg,
         SourceType::Ptr => panic!("ptr should not occur in fct definition."),
         SourceType::This => {

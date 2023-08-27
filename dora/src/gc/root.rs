@@ -5,7 +5,8 @@ use crate::language::ty::SourceType;
 use crate::stack::DoraToNativeInfo;
 use crate::threads::DoraThread;
 use crate::vm::{
-    get_concrete_tuple_ty, specialize_enum_id_params, value_instance, CodeKind, EnumLayout, VM,
+    get_concrete_tuple_ty, specialize_enum_id_params, union_instance_layout, value_instance,
+    CodeKind, EnumLayout, UnionLayout, VM,
 };
 
 pub fn determine_strong_roots(vm: &VM, threads: &[Arc<DoraThread>]) -> Vec<Slot> {
@@ -66,6 +67,16 @@ fn iterate_roots_from_globals<F: FnMut(Slot)>(vm: &VM, callback: &mut F) {
                     let slot_address = global_var.address_value.offset(offset as usize);
                     let slot = Slot::at(slot_address);
                     callback(slot);
+                }
+            }
+
+            SourceType::Union(union_id, ref type_params) => {
+                match union_instance_layout(vm, union_id, type_params.clone()) {
+                    UnionLayout::Int => {}
+                    UnionLayout::Ptr | UnionLayout::Tagged => {
+                        let slot = Slot::at(global_var.address_value);
+                        callback(slot);
+                    }
                 }
             }
 

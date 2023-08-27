@@ -35,6 +35,7 @@ mod traitdefck;
 pub(crate) mod ty;
 mod type_params;
 mod typeparamck;
+mod unionck;
 mod useck;
 mod valuedefck;
 

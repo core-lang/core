@@ -292,7 +292,8 @@ fn discover_type_params(sa: &SemAnalysis, ty: SourceType, used_type_params: &mut
         | SourceType::Trait(_, _) => {}
         SourceType::Class(_, params)
         | SourceType::Enum(_, params)
-        | SourceType::Value(_, params) => {
+        | SourceType::Value(_, params)
+        | SourceType::Union(_, params) => {
             for param in params.iter() {
                 discover_type_params(sa, param, used_type_params);
             }

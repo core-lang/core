@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::bytecode::BytecodeTypeKind;
 use crate::language::sem_analysis::{
-    ClassDefinitionId, EnumDefinitionId, TraitDefinitionId, ValueDefinitionId,
+    ClassDefinitionId, EnumDefinitionId, TraitDefinitionId, UnionDefinitionId, ValueDefinitionId,
 };
 use crate::language::ty::{SourceType, SourceTypeArray};
 
@@ -22,6 +22,7 @@ pub enum BytecodeType {
     Enum(EnumDefinitionId, SourceTypeArray),
     Value(ValueDefinitionId, SourceTypeArray),
     Class(ClassDefinitionId, SourceTypeArray),
+    Union(UnionDefinitionId, SourceTypeArray),
     Trait(TraitDefinitionId, SourceTypeArray),
     Lambda(SourceTypeArray, Box<SourceType>),
 }
@@ -42,6 +43,7 @@ impl BytecodeType {
             BytecodeType::TypeParam(_) => BytecodeTypeKind::TypeParam,
             BytecodeType::Enum(_, _) => BytecodeTypeKind::Enum,
             BytecodeType::Value(_, _) => BytecodeTypeKind::Value,
+            BytecodeType::Union(_, _) => BytecodeTypeKind::Union,
             BytecodeType::Class(_, _) => BytecodeTypeKind::Class,
             BytecodeType::Trait(_, _) => BytecodeTypeKind::Trait,
             BytecodeType::Lambda(_, _) => BytecodeTypeKind::Lambda,

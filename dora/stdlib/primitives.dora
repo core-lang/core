@@ -437,7 +437,23 @@ impl UInt8 {
   @pub @static fun minValue(): UInt8 = 0u8;
 }
 
-union A of B, C;
+union JSON of String, Float64, Int32; /* {
+
+  fun bla(): String = if this
+    ... is A { 1 }
+    ... is B { 2 }
+    ... is C { 3 };
+
+  fun bla(): String = {
+    let ... = this;
+    if ... is A { 1 }
+    else if ... is B { 2 }
+    else if ... is C { 3 };
+  }
+
+}*/
+
+fun una(a: JSON): Bool = true;
 
 @pub enum Option[T] {
   Some(T),

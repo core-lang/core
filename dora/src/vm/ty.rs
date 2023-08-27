@@ -1,7 +1,10 @@
 use crate::language::ty::SourceType;
 use crate::mem;
 use crate::mode::MachineMode;
-use crate::vm::{get_concrete_tuple_ty, specialize_enum_id_params, value_instance, EnumLayout, VM};
+use crate::vm::{
+    get_concrete_tuple_ty, specialize_enum_id_params, union_instance_layout, value_instance,
+    EnumLayout, UnionLayout, VM,
+};
 
 impl SourceType {
     pub fn size(&self, vm: &VM) -> i32 {
@@ -32,6 +35,12 @@ impl SourceType {
             SourceType::Value(value_id, type_params) => {
                 let value_instance = value_instance(vm, *value_id, type_params.clone());
                 value_instance.size
+            }
+            SourceType::Union(union_id, type_params) => {
+                match union_instance_layout(vm, *union_id, type_params.clone()) {
+                    UnionLayout::Int => SourceType::Int32.size(vm),
+                    UnionLayout::Ptr | UnionLayout::Tagged => SourceType::Ptr.size(vm),
+                }
             }
             SourceType::Trait(_, _) => mem::ptr_width(),
             SourceType::TypeParam(_) => panic!("no size for type variable."),
@@ -68,6 +77,12 @@ impl SourceType {
                 let value_instance = value_instance(vm, *value_id, type_params.clone());
                 value_instance.align
             }
+            SourceType::Union(union_id, type_params) => {
+                match union_instance_layout(vm, *union_id, type_params.clone()) {
+                    UnionLayout::Int => SourceType::Int32.align(vm),
+                    UnionLayout::Ptr | UnionLayout::Tagged => SourceType::Ptr.align(vm),
+                }
+            }
             SourceType::Trait(_, _) => mem::ptr_width(),
             SourceType::TypeParam(_) => panic!("no alignment for type variable."),
             SourceType::Tuple(_) => get_concrete_tuple_ty(vm, self).align(),
@@ -92,6 +107,7 @@ impl SourceType {
                 MachineMode::Ptr
             }
             SourceType::Value(_, _) => panic!("no machine mode for value type."),
+            SourceType::Union(_, _) => MachineMode::Int32,
             SourceType::Trait(_, _) => MachineMode::Ptr,
             SourceType::TypeParam(_) => panic!("no machine mode for type variable."),
             SourceType::Tuple(_) => unimplemented!(),

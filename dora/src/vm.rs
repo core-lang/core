@@ -14,7 +14,7 @@ use crate::language::sem_analysis::{
     ConstDefinition, EnumDefinition, EnumDefinitionId, ExtensionDefinition, FctDefinition,
     FctDefinitionId, GlobalDefinition, ImplDefinition, ModuleDefinition, ModuleDefinitionId,
     PackageDefinition, PackageDefinitionId, SourceFile, TraitDefinition, TraitDefinitionId,
-    UseDefinition, ValueDefinition, ValueDefinitionId,
+    UnionDefinition, UnionDefinitionId, UseDefinition, ValueDefinition, ValueDefinitionId,
 };
 use crate::language::ty::SourceTypeArray;
 use crate::stack::DoraToNativeInfo;
@@ -48,12 +48,13 @@ pub use self::specialize::{
     add_ref_fields, replace_type_param, specialize_class_id, specialize_class_id_params,
     specialize_enum_class, specialize_enum_id_params, specialize_lambda, specialize_trait_object,
     specialize_tuple_array, specialize_tuple_bty, specialize_tuple_ty, specialize_type,
-    specialize_type_list, specialize_value_id_params, value_instance,
+    specialize_type_list, specialize_value_id_params, union_instance_layout, value_instance,
 };
 pub use self::stubs::{setup_stubs, Stubs};
 pub use self::tuples::{
     get_concrete_tuple_array, get_concrete_tuple_bytecode_ty, get_concrete_tuple_ty, ConcreteTuple,
 };
+pub use self::unions::{UnionInstance, UnionInstanceId, UnionLayout};
 pub use self::values::{ValueInstance, ValueInstanceField, ValueInstanceId};
 pub use self::waitlists::{ManagedCondition, ManagedMutex, WaitLists};
 
@@ -69,6 +70,7 @@ mod specialize;
 mod stubs;
 mod tuples;
 mod ty;
+mod unions;
 mod values;
 mod waitlists;
 
@@ -111,6 +113,7 @@ pub struct FullSemAnalysis {
     pub consts: MutableVec<ConstDefinition>, // stores all const definitions
     pub values: MutableVec<ValueDefinition>, // stores all value type source definitions
     pub classes: MutableVec<ClassDefinition>, // stores all class type source definitions
+    pub unions: MutableVec<UnionDefinition>, // stores all union source definitions
     pub extensions: MutableVec<ExtensionDefinition>, // stores all extension definitions
     pub annotations: MutableVec<AnnotationDefinition>, // stores all annotation source definitions
     pub modules: MutableVec<ModuleDefinition>, // stores all module definitions
@@ -139,6 +142,7 @@ impl FullSemAnalysis {
             consts: MutableVec::new(),
             values: MutableVec::new(),
             classes: MutableVec::new(),
+            unions: MutableVec::new(),
             extensions: MutableVec::new(),
             annotations: MutableVec::new(),
             modules: MutableVec::new(),
@@ -197,6 +201,10 @@ pub struct VM {
     pub class_specializations:
         RwLock<HashMap<(ClassDefinitionId, SourceTypeArray), ClassInstanceId>>,
     pub class_instances: GrowableVecNonIter<ClassInstance>, // stores all class definitions
+    pub unions: MutableVec<UnionDefinition>,                // store all union definitions
+    pub union_specializations:
+        RwLock<HashMap<(UnionDefinitionId, SourceTypeArray), UnionInstanceId>>,
+    pub union_instances: GrowableVecNonIter<UnionInstance>, // stores all union definitions
     pub extensions: MutableVec<ExtensionDefinition>,        // stores all extension definitions
     pub annotations: MutableVec<AnnotationDefinition>, // stores all annotation source definitions
     pub modules: MutableVec<ModuleDefinition>,         // stores all module definitions
@@ -242,6 +250,9 @@ impl VM {
             classes: MutableVec::new(),
             class_specializations: RwLock::new(HashMap::new()),
             class_instances: GrowableVecNonIter::new(),
+            unions: MutableVec::new(),
+            union_specializations: RwLock::new(HashMap::new()),
+            union_instances: GrowableVecNonIter::new(),
             extensions: MutableVec::new(),
             annotations: MutableVec::new(),
             modules: MutableVec::new(),
@@ -296,6 +307,9 @@ impl VM {
             classes: sa.classes,
             class_specializations: RwLock::new(HashMap::new()),
             class_instances: GrowableVecNonIter::new(),
+            unions: sa.unions,
+            union_specializations: RwLock::new(HashMap::new()),
+            union_instances: GrowableVecNonIter::new(),
             extensions: sa.extensions,
             annotations: sa.annotations,
             modules: sa.modules,

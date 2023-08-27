@@ -4,12 +4,14 @@ use std::sync::Arc;
 
 use crate::bytecode::BytecodeType;
 use crate::language::sem_analysis::{
-    create_tuple, ClassDefinitionId, FctDefinitionId, TraitDefinitionId,
+    create_tuple, ClassDefinitionId, FctDefinitionId, TraitDefinitionId, UnionDefinition,
+    UnionDefinitionId,
 };
 use crate::language::ty::{SourceType, SourceTypeArray};
 use crate::mem;
 use crate::object::Header;
 use crate::size::InstanceSize;
+use crate::vm::unions::{UnionInstance, UnionInstanceId, UnionLayout};
 use crate::vm::{
     create_class_instance_with_vtable, get_concrete_tuple_ty, ClassDefinition, ClassInstanceId,
     EnumDefinition, EnumDefinitionId, EnumInstance, EnumInstanceId, EnumLayout, FieldInstance,
@@ -127,6 +129,110 @@ fn create_specialized_value(
     assert!(old.is_none());
 
     id
+}
+
+pub fn union_instance_layout(
+    vm: &VM,
+    union_id: UnionDefinitionId,
+    type_params: SourceTypeArray,
+) -> UnionLayout {
+    let union_instance_id = specialize_union_id_params(vm, union_id, type_params);
+    let union_instance = vm.union_instances.idx(union_instance_id);
+    union_instance.layout
+}
+
+pub fn specialize_union_id_params(
+    vm: &VM,
+    union_id: UnionDefinitionId,
+    type_params: SourceTypeArray,
+) -> UnionInstanceId {
+    let union = &vm.unions[union_id];
+    let union = union.read();
+    specialize_union(vm, &*union, type_params)
+}
+
+pub fn specialize_union(
+    vm: &VM,
+    union: &UnionDefinition,
+    type_params: SourceTypeArray,
+) -> UnionInstanceId {
+    if let Some(&id) = vm
+        .union_specializations
+        .read()
+        .get(&(union.id(), type_params.clone()))
+    {
+        return id;
+    }
+
+    create_specialized_union(vm, union, type_params)
+}
+
+fn create_specialized_union(
+    vm: &VM,
+    union: &UnionDefinition,
+    type_params: SourceTypeArray,
+) -> UnionInstanceId {
+    let layout = if union_is_simple_integer(union) {
+        UnionLayout::Int
+    } else if union_is_ptr(vm, union, &type_params) {
+        UnionLayout::Ptr
+    } else {
+        UnionLayout::Tagged
+    };
+
+    let mut specializations = vm.union_specializations.write();
+
+    if let Some(&id) = specializations.get(&(union.id(), type_params.clone())) {
+        return id;
+    }
+
+    let variants = if let UnionLayout::Tagged = layout {
+        vec![None; union.variants.len()]
+    } else {
+        Vec::new()
+    };
+
+    let id = vm.union_instances.push(UnionInstance {
+        union_id: union.id(),
+        type_params: type_params.clone(),
+        layout,
+        variants: RwLock::new(variants),
+    });
+
+    let old = specializations.insert((union.id(), type_params.clone()), id);
+    assert!(old.is_none());
+
+    id
+}
+
+fn union_is_simple_integer(union: &UnionDefinition) -> bool {
+    for variant in &union.variants {
+        if !variant.types.is_empty() {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn union_is_ptr(vm: &VM, union: &UnionDefinition, type_params: &SourceTypeArray) -> bool {
+    if union.variants.len() != 2 {
+        return false;
+    }
+
+    let variant1 = union.variants.first().unwrap();
+    let variant2 = union.variants.last().unwrap();
+
+    let (none_variant, some_variant) = if variant1.types.is_empty() {
+        (variant1, variant2)
+    } else {
+        (variant2, variant1)
+    };
+
+    none_variant.types.len() == 0
+        && some_variant.types.len() == 1
+        && specialize_type(vm, some_variant.types.first().unwrap().clone(), type_params)
+            .reference_type()
 }
 
 pub fn specialize_enum_id_params(
@@ -430,6 +536,13 @@ fn create_specialized_class_array(
                 InstanceSize::ValueArray(value_instance.size)
             }
 
+            SourceType::Union(union_id, type_params) => {
+                match union_instance_layout(vm, union_id, type_params) {
+                    UnionLayout::Int => InstanceSize::PrimitiveArray(4),
+                    UnionLayout::Ptr | UnionLayout::Tagged => InstanceSize::ObjArray,
+                }
+            }
+
             SourceType::Enum(enum_id, type_params) => {
                 let edef_id = specialize_enum_id_params(vm, enum_id, type_params);
                 let edef = vm.enum_instances.idx(edef_id);
@@ -644,6 +757,17 @@ pub fn replace_type_param(
             );
 
             SourceType::Value(value_id, new_type_params)
+        }
+
+        SourceType::Union(union_id, old_type_params) => {
+            let new_type_params = SourceTypeArray::with(
+                old_type_params
+                    .iter()
+                    .map(|p| replace_type_param(vm, p, type_params, self_ty.clone()))
+                    .collect::<Vec<_>>(),
+            );
+
+            SourceType::Union(union_id, new_type_params)
         }
 
         SourceType::Enum(enum_id, old_type_params) => {

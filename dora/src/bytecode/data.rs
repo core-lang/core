@@ -38,6 +38,7 @@ pub enum BytecodeTypeKind {
     Tuple,
     Enum,
     Value,
+    Union,
     TypeParam,
     Class,
     Trait,

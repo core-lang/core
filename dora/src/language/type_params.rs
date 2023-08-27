@@ -15,6 +15,7 @@ pub fn check(sa: &SemAnalysis) {
     check_classes(sa);
     check_enums(sa);
     check_structs(sa);
+    check_unions(sa);
     check_extensions(sa);
 }
 
@@ -144,6 +145,30 @@ fn check_structs(sa: &SemAnalysis) {
         }
 
         value.write().type_params = Some(type_param_definition);
+    }
+}
+
+fn check_unions(sa: &SemAnalysis) {
+    for union in sa.unions.iter() {
+        let type_param_definition;
+
+        {
+            let union = union.read();
+            let mut symtable = ModuleSymTable::new(sa, union.module_id);
+            symtable.push_level();
+
+            type_param_definition = read_type_param_definition(
+                sa,
+                union.ast.type_params.as_ref(),
+                &mut symtable,
+                union.file_id,
+                union.pos,
+            );
+
+            symtable.pop_level();
+        }
+
+        union.write().type_params = Some(type_param_definition);
     }
 }
 
