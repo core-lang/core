@@ -31,8 +31,8 @@ use crate::vm::{
     get_concrete_tuple_array, get_concrete_tuple_bytecode_ty, get_concrete_tuple_ty,
     specialize_class_id_params, specialize_enum_class, specialize_enum_id_params,
     specialize_lambda, specialize_trait_object, specialize_tuple_array, specialize_tuple_bty,
-    specialize_tuple_ty, specialize_type, specialize_type_list, specialize_value_id_params,
-    EnumLayout, GcPoint, LazyCompilationSite, Trap, VM,
+    specialize_tuple_ty, specialize_type, specialize_type_list, value_instance, EnumLayout,
+    GcPoint, LazyCompilationSite, Trap, VM,
 };
 use crate::vtable::VTable;
 
@@ -230,10 +230,7 @@ impl<'a> CannonCodeGen<'a> {
 
                 BytecodeType::Value(value_id, type_params) => {
                     let offset = self.register_offset(Register(idx));
-                    let value_instance_id =
-                        specialize_value_id_params(self.vm, value_id, type_params);
-                    let value_instance = self.vm.value_instances.idx(value_instance_id);
-
+                    let value_instance = value_instance(self.vm, value_id, type_params);
                     for &ref_offset in &value_instance.ref_fields {
                         self.references.push(offset + ref_offset);
                     }
@@ -1311,9 +1308,7 @@ impl<'a> CannonCodeGen<'a> {
         dest: RegOrOffset,
         src: RegOrOffset,
     ) {
-        let value_instance_id = specialize_value_id_params(self.vm, value_id, type_params);
-        let value_instance = self.vm.value_instances.idx(value_instance_id);
-
+        let value_instance = value_instance(self.vm, value_id, type_params);
         for field in &value_instance.fields {
             let src = src.offset(field.offset);
             let dest = dest.offset(field.offset);
@@ -1549,9 +1544,7 @@ impl<'a> CannonCodeGen<'a> {
         let type_params = specialize_type_list(self.vm, &type_params, self.type_params);
         debug_assert!(type_params.iter().all(|ty| ty.is_concrete_type(self.vm)));
 
-        let value_instance_id = specialize_value_id_params(self.vm, value_id, type_params.clone());
-        let value_instance = self.vm.value_instances.idx(value_instance_id);
-
+        let value_instance = value_instance(self.vm, value_id, type_params);
         let field = &value_instance.fields[field_id.to_usize()];
 
         let bytecode_type = self.specialize_register_type(dest);
@@ -1661,9 +1654,7 @@ impl<'a> CannonCodeGen<'a> {
                     RegOrOffset::Offset(src_offset),
                 );
 
-                let value_instance_id =
-                    specialize_value_id_params(self.vm, *value_id, type_params.clone());
-                let value_instance = self.vm.value_instances.idx(value_instance_id);
+                let value_instance = value_instance(self.vm, *value_id, type_params.clone());
                 needs_write_barrier = value_instance.contains_references();
             }
 
@@ -2468,9 +2459,7 @@ impl<'a> CannonCodeGen<'a> {
         let type_params = specialize_type_list(self.vm, &type_params, self.type_params);
         debug_assert!(type_params.iter().all(|ty| ty.is_concrete_type(self.vm)));
 
-        let value_instance_id = specialize_value_id_params(self.vm, value_id, type_params);
-        let value_instance = self.vm.value_instances.idx(value_instance_id);
-
+        let value_instance = value_instance(self.vm, value_id, type_params);
         let arguments = self.argument_stack.drain(..).collect::<Vec<_>>();
 
         let dest_offset = self.register_offset(dest);
@@ -2716,9 +2705,7 @@ impl<'a> CannonCodeGen<'a> {
             }
 
             BytecodeType::Value(value_id, type_params) => {
-                let value_instance_id =
-                    specialize_value_id_params(self.vm, value_id, type_params.clone());
-                let value_instance = self.vm.value_instances.idx(value_instance_id);
+                let value_instance = value_instance(self.vm, value_id, type_params.clone());
 
                 self.asm
                     .array_address(REG_TMP1, REG_RESULT, REG_TMP1, value_instance.size);
@@ -2860,10 +2847,7 @@ impl<'a> CannonCodeGen<'a> {
             }
 
             BytecodeType::Value(value_id, type_params) => {
-                let value_instance_id =
-                    specialize_value_id_params(self.vm, value_id, type_params.clone());
-                let value_instance = self.vm.value_instances.idx(value_instance_id);
-
+                let value_instance = value_instance(self.vm, value_id, type_params.clone());
                 let element_size = value_instance.size;
                 self.asm
                     .array_address(REG_TMP1, REG_RESULT, REG_TMP1, element_size);
@@ -5403,10 +5387,7 @@ pub fn size(vm: &VM, ty: BytecodeType) -> i32 {
             }
         }
         BytecodeType::Value(value_id, type_params) => {
-            let vdef_id = specialize_value_id_params(vm, value_id, type_params);
-            let vdef = vm.value_instances.idx(vdef_id);
-
-            vdef.size
+            value_instance(vm, value_id, type_params).size
         }
         BytecodeType::Class(_, _) | BytecodeType::Lambda(_, _) => {
             unreachable!()
