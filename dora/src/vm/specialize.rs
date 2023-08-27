@@ -42,6 +42,15 @@ pub fn specialize_type_list(
     SourceTypeArray::with(specialized_types)
 }
 
+pub fn value_instance(
+    vm: &VM,
+    value_id: ValueDefinitionId,
+    type_params: SourceTypeArray,
+) -> Arc<ValueInstance> {
+    let value_instance_id = specialize_value_id_params(vm, value_id, type_params);
+    vm.value_instances.idx(value_instance_id)
+}
+
 pub fn specialize_value_id_params(
     vm: &VM,
     value_id: ValueDefinitionId,
@@ -288,10 +297,8 @@ pub fn add_ref_fields(vm: &VM, ref_fields: &mut Vec<i32>, offset: i32, ty: Sourc
             }
         }
     } else if let SourceType::Value(value_id, type_params) = ty.clone() {
-        let sdef_id = specialize_value_id_params(vm, value_id, type_params);
-        let sdef = vm.value_instances.idx(sdef_id);
-
-        for &ref_offset in &sdef.ref_fields {
+        let value_instance = value_instance(vm, value_id, type_params);
+        for &ref_offset in &value_instance.ref_fields {
             ref_fields.push(offset + ref_offset);
         }
     } else if ty.reference_type() {
@@ -419,10 +426,8 @@ fn create_specialized_class_array(
             }
 
             SourceType::Value(value_id, type_params) => {
-                let vdef_id = specialize_value_id_params(vm, value_id, type_params);
-                let vdef = vm.value_instances.idx(vdef_id);
-
-                InstanceSize::ValueArray(vdef.size)
+                let value_instance = value_instance(vm, value_id, type_params);
+                InstanceSize::ValueArray(value_instance.size)
             }
 
             SourceType::Enum(enum_id, type_params) => {
