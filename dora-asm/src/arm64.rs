@@ -1971,11 +1971,11 @@ impl AssemblerArm64 {
     }
 
     pub fn rev_w(&mut self, rd: Register, rn: Register) {
-        self.emit_u32(cls::dataproc1(0, 0, 0b00000, 0b000001, rn, rd));
+        self.emit_u32(cls::dataproc1(0, 0, 0b00000, 0b000010, rn, rd));
     }
 
     pub fn rev(&mut self, rd: Register, rn: Register) {
-        self.emit_u32(cls::dataproc1(0, 0, 0b00000, 0b000001, rn, rd));
+        self.emit_u32(cls::dataproc1(1, 0, 0b00000, 0b000011, rn, rd));
     }
 
     pub fn rorv(&mut self, rd: Register, rn: Register, rm: Register) {
