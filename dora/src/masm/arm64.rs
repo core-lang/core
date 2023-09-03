@@ -541,6 +541,14 @@ impl MacroAssembler {
         }
     }
 
+    pub fn int_reverse_bytes(&mut self, mode: MachineMode, dest: Reg, src: Reg) {
+        match mode {
+            MachineMode::Int32 => self.asm.rev_w(dest.into(), src.into()),
+            MachineMode::Int64 => self.asm.rev(dest.into(), src.into()),
+            _ => panic!("unimplemented mode {:?}", mode),
+        }
+    }
+
     pub fn count_bits(&mut self, mode: MachineMode, dest: Reg, src: Reg, count_one_bits: bool) {
         let scratch = FREG_TMP1;
         let scratch_src = self.get_scratch();
