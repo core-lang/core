@@ -1029,6 +1029,21 @@ impl<'a> CannonCodeGen<'a> {
         self.emit_store_register(REG_RESULT.into(), dest);
     }
 
+    fn emit_reverse_bytes(&mut self, dest: Register, src: Register) {
+        assert_eq!(
+            self.bytecode.register_type(src),
+            self.bytecode.register_type(dest)
+        );
+
+        self.emit_load_register(src, REG_RESULT.into());
+
+        let bytecode_type = self.bytecode.register_type(dest);
+        self.asm
+            .int_reverse_bytes(mode(self.vm, bytecode_type), REG_RESULT, REG_RESULT);
+
+        self.emit_store_register(REG_RESULT.into(), dest);
+    }
+
     fn emit_reinterpret(&mut self, dest: Register, src: Register) {
         assert_ne!(
             self.bytecode.register_type(dest),
@@ -3881,6 +3896,12 @@ impl<'a> CannonCodeGen<'a> {
                 let lhs_reg = arguments[0];
                 let rhs_reg = arguments[1];
                 self.emit_ror_int(dest, lhs_reg, rhs_reg);
+            }
+
+            Intrinsic::Int32ReverseBytes | Intrinsic::Int64ReverseBytes => {
+                assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+                self.emit_reverse_bytes(dest, src_reg);
             }
 
             Intrinsic::ThreadCurrent => {

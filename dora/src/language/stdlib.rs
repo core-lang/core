@@ -674,6 +674,14 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         sa,
         stdlib_id,
         "primitives::Int32",
+        "reverseBytes",
+        Intrinsic::Int32ReverseBytes,
+    );
+
+    intrinsic_method(
+        sa,
+        stdlib_id,
+        "primitives::Int32",
         "unaryPlus",
         Intrinsic::Int32Plus,
     );
@@ -918,6 +926,14 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         "primitives::Int64",
         "rotateRight",
         Intrinsic::Int64RotateRight,
+    );
+
+    intrinsic_method(
+        sa,
+        stdlib_id,
+        "primitives::Int64",
+        "reverseBytes",
+        Intrinsic::Int64ReverseBytes,
     );
 
     intrinsic_method(
