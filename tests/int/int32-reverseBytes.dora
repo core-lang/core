@@ -1,0 +1,3 @@
+fun main(): Unit {
+  assert(0x01234567i32.reverseBytes() == 0x67452301i32);
+}
