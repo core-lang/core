@@ -740,6 +740,18 @@ impl MacroAssembler {
         }
     }
 
+    pub fn int_reverse_bytes(&mut self, mode: MachineMode, dest: Reg, src: Reg) {
+        if mode.is64() {
+            self.asm.bswapq_r(src.into());
+        } else {
+            self.asm.bswapl_r(src.into());
+        }
+
+        if dest != src {
+            self.mov_rr(mode.is64(), dest.into(), src.into());
+        }
+    }
+
     pub fn count_bits(&mut self, mode: MachineMode, dest: Reg, src: Reg, count_one_bits: bool) {
         if count_one_bits {
             if mode.is64() {

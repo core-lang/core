@@ -1309,6 +1309,18 @@ impl AssemblerX64 {
         self.emit_modrm_opcode(0b001, opnd);
     }
 
+    pub fn bswapl_r(&mut self, opnd: Register) {
+        self.emit_rex_optional(false, opnd.needs_rex(), false, false);
+        self.emit_u8(0x0f);
+        self.emit_u8(0xc8 | opnd.low_bits());
+    }
+
+    pub fn bswapq_r(&mut self, opnd: Register) {
+        self.emit_rex(true, opnd.needs_rex(), false, false);
+        self.emit_u8(0x0f);
+        self.emit_u8(0xc8 | opnd.low_bits());
+    }
+
     pub fn xaddq_ar(&mut self, dest: Address, src: Register) {
         self.emit_rex64_modrm_address(src, dest);
         self.emit_u8(0x0f);

@@ -342,6 +342,8 @@ pub enum Intrinsic {
     Int32RotateLeft,
     Int32RotateRight,
 
+    Int32ReverseBytes,
+
     Int32Not,
     Int32Neg,
     Int32Plus,
@@ -382,6 +384,8 @@ pub enum Intrinsic {
 
     Int64RotateLeft,
     Int64RotateRight,
+
+    Int64ReverseBytes,
 
     Int64Not,
     Int64Neg,
@@ -546,6 +550,8 @@ impl Intrinsic {
             | Intrinsic::Int32RotateRight
             | Intrinsic::Int64RotateLeft
             | Intrinsic::Int64RotateRight
+            | Intrinsic::Int32ReverseBytes
+            | Intrinsic::Int64ReverseBytes
             | Intrinsic::ThreadCurrent => true,
             _ => false,
         }
@@ -569,6 +575,7 @@ impl Intrinsic {
             | Intrinsic::Int32Sar
             | Intrinsic::Int32RotateLeft
             | Intrinsic::Int32RotateRight
+            | Intrinsic::Int32ReverseBytes
             | Intrinsic::Int32Not
             | Intrinsic::Int32Plus
             | Intrinsic::Int32Neg
@@ -616,6 +623,7 @@ impl Intrinsic {
             | Intrinsic::Int64Sar
             | Intrinsic::Int64RotateLeft
             | Intrinsic::Int64RotateRight
+            | Intrinsic::Int64ReverseBytes
             | Intrinsic::Int64Not
             | Intrinsic::Int64Plus
             | Intrinsic::Int64Neg
