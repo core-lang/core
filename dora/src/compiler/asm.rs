@@ -373,6 +373,10 @@ impl<'a> BaselineAssembler<'a> {
         self.masm.int_ror(mode, dest, lhs, rhs);
     }
 
+    pub fn int_reverse_bits(&mut self, mode: MachineMode, dest: Reg, src: Reg) {
+        self.masm.int_reverse_bits(mode, dest, src);
+    }
+
     pub fn int_reverse_bytes(&mut self, mode: MachineMode, dest: Reg, src: Reg) {
         self.masm.int_reverse_bytes(mode, dest, src);
     }

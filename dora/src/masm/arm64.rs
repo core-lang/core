@@ -541,6 +541,14 @@ impl MacroAssembler {
         }
     }
 
+    pub fn int_reverse_bits(&mut self, mode: MachineMode, dest: Reg, src: Reg) {
+        match mode {
+            MachineMode::Int32 => self.asm.rbit_w(dest.into(), src.into()),
+            MachineMode::Int64 => self.asm.rbit(dest.into(), src.into()),
+            _ => panic!("unimplemented mode {:?}", mode),
+        }
+    }
+
     pub fn int_reverse_bytes(&mut self, mode: MachineMode, dest: Reg, src: Reg) {
         match mode {
             MachineMode::Int32 => self.asm.rev_w(dest.into(), src.into()),

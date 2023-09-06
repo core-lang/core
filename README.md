@@ -5,10 +5,6 @@ Works on Linux, Windows and macOS (x86\_64 and aarch64).
 
 The source repository of the Core Programming Language [website](https://core-lang.dev) can be found [here](https://github.com/core-lang/core-website).
 
-## Setup
-Install Rust nightly through [rustup.rs](http://rustup.rs). Use the specific nightly version listed in the [rust-toolchain](https://github.com/dinfuehr/dora/blob/master/rust-toolchain) file. Core simply uses `cargo` for building:
-
-
 ## Compilation
 ```
 # build in debug and release mode
