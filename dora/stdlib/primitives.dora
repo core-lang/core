@@ -67,6 +67,7 @@ impl Int32 {
   @pub @internal fun rotateLeft(by: Int32): Int32;
   @pub @internal fun rotateRight(by: Int32): Int32;
 
+  @pub @internal fun reverseBits(): Int32;
   @pub @internal fun reverseBytes(): Int32;
 
   @pub @internal fun unaryPlus(): Int32;
@@ -243,6 +244,7 @@ impl Int64 {
   @pub @internal fun rotateLeft(by: Int32): Int64;
   @pub @internal fun rotateRight(by: Int32): Int64;
 
+  @pub @internal fun reverseBits(): Int64;
   @pub @internal fun reverseBytes(): Int64;
 
   @pub @internal fun unaryPlus(): Int64;
