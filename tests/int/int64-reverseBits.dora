@@ -1,0 +1,5 @@
+fun main(): Unit {
+  println(0x0123456789ABCDEF.toStringBinary().toString());
+  println(0x0123456789ABCDEF.reverseBits().toStringBinary().toString());
+  assert(0x0123456789ABCDEF.reverseBits() == -597899502893742976);
+}

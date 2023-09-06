@@ -1,0 +1,5 @@
+fun main(): Unit {
+  println(0x01234567i32.toStringBinary().toString());
+  println(0x01234567i32.reverseBits().toStringBinary().toString());
+  assert(0x01234567i32.reverseBits() == 1i32);
+}
