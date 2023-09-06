@@ -740,6 +740,95 @@ impl MacroAssembler {
         }
     }
 
+    pub fn int_reverse_bits(&mut self, mode: MachineMode, dest: Reg, src: Reg) {
+        match mode {
+            MachineMode::Int32 => {
+                let scratch1 = self.get_scratch();
+                self.asm.movl_ri((*scratch1).into(), Immediate(0x55555555));
+                self.asm.andl_rr((*scratch1).into(), src.into());
+                self.asm.shll_ri((*scratch1).into(), Immediate(1));
+
+                let scratch2 = self.get_scratch();
+                self.asm
+                    .movl_ri((*scratch2).into(), Immediate(0xAAAAAAAAu32 as i32 as i64));
+                self.asm.andl_rr((*scratch2).into(), src.into());
+                self.asm.shrl_ri((*scratch2).into(), Immediate(1));
+
+                self.asm.orl_rr((*scratch1).into(), (*scratch2).into());
+
+                let scratch3 = self.get_scratch();
+                self.asm.movl_ri((*scratch3).into(), Immediate(0x33333333));
+                self.asm.andl_rr((*scratch3).into(), (*scratch1).into());
+                self.asm.shll_ri((*scratch3).into(), Immediate(2));
+
+                let scratch4 = self.get_scratch();
+                self.asm
+                    .movl_ri((*scratch4).into(), Immediate(0xCCCCCCCCu32 as i32 as i64));
+                self.asm.andl_rr((*scratch4).into(), (*scratch1).into());
+                self.asm.shrl_ri((*scratch4).into(), Immediate(2));
+
+                self.asm.orl_rr((*scratch3).into(), (*scratch4).into());
+
+                // re-use scratch register
+                self.asm.movl_ri((*scratch1).into(), Immediate(0x0F0F0F0F));
+                self.asm.andl_rr((*scratch1).into(), (*scratch3).into());
+                self.asm.shll_ri((*scratch1).into(), Immediate(4));
+
+                self.asm
+                    .movl_ri(dest.into(), Immediate(0xF0F0F0F0u32 as i32 as i64));
+                self.asm.andl_rr(dest.into(), (*scratch3).into());
+                self.asm.shrl_ri(dest.into(), Immediate(4));
+
+                self.asm.orl_rr(dest.into(), (*scratch1).into());
+                self.asm.bswapl_r(dest.into())
+            }
+            MachineMode::Int64 => {
+                let scratch1 = self.get_scratch();
+                self.asm
+                    .movq_ri((*scratch1).into(), Immediate(0x5555555555555555));
+                self.asm.andq_rr((*scratch1).into(), src.into());
+                self.asm.shlq_ri((*scratch1).into(), Immediate(1));
+
+                let scratch2 = self.get_scratch();
+                self.asm
+                    .movq_ri((*scratch2).into(), Immediate(0xAAAAAAAAAAAAAAAAu64 as i64));
+                self.asm.andq_rr((*scratch2).into(), src.into());
+                self.asm.shrq_ri((*scratch2).into(), Immediate(1));
+
+                self.asm.orq_rr((*scratch1).into(), (*scratch2).into());
+
+                let scratch3 = self.get_scratch();
+                self.asm
+                    .movq_ri((*scratch3).into(), Immediate(0x3333333333333333));
+                self.asm.andq_rr((*scratch3).into(), (*scratch1).into());
+                self.asm.shlq_ri((*scratch3).into(), Immediate(2));
+
+                let scratch4 = self.get_scratch();
+                self.asm
+                    .movq_ri((*scratch4).into(), Immediate(0xCCCCCCCCCCCCCCCCu64 as i64));
+                self.asm.andq_rr((*scratch4).into(), (*scratch1).into());
+                self.asm.shrq_ri((*scratch4).into(), Immediate(2));
+
+                self.asm.orq_rr((*scratch3).into(), (*scratch4).into());
+
+                // re-use scratch register
+                self.asm
+                    .movq_ri((*scratch1).into(), Immediate(0x0F0F0F0F0F0F0F0F));
+                self.asm.andq_rr((*scratch1).into(), (*scratch3).into());
+                self.asm.shlq_ri((*scratch1).into(), Immediate(4));
+
+                self.asm
+                    .movq_ri(dest.into(), Immediate(0xF0F0F0F0F0F0F0F0u64 as i64));
+                self.asm.andq_rr(dest.into(), (*scratch3).into());
+                self.asm.shrq_ri(dest.into(), Immediate(4));
+
+                self.asm.orq_rr(dest.into(), (*scratch1).into());
+                self.asm.bswapq_r(dest.into())
+            }
+            _ => panic!("unimplemented mode {:?}", mode),
+        }
+    }
+
     pub fn int_reverse_bytes(&mut self, mode: MachineMode, dest: Reg, src: Reg) {
         if mode.is64() {
             self.asm.bswapq_r(src.into());

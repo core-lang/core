@@ -496,6 +496,10 @@ impl AssemblerX64 {
         self.emit_modrm_registers(src, dest);
     }
 
+    pub fn andl_ri(&mut self, dest: Register, imm: Immediate) {
+        self.emit_alu32_imm(dest, imm, 0b100, 0x25);
+    }
+
     pub fn andq_rr(&mut self, dest: Register, src: Register) {
         self.emit_rex64_modrm(src, dest);
         self.emit_u8(0x21);
