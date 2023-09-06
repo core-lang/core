@@ -1,0 +1,22 @@
+fun main(): Unit {
+  let x = UInt8::minValue().toStringBinary();
+  assert(x == "00000000");
+
+  let x = UInt8::maxValue().toStringBinary();
+  assert(x == "11111111");
+
+  let x = 12i32.toUInt8().toStringBinary();
+  assert(x == "00001100");
+
+  let x = 67i32.toUInt8().toStringBinary();
+  assert(x == "01000011");
+
+  let x = 129i32.toUInt8().toStringBinary();
+  assert(x == "10000001");
+
+  let x = (-1i32).toUInt8().toStringBinary();
+  assert(x == "11111111");
+
+  let x = (-129i32).toUInt8().toStringBinary();
+  assert(x == "01111111");
+}
