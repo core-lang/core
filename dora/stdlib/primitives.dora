@@ -35,12 +35,13 @@ impl Int32 {
   @pub @internal fun toInt64(): Int64;
   @pub @internal fun toString(): String;
 
-  @pub fun toStringBinary(): String = String::binary(self.toInt64(), Int32::bits());
-  @pub fun toStringHex(): String = String::hex(self.toInt64(), Int32::bits());
+  @pub fun toStringBinary(): String = String::binary(self.asInt64(), Int32::bits());
+  @pub fun toStringHex(): String = String::hex(self.asInt64(), Int32::bits());
 
   @pub @internal fun toFloat32(): Float32;
   @pub @internal fun toFloat64(): Float64;
 
+  @pub @internal fun asInt64(): Int64;
   @pub @internal fun asFloat32(): Float32;
 
   @pub @internal fun equals(rhs: Int32): Bool;

@@ -39,4 +39,8 @@ fun main(): Unit {
     assert(x.toInt64() == x.toInt64().asFloat64().asInt64());
     assert(x.toFloat32() == x.toFloat32().asInt32().asFloat32());
     assert(x.toFloat64() == x.toFloat64().asInt64().asFloat64());
+
+    let x = -1i32;
+    assert(x.toInt64() == 0b1111111111111111111111111111111111111111111111111111111111111111);
+    assert(x.asInt64() == 0b0000000000000000000000000000000011111111111111111111111111111111);
 }
