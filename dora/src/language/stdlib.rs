@@ -530,6 +530,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         Intrinsic::Int32ToFloat64,
     );
 
+    intrinsic_method(sa, stdlib_id, "Int32", "asInt64", Intrinsic::Int32AsInt64);
     intrinsic_method(
         sa,
         stdlib_id,

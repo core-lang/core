@@ -314,6 +314,7 @@ pub enum Intrinsic {
     Int32ToInt64,
     Int32ToFloat32,
     Int32ToFloat64,
+    Int32AsInt64,
     ReinterpretInt32AsFloat32,
 
     EnumEq,
@@ -519,6 +520,7 @@ impl Intrinsic {
             | Intrinsic::Int32ToFloat64
             | Intrinsic::Int64ToFloat32
             | Intrinsic::Int64ToFloat64
+            | Intrinsic::Int32AsInt64
             | Intrinsic::ReinterpretFloat32AsInt32
             | Intrinsic::ReinterpretInt32AsFloat32
             | Intrinsic::ReinterpretFloat64AsInt64
@@ -636,6 +638,7 @@ impl Intrinsic {
             | Intrinsic::CharToInt64
             | Intrinsic::ByteToInt64
             | Intrinsic::Int32ToInt64
+            | Intrinsic::Int32AsInt64
             | Intrinsic::Float32ToInt64
             | Intrinsic::Float64ToInt64
             | Intrinsic::ArrayLen
