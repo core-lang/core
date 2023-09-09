@@ -3849,6 +3849,14 @@ impl<'a> CannonCodeGen<'a> {
                 self.emit_int_to_int64(dest, src_reg);
             }
 
+            Intrinsic::Int32AsInt64 => {
+                assert_eq!(arguments.len(), 1);
+
+                let src_reg = arguments[0];
+
+                self.emit_shrink(dest, MachineMode::Int64, src_reg, MachineMode::Int32);
+            }
+
             Intrinsic::CharToInt64 => {
                 assert_eq!(arguments.len(), 1);
 
