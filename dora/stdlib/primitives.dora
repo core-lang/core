@@ -84,7 +84,7 @@ impl Int32 {
     var c = 0i32;
     while (x != 0i32) {
       c = c + 1i32;
-      x = x.bitwiseAnd(x - 1i32);
+      x = x.bitwiseAnd(x.wrappingSub(1i32));
     }
     return c;
   }
@@ -261,7 +261,7 @@ impl Int64 {
     var c = 0i32;
     while (x != 0i64) {
       c = c + 1i32;
-      x = x.bitwiseAnd(x - 1i64);
+      x = x.bitwiseAnd(x.wrappingSub(1i64));
     }
     return c;
   }
