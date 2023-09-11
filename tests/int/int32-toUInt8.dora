@@ -1,0 +1,20 @@
+fun main(): Unit {
+  let x = Int32::minValue().toUInt8();
+  assert(x == 0i32.toUInt8());
+
+  let x = (-1i32).toUInt8();
+  assert(x == 255u8);
+
+  let x = 0i32.toUInt8();
+  assert(x == 0u8);
+
+  let x = 255i32.toUInt8();
+  assert(x == 255u8);
+
+  let x = 257i32.toUInt8();
+  assert(x == 1u8);
+
+  let x = Int32::maxValue().toUInt8();
+  assert(x == 255u8);
+
+}
