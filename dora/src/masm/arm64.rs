@@ -1523,7 +1523,7 @@ impl MacroAssembler {
         }
     }
 
-    pub fn extend_int_long(&mut self, dest: Reg, src: Reg) {
+    pub fn int32_to_int64(&mut self, dest: Reg, src: Reg) {
         self.asm.sxtw(dest.into(), src.into());
     }
 

@@ -1115,61 +1115,6 @@ impl<'a> CannonCodeGen<'a> {
         self.emit_store_register(dest_register.into(), dest);
     }
 
-    fn emit_extend_uint8(&mut self, dest: Register, src: Register, _mode: MachineMode) {
-        assert_eq!(self.bytecode.register_type(src), BytecodeType::UInt8);
-
-        self.emit_load_register(src, REG_RESULT.into());
-        self.emit_store_register(REG_RESULT.into(), dest);
-    }
-
-    fn emit_shrink(
-        &mut self,
-        dest: Register,
-        _dest_mode: MachineMode,
-        src: Register,
-        _src_mode: MachineMode,
-    ) {
-        self.emit_load_register(src, REG_RESULT.into());
-        self.emit_store_register(REG_RESULT.into(), dest);
-    }
-
-    fn emit_int_to_int64(&mut self, dest: Register, src: Register) {
-        assert_eq!(self.bytecode.register_type(dest), BytecodeType::Int64);
-        assert_eq!(self.bytecode.register_type(src), BytecodeType::Int32);
-
-        self.emit_load_register(src, REG_RESULT.into());
-        self.asm.extend_int_long(REG_RESULT, REG_RESULT);
-
-        self.emit_store_register(REG_RESULT.into(), dest);
-    }
-
-    fn emit_int64_to_int(&mut self, dest: Register, src: Register) {
-        assert_eq!(self.bytecode.register_type(dest), BytecodeType::Int32);
-        assert_eq!(self.bytecode.register_type(src), BytecodeType::Int64);
-
-        self.emit_load_register(src, REG_RESULT.into());
-
-        self.emit_store_register(REG_RESULT.into(), dest);
-    }
-
-    fn emit_promote_float(&mut self, dest: Register, src: Register) {
-        assert_eq!(self.bytecode.register_type(dest), BytecodeType::Float64);
-        assert_eq!(self.bytecode.register_type(src), BytecodeType::Float32);
-
-        self.emit_load_register(src, FREG_RESULT.into());
-        self.asm.float32_to_float64(FREG_RESULT, FREG_RESULT);
-        self.emit_store_register(FREG_RESULT.into(), dest);
-    }
-
-    fn emit_demote_float64(&mut self, dest: Register, src: Register) {
-        assert_eq!(self.bytecode.register_type(dest), BytecodeType::Float32);
-        assert_eq!(self.bytecode.register_type(src), BytecodeType::Float64);
-
-        self.emit_load_register(src, FREG_RESULT.into());
-        self.asm.float64_to_float32(FREG_RESULT, FREG_RESULT);
-        self.emit_store_register(FREG_RESULT.into(), dest);
-    }
-
     fn emit_mov_generic(&mut self, dest: Register, src: Register) {
         assert_eq!(
             self.bytecode.register_type(src),
@@ -3342,6 +3287,42 @@ impl<'a> CannonCodeGen<'a> {
         pos: Position,
     ) {
         match intrinsic {
+            Intrinsic::Unreachable => {
+                let native_fct = NativeFct {
+                    fctptr: Address::from_ptr(stdlib::unreachable as *const u8),
+                    args: &[],
+                    return_type: SourceType::Unit,
+                    desc: NativeFctKind::NativeStub(fct_id),
+                };
+                let gcpoint = self.create_gcpoint();
+                let result = REG_RESULT.into();
+                self.asm.native_call(native_fct, pos, gcpoint, result);
+
+                // Method should never return
+                self.asm.debug();
+            }
+
+            Intrinsic::UnsafeKillRefs => {
+                self.emit_intrinsic_unsafe_kill_refs(
+                    dest,
+                    fct_id,
+                    intrinsic,
+                    arguments,
+                    type_params,
+                    pos,
+                );
+            }
+
+            Intrinsic::Assert => {
+                assert_eq!(arguments.len(), 1);
+                self.emit_load_register(arguments[0], REG_RESULT.into());
+                self.asm.assert(REG_RESULT, pos);
+            }
+
+            Intrinsic::Debug => {
+                self.asm.debug();
+            }
+
             Intrinsic::Float32Abs | Intrinsic::Float64Abs => {
                 debug_assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
@@ -3422,41 +3403,84 @@ impl<'a> CannonCodeGen<'a> {
                 );
             }
 
-            Intrinsic::ReinterpretFloat32AsInt32
-            | Intrinsic::ReinterpretInt32AsFloat32
-            | Intrinsic::ReinterpretFloat64AsInt64
-            | Intrinsic::ReinterpretInt64AsFloat64 => {
+            Intrinsic::Float32AsInt32 => {
                 debug_assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
 
-                self.emit_reinterpret(dest, src_reg);
+                self.emit_load_register(src_reg.into(), FREG_RESULT.into());
+                self.asm.float_as_int(
+                    MachineMode::Int32,
+                    REG_RESULT.into(),
+                    MachineMode::Float32,
+                    FREG_RESULT.into(),
+                );
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::Unreachable => {
-                let native_fct = NativeFct {
-                    fctptr: Address::from_ptr(stdlib::unreachable as *const u8),
-                    args: &[],
-                    return_type: SourceType::Unit,
-                    desc: NativeFctKind::NativeStub(fct_id),
-                };
-                let gcpoint = self.create_gcpoint();
-                let result = REG_RESULT.into();
-                self.asm.native_call(native_fct, pos, gcpoint, result);
+            Intrinsic::Float64AsInt64 => {
+                debug_assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
 
-                // Method should never return
-                self.asm.debug();
+                self.emit_load_register(src_reg.into(), FREG_RESULT.into());
+                self.asm.float_as_int(
+                    MachineMode::Int64,
+                    REG_RESULT.into(),
+                    MachineMode::Float64,
+                    FREG_RESULT.into(),
+                );
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::PromoteFloat32ToFloat64 => {
+            Intrinsic::Int32AsFloat32 => {
+                debug_assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+
+                self.emit_load_register(src_reg.into(), REG_RESULT.into());
+                self.asm.int_as_float(
+                    MachineMode::Float32,
+                    FREG_RESULT.into(),
+                    MachineMode::Int32,
+                    REG_RESULT.into(),
+                );
+                self.emit_store_register(FREG_RESULT.into(), dest);
+            }
+
+            Intrinsic::Int64AsFloat64 => {
+                debug_assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+
+                self.emit_load_register(src_reg.into(), REG_RESULT.into());
+                self.asm.int_as_float(
+                    MachineMode::Float64,
+                    FREG_RESULT.into(),
+                    MachineMode::Int64,
+                    REG_RESULT.into(),
+                );
+                self.emit_store_register(FREG_RESULT.into(), dest);
+            }
+
+            Intrinsic::Float32ToFloat64 => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
-                self.emit_promote_float(dest, src_reg);
+
+                assert_eq!(self.bytecode.register_type(dest), BytecodeType::Float64);
+                assert_eq!(self.bytecode.register_type(src_reg), BytecodeType::Float32);
+
+                self.emit_load_register(src_reg, FREG_RESULT.into());
+                self.asm.float32_to_float64(FREG_RESULT, FREG_RESULT);
+                self.emit_store_register(FREG_RESULT.into(), dest);
             }
 
-            Intrinsic::DemoteFloat64ToFloat32 => {
+            Intrinsic::Float64ToFloat32 => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
-                self.emit_demote_float64(dest, src_reg);
+
+                assert_eq!(self.bytecode.register_type(dest), BytecodeType::Float32);
+                assert_eq!(self.bytecode.register_type(src_reg), BytecodeType::Float64);
+
+                self.emit_load_register(src_reg, FREG_RESULT.into());
+                self.asm.float64_to_float32(FREG_RESULT, FREG_RESULT);
+                self.emit_store_register(FREG_RESULT.into(), dest);
             }
 
             Intrinsic::BoolToInt32 | Intrinsic::BoolToInt64 => {
@@ -3469,27 +3493,66 @@ impl<'a> CannonCodeGen<'a> {
                 self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::Float32ToInt32
-            | Intrinsic::Float32ToInt64
-            | Intrinsic::Float64ToInt32
-            | Intrinsic::Float64ToInt64 => {
+            Intrinsic::Float32ToInt32 => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
 
                 self.emit_load_register(src_reg, FREG_RESULT.into());
-                let (src_mode, dest_mode) = match intrinsic {
-                    Intrinsic::Float32ToInt32 => (MachineMode::Float32, MachineMode::Int32),
-                    Intrinsic::Float64ToInt32 => (MachineMode::Float64, MachineMode::Int32),
-                    Intrinsic::Float32ToInt64 => (MachineMode::Float32, MachineMode::Int64),
-                    Intrinsic::Float64ToInt64 => (MachineMode::Float64, MachineMode::Int64),
-                    _ => unreachable!(),
-                };
-                self.asm
-                    .float_to_int(dest_mode, REG_RESULT, src_mode, FREG_RESULT);
+                self.asm.float_to_int(
+                    MachineMode::Int32,
+                    REG_RESULT,
+                    MachineMode::Float32,
+                    FREG_RESULT,
+                );
                 self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::Int32Cmp | Intrinsic::Int64Cmp | Intrinsic::ByteCmp | Intrinsic::CharCmp => {
+            Intrinsic::Float32ToInt64 => {
+                assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+
+                self.emit_load_register(src_reg, FREG_RESULT.into());
+                self.asm.float_to_int(
+                    MachineMode::Int64,
+                    REG_RESULT,
+                    MachineMode::Float32,
+                    FREG_RESULT,
+                );
+                self.emit_store_register(REG_RESULT.into(), dest);
+            }
+
+            Intrinsic::Float64ToInt32 => {
+                assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+
+                self.emit_load_register(src_reg, FREG_RESULT.into());
+                self.asm.float_to_int(
+                    MachineMode::Int32,
+                    REG_RESULT,
+                    MachineMode::Float64,
+                    FREG_RESULT,
+                );
+                self.emit_store_register(REG_RESULT.into(), dest);
+            }
+
+            Intrinsic::Float64ToInt64 => {
+                assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+
+                self.emit_load_register(src_reg, FREG_RESULT.into());
+                self.asm.float_to_int(
+                    MachineMode::Int64,
+                    REG_RESULT,
+                    MachineMode::Float64,
+                    FREG_RESULT,
+                );
+                self.emit_store_register(REG_RESULT.into(), dest);
+            }
+
+            Intrinsic::Int32Cmp
+            | Intrinsic::Int64Cmp
+            | Intrinsic::UInt8Cmp
+            | Intrinsic::CharCmp => {
                 assert_eq!(arguments.len(), 2);
                 let lhs_reg = arguments[0];
                 let rhs_reg = arguments[1];
@@ -3500,7 +3563,7 @@ impl<'a> CannonCodeGen<'a> {
                 let mode = match intrinsic {
                     Intrinsic::Int64Cmp => MachineMode::Int64,
                     Intrinsic::Int32Cmp | Intrinsic::CharCmp => MachineMode::Int32,
-                    Intrinsic::ByteCmp => MachineMode::Int8,
+                    Intrinsic::UInt8Cmp => MachineMode::Int8,
                     _ => unreachable!(),
                 };
 
@@ -3544,35 +3607,60 @@ impl<'a> CannonCodeGen<'a> {
                 self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::Int32ToFloat32
-            | Intrinsic::Int32ToFloat64
-            | Intrinsic::Int64ToFloat32
-            | Intrinsic::Int64ToFloat64 => {
+            Intrinsic::Int32ToFloat32 => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
 
                 self.emit_load_register(src_reg, REG_RESULT.into());
-                let (src_mode, dest_mode) = match intrinsic {
-                    Intrinsic::Int32ToFloat32 => (MachineMode::Int32, MachineMode::Float32),
-                    Intrinsic::Int32ToFloat64 => (MachineMode::Int32, MachineMode::Float64),
-                    Intrinsic::Int64ToFloat32 => (MachineMode::Int64, MachineMode::Float32),
-                    Intrinsic::Int64ToFloat64 => (MachineMode::Int64, MachineMode::Float64),
-                    _ => unreachable!(),
-                };
-                self.asm
-                    .int_to_float(dest_mode, FREG_RESULT, src_mode, REG_RESULT);
+                self.asm.int_to_float(
+                    MachineMode::Float32,
+                    FREG_RESULT,
+                    MachineMode::Int32,
+                    REG_RESULT,
+                );
                 self.emit_store_register(FREG_RESULT.into(), dest);
             }
 
-            Intrinsic::UnsafeKillRefs => {
-                self.emit_intrinsic_unsafe_kill_refs(
-                    dest,
-                    fct_id,
-                    intrinsic,
-                    arguments,
-                    type_params,
-                    pos,
+            Intrinsic::Int32ToFloat64 => {
+                assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.asm.int_to_float(
+                    MachineMode::Float64,
+                    FREG_RESULT,
+                    MachineMode::Int32,
+                    REG_RESULT,
                 );
+                self.emit_store_register(FREG_RESULT.into(), dest);
+            }
+
+            Intrinsic::Int64ToFloat32 => {
+                assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.asm.int_to_float(
+                    MachineMode::Float32,
+                    FREG_RESULT,
+                    MachineMode::Int64,
+                    REG_RESULT,
+                );
+                self.emit_store_register(FREG_RESULT.into(), dest);
+            }
+
+            Intrinsic::Int64ToFloat64 => {
+                assert_eq!(arguments.len(), 1);
+                let src_reg = arguments[0];
+
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.asm.int_to_float(
+                    MachineMode::Float64,
+                    FREG_RESULT,
+                    MachineMode::Int64,
+                    REG_RESULT,
+                );
+                self.emit_store_register(FREG_RESULT.into(), dest);
             }
 
             Intrinsic::OptionIsNone | Intrinsic::OptionIsSome => {
@@ -3595,10 +3683,6 @@ impl<'a> CannonCodeGen<'a> {
                     type_params,
                     pos,
                 );
-            }
-
-            Intrinsic::Debug => {
-                self.asm.debug();
             }
 
             Intrinsic::AtomicInt32Get => {
@@ -3825,86 +3909,92 @@ impl<'a> CannonCodeGen<'a> {
                 self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::ByteToChar | Intrinsic::ByteToInt32 => {
+            Intrinsic::UInt8ToChar | Intrinsic::UInt8ToInt32 => {
                 assert_eq!(arguments.len(), 1);
-
                 let src_reg = arguments[0];
 
-                self.emit_extend_uint8(dest, src_reg, MachineMode::Int32);
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::ByteToInt64 => {
+            Intrinsic::UInt8ToInt64 => {
                 assert_eq!(arguments.len(), 1);
-
                 let src_reg = arguments[0];
 
-                self.emit_extend_uint8(dest, src_reg, MachineMode::Int64);
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
             Intrinsic::Int32ToInt64 => {
                 assert_eq!(arguments.len(), 1);
-
                 let src_reg = arguments[0];
 
-                self.emit_int_to_int64(dest, src_reg);
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.asm.int32_to_int64(REG_RESULT, REG_RESULT);
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
             Intrinsic::Int32AsInt64 => {
                 assert_eq!(arguments.len(), 1);
-
                 let src_reg = arguments[0];
 
-                self.emit_shrink(dest, MachineMode::Int64, src_reg, MachineMode::Int32);
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
             Intrinsic::CharToInt64 => {
                 assert_eq!(arguments.len(), 1);
-
                 let src_reg = arguments[0];
 
-                self.emit_shrink(dest, MachineMode::Int64, src_reg, MachineMode::Int32);
-            }
-
-            Intrinsic::Assert => {
-                assert_eq!(arguments.len(), 1);
-                self.emit_load_register(arguments[0], REG_RESULT.into());
-                self.asm.assert(REG_RESULT, pos);
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
             Intrinsic::Int64ToInt32 => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
-                self.emit_int64_to_int(dest, src_reg);
+
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
             Intrinsic::Int64ToChar => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
-                self.emit_shrink(dest, MachineMode::Int32, src_reg, MachineMode::Int64);
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::Int64ToByte => {
+            Intrinsic::Int64ToUInt8 => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
-                self.emit_shrink(dest, MachineMode::Int8, src_reg, MachineMode::Int64);
+
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
             Intrinsic::Int32ToChar => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
-                self.emit_shrink(dest, MachineMode::Int32, src_reg, MachineMode::Int32);
+
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
-            Intrinsic::Int32ToByte => {
+            Intrinsic::Int32ToUInt8 => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
-                self.emit_shrink(dest, MachineMode::Int8, src_reg, MachineMode::Int32);
+
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
             Intrinsic::CharToInt32 => {
                 assert_eq!(arguments.len(), 1);
                 let src_reg = arguments[0];
-                self.emit_shrink(dest, MachineMode::Int32, src_reg, MachineMode::Int32);
+
+                self.emit_load_register(src_reg, REG_RESULT.into());
+                self.emit_store_register(REG_RESULT.into(), dest);
             }
 
             Intrinsic::Int32RotateLeft | Intrinsic::Int64RotateLeft => {
