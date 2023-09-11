@@ -418,35 +418,35 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "primitives::UInt8",
         "toInt64",
-        Intrinsic::ByteToInt64,
+        Intrinsic::UInt8ToInt64,
     );
     intrinsic_method(
         sa,
         stdlib_id,
         "primitives::UInt8",
         "toInt32",
-        Intrinsic::ByteToInt32,
+        Intrinsic::UInt8ToInt32,
     );
     intrinsic_method(
         sa,
         stdlib_id,
         "primitives::UInt8",
         "toChar",
-        Intrinsic::ByteToChar,
+        Intrinsic::UInt8ToChar,
     );
     intrinsic_method(
         sa,
         stdlib_id,
         "primitives::UInt8",
         "equals",
-        Intrinsic::ByteEq,
+        Intrinsic::UInt8Eq,
     );
     intrinsic_method(
         sa,
         stdlib_id,
         "primitives::UInt8",
         "compareTo",
-        Intrinsic::ByteCmp,
+        Intrinsic::UInt8Cmp,
     );
 
     native_method(
@@ -498,7 +498,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "primitives::Int32",
         "toUInt8",
-        Intrinsic::Int32ToByte,
+        Intrinsic::Int32ToUInt8,
     );
     intrinsic_method(
         sa,
@@ -536,7 +536,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "Int32",
         "asFloat32",
-        Intrinsic::ReinterpretInt32AsFloat32,
+        Intrinsic::Int32AsFloat32,
     );
 
     intrinsic_method(
@@ -778,7 +778,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "primitives::Int64",
         "toUInt8",
-        Intrinsic::Int64ToByte,
+        Intrinsic::Int64ToUInt8,
     );
 
     intrinsic_method(
@@ -801,7 +801,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "primitives::Int64",
         "asFloat64",
-        Intrinsic::ReinterpretInt64AsFloat64,
+        Intrinsic::Int64AsFloat64,
     );
 
     intrinsic_method(
@@ -1159,7 +1159,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "primitives::Float32",
         "toFloat64",
-        Intrinsic::PromoteFloat32ToFloat64,
+        Intrinsic::Float32ToFloat64,
     );
 
     intrinsic_method(
@@ -1167,7 +1167,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "primitives::Float32",
         "asInt32",
-        Intrinsic::ReinterpretFloat32AsInt32,
+        Intrinsic::Float32AsInt32,
     );
 
     intrinsic_method(
@@ -1315,7 +1315,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "primitives::Float64",
         "toFloat32",
-        Intrinsic::DemoteFloat64ToFloat32,
+        Intrinsic::Float64ToFloat32,
     );
 
     intrinsic_method(
@@ -1323,7 +1323,7 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         stdlib_id,
         "primitives::Float64",
         "asInt64",
-        Intrinsic::ReinterpretFloat64AsInt64,
+        Intrinsic::Float64AsInt64,
     );
 
     intrinsic_method(

@@ -526,8 +526,8 @@ impl<'a> BaselineAssembler<'a> {
         self.masm.extend_byte(mode, dest, src);
     }
 
-    pub fn extend_int_long(&mut self, dest: Reg, src: Reg) {
-        self.masm.extend_int_long(dest, src);
+    pub fn int32_to_int64(&mut self, dest: Reg, src: Reg) {
+        self.masm.int32_to_int64(dest, src);
     }
 
     pub fn float32_to_float64(&mut self, dest: FReg, src: FReg) {

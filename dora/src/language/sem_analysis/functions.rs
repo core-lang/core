@@ -296,24 +296,25 @@ pub enum Intrinsic {
     BoolToInt32,
     BoolToInt64,
 
-    ByteEq,
-    ByteCmp,
-    ByteToChar,
-    ByteToInt32,
-    ByteToInt64,
+    UInt8Eq,
+    UInt8Cmp,
+    UInt8ToChar,
+    UInt8ToInt32,
+    UInt8ToInt64,
 
     CharEq,
     CharCmp,
     CharToInt32,
     CharToInt64,
 
-    Int32ToByte,
+    Int32ToUInt8,
     Int32ToChar,
     Int32ToInt64,
     Int32ToFloat32,
     Int32ToFloat64,
+
     Int32AsInt64,
-    ReinterpretInt32AsFloat32,
+    Int32AsFloat32,
 
     EnumEq,
     EnumNe,
@@ -357,10 +358,11 @@ pub enum Intrinsic {
 
     Int64ToInt32,
     Int64ToChar,
-    Int64ToByte,
+    Int64ToUInt8,
     Int64ToFloat32,
     Int64ToFloat64,
-    ReinterpretInt64AsFloat64,
+
+    Int64AsFloat64,
 
     Int64Eq,
     Int64Cmp,
@@ -401,8 +403,9 @@ pub enum Intrinsic {
 
     Float32ToInt32,
     Float32ToInt64,
-    PromoteFloat32ToFloat64,
-    ReinterpretFloat32AsInt32,
+    Float32ToFloat64,
+
+    Float32AsInt32,
 
     Float32Eq,
     Float32Cmp,
@@ -427,8 +430,9 @@ pub enum Intrinsic {
 
     Float64ToInt32,
     Float64ToInt64,
-    DemoteFloat64ToFloat32,
-    ReinterpretFloat64AsInt64,
+    Float64ToFloat32,
+
+    Float64AsInt64,
 
     Float64Eq,
     Float64Cmp,
@@ -507,8 +511,8 @@ impl Intrinsic {
             | Intrinsic::Float64RoundHalfEven
             | Intrinsic::Float32Sqrt
             | Intrinsic::Float64Sqrt
-            | Intrinsic::PromoteFloat32ToFloat64
-            | Intrinsic::DemoteFloat64ToFloat32
+            | Intrinsic::Float32ToFloat64
+            | Intrinsic::Float64ToFloat32
             | Intrinsic::BoolToInt32
             | Intrinsic::Float32ToInt32
             | Intrinsic::Float32ToInt64
@@ -519,10 +523,10 @@ impl Intrinsic {
             | Intrinsic::Int64ToFloat32
             | Intrinsic::Int64ToFloat64
             | Intrinsic::Int32AsInt64
-            | Intrinsic::ReinterpretFloat32AsInt32
-            | Intrinsic::ReinterpretInt32AsFloat32
-            | Intrinsic::ReinterpretFloat64AsInt64
-            | Intrinsic::ReinterpretInt64AsFloat64
+            | Intrinsic::Float32AsInt32
+            | Intrinsic::Int32AsFloat32
+            | Intrinsic::Float64AsInt64
+            | Intrinsic::Int64AsFloat64
             | Intrinsic::OptionGetOrPanic
             | Intrinsic::OptionIsNone
             | Intrinsic::OptionIsSome
@@ -537,16 +541,16 @@ impl Intrinsic {
             | Intrinsic::AtomicInt64Exchange
             | Intrinsic::AtomicInt64CompareExchange
             | Intrinsic::AtomicInt64FetchAdd
-            | Intrinsic::ByteToChar
-            | Intrinsic::ByteToInt32
-            | Intrinsic::ByteToInt64
+            | Intrinsic::UInt8ToChar
+            | Intrinsic::UInt8ToInt32
+            | Intrinsic::UInt8ToInt64
             | Intrinsic::Int32ToInt64
             | Intrinsic::CharToInt64
-            | Intrinsic::Int64ToByte
+            | Intrinsic::Int64ToUInt8
             | Intrinsic::Int64ToChar
             | Intrinsic::Int64ToInt32
             | Intrinsic::CharToInt32
-            | Intrinsic::Int32ToByte
+            | Intrinsic::Int32ToUInt8
             | Intrinsic::Int32ToChar
             | Intrinsic::Int32RotateLeft
             | Intrinsic::Int32RotateRight
@@ -584,14 +588,14 @@ impl Intrinsic {
             | Intrinsic::Int32Not
             | Intrinsic::Int32Plus
             | Intrinsic::Int32Neg
-            | Intrinsic::ReinterpretFloat32AsInt32
+            | Intrinsic::Float32AsInt32
             | Intrinsic::CharToInt32
             | Intrinsic::Int64ToInt32
-            | Intrinsic::ByteToInt32
+            | Intrinsic::UInt8ToInt32
             | Intrinsic::Float32ToInt32
             | Intrinsic::Float64ToInt32
             | Intrinsic::BoolToInt32
-            | Intrinsic::ByteCmp
+            | Intrinsic::UInt8Cmp
             | Intrinsic::CharCmp
             | Intrinsic::Int32Cmp
             | Intrinsic::Int64Cmp
@@ -633,21 +637,21 @@ impl Intrinsic {
             | Intrinsic::Int64Plus
             | Intrinsic::Int64Neg
             | Intrinsic::CharToInt64
-            | Intrinsic::ByteToInt64
+            | Intrinsic::UInt8ToInt64
             | Intrinsic::Int32ToInt64
             | Intrinsic::Int32AsInt64
             | Intrinsic::Float32ToInt64
             | Intrinsic::Float64ToInt64
             | Intrinsic::ArrayLen
             | Intrinsic::StrLen
-            | Intrinsic::ReinterpretFloat64AsInt64 => BytecodeType::Int64,
+            | Intrinsic::Float64AsInt64 => BytecodeType::Int64,
             Intrinsic::Float32Add
             | Intrinsic::Float32Sub
             | Intrinsic::Float32Div
             | Intrinsic::Float32Mul
             | Intrinsic::Float32Neg
             | Intrinsic::Float32Plus
-            | Intrinsic::ReinterpretInt32AsFloat32
+            | Intrinsic::Int32AsFloat32
             | Intrinsic::Int32ToFloat32
             | Intrinsic::Int64ToFloat32
             | Intrinsic::Float32RoundToZero
@@ -655,7 +659,7 @@ impl Intrinsic {
             | Intrinsic::Float32RoundDown
             | Intrinsic::Float32RoundHalfEven
             | Intrinsic::Float32Sqrt
-            | Intrinsic::DemoteFloat64ToFloat32 => BytecodeType::Float32,
+            | Intrinsic::Float64ToFloat32 => BytecodeType::Float32,
             Intrinsic::Float64Add
             | Intrinsic::Float64Sub
             | Intrinsic::Float64Div
@@ -664,15 +668,15 @@ impl Intrinsic {
             | Intrinsic::Float64Plus
             | Intrinsic::Int32ToFloat64
             | Intrinsic::Int64ToFloat64
-            | Intrinsic::ReinterpretInt64AsFloat64
+            | Intrinsic::Int64AsFloat64
             | Intrinsic::Float64RoundToZero
             | Intrinsic::Float64RoundUp
             | Intrinsic::Float64RoundDown
             | Intrinsic::Float64RoundHalfEven
             | Intrinsic::Float64Sqrt
-            | Intrinsic::PromoteFloat32ToFloat64 => BytecodeType::Float64,
+            | Intrinsic::Float32ToFloat64 => BytecodeType::Float64,
             Intrinsic::BoolEq
-            | Intrinsic::ByteEq
+            | Intrinsic::UInt8Eq
             | Intrinsic::CharEq
             | Intrinsic::EnumEq
             | Intrinsic::EnumNe
@@ -683,8 +687,8 @@ impl Intrinsic {
             | Intrinsic::BoolNot
             | Intrinsic::Float64IsNan
             | Intrinsic::Float32IsNan => BytecodeType::Bool,
-            Intrinsic::Int32ToByte | Intrinsic::Int64ToByte => BytecodeType::UInt8,
-            Intrinsic::Int32ToChar | Intrinsic::Int64ToChar | Intrinsic::ByteToChar => {
+            Intrinsic::Int32ToUInt8 | Intrinsic::Int64ToUInt8 => BytecodeType::UInt8,
+            Intrinsic::Int32ToChar | Intrinsic::Int64ToChar | Intrinsic::UInt8ToChar => {
                 BytecodeType::Char
             }
             _ => panic!("no return type for {:?}", self),
