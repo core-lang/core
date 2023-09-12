@@ -1,0 +1,25 @@
+fun main(): Unit {
+  let x = Int32::minValue().toStringBinary();
+  assert(x == "10000000000000000000000000000000");
+
+  let x = Int32::maxValue().toStringBinary();
+  assert(x == "01111111111111111111111111111111");
+
+  let x = 0i32.toStringBinary();
+  assert(x == "00000000000000000000000000000000");
+
+  let x = 12i32.toStringBinary();
+  assert(x == "00000000000000000000000000001100");
+
+  let x = 67i32.toStringBinary();
+  assert(x == "00000000000000000000000001000011");
+
+  let x = 129i32.toStringBinary();
+  assert(x == "00000000000000000000000010000001");
+
+  let x = (-1i32).toStringBinary();
+  assert(x == "11111111111111111111111111111111");
+
+  let x = (-129i32).toStringBinary();
+  assert(x == "11111111111111111111111101111111");
+}

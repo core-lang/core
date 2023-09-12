@@ -171,17 +171,15 @@ impl String {
 
   @pub @static @internal fun fromStringPart(val: String, offset: Int64, len: Int64): Option[String];
 
-  @pub @static fun binary(data: Int64): String {
-    var data = data;
-    if data == 0i64 { return "0"; }
-    let array = Array[UInt8]::zero(64i64);
-    var at = array.size();
-    while data != 0i64 {
-      array(at - 1i64) = ('0'.toInt64() + (data & 1i64)).toUInt8();
-      data = data.shiftRight(1i32);
-      at = at - 1i64;
+  @pub @static fun binary(data: Int64, bits: Int32): String {
+    let bits = bits.toInt64();
+    let array = Array[UInt8]::zero(bits);
+    var at = array.size() - 1;
+    while (at >= 0) {
+      array(bits - 1 - at) = (('0'.toInt64()) + (data.shiftRight(at.toInt32()) & 1)).toUInt8();
+      at = at - 1;
     }
-    return String::fromBytesPart(array, at, array.size() - at + 1i64).getOrPanic();
+    return String::fromBytes(array).getOrPanic();
   }
 
   @pub @static fun hex(data: Int64): String {
