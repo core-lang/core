@@ -36,7 +36,7 @@ impl Int32 {
   @pub @internal fun toString(): String;
 
   @pub fun toStringBinary(): String = String::binary(self.toInt64(), Int32::bits());
-  @pub fun toStringHex(): String = String::hex(self.toInt64() & 0xFFFFFFFFi64);
+  @pub fun toStringHex(): String = String::hex(self.toInt64(), Int32::bits());
 
   @pub @internal fun toFloat32(): Float32;
   @pub @internal fun toFloat64(): Float64;
@@ -208,9 +208,9 @@ impl Int64 {
   @pub @internal fun toCharUnchecked(): Char;
   @pub @internal fun toInt32(): Int32;
   @pub @internal fun toString(): String;
-  @pub fun toStringHex(): String { String::hex(self) }
 
   @pub fun toStringBinary(): String = String::binary(self, Int64::bits());
+  @pub fun toStringHex(): String = String::hex(self, Int64::bits());
 
   @pub @internal fun toFloat32(): Float32;
   @pub @internal fun toFloat64(): Float64;
@@ -417,7 +417,7 @@ impl UInt8 {
   @pub @internal fun toString(): String;
 
   @pub fun toStringBinary(): String = String::binary(self.toInt64(), UInt8::bits());
-  @pub fun toStringHex(): String = String::hex(self.toInt64());
+  @pub fun toStringHex(): String = String::hex(self.toInt64(), UInt8::bits());
 
   @pub @internal fun equals(rhs: UInt8): Bool;
   @pub @internal fun compareTo(rhs: UInt8): Int32;

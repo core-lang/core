@@ -1,0 +1,22 @@
+fun main(): Unit {
+  let x = UInt8::minValue().toStringHex();
+  assert(x == "00");
+
+  let x = UInt8::maxValue().toStringHex();
+  assert(x == "FF");
+
+  let x = 12u8.toStringHex();
+  assert(x == "0C");
+
+  let x = 67u8.toStringHex();
+  assert(x == "43");
+
+  let x = 129u8.toStringHex();
+  assert(x == "81");
+
+  let x = (-1i32).toUInt8().toStringHex();
+  assert(x == "FF");
+
+  let x = (-129i32).toUInt8().toStringHex();
+  assert(x == "7F");
+}

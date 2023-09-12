@@ -1,0 +1,25 @@
+fun main(): Unit {
+  let x = Int32::minValue().toStringHex();
+  assert(x == "80000000");
+
+  let x = Int32::maxValue().toStringHex();
+  assert(x == "7FFFFFFF");
+
+  let x = 0i32.toStringHex();
+  assert(x == "00000000");
+
+  let x = 12i32.toStringHex();
+  assert(x == "0000000C");
+
+  let x = 67i32.toStringHex();
+  assert(x == "00000043");
+
+  let x = 129i32.toStringHex();
+  assert(x == "00000081");
+
+  let x = (-1i32).toStringHex();
+  assert(x == "FFFFFFFF");
+
+  let x = (-129i32).toStringHex();
+  assert(x == "FFFFFF7F");
+}
