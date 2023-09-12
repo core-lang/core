@@ -182,24 +182,20 @@ impl String {
     return String::fromBytes(array).getOrPanic();
   }
 
-  @pub @static fun hex(data: Int64): String {
-    var data = data;
-    if data == 0i64 { return "0"; }
-    let array = Array[UInt8]::zero(16i64);
-    var at = array.size();
-    while data != 0i64 {
-      let digit = (data & 0xFi64).toInt32();
-
+  @pub @static fun hex(data: Int64, bits: Int32): String {
+    let bits = bits.toInt64() / 4;
+    let array = Array[UInt8]::zero(bits);
+    var at = array.size() - 1;
+    while at >= 0 {
+      let digit = (data.shiftRight(at.toInt32() * 4i32) & 0xF).toInt32();
       if digit < 10i32 {
-        array(at - 1i64) = ('0'.toInt32() + digit).toUInt8();
+        array(bits - 1 - at) = ('0'.toInt32() + digit).toUInt8();
       } else {
-        array(at - 1i64) = ('A'.toInt32() + digit - 10i32).toUInt8();
+        array(bits - 1 - at) = ('A'.toInt32() + digit - 10i32).toUInt8();
       }
-
-      data = data.shiftRight(4i32);
-      at = at - 1i64;
+      at = at - 1;
     }
-    return String::fromBytesPart(array, at, array.size() - at + 1i64).getOrPanic();
+    return String::fromBytes(array).getOrPanic();
   }
 }
 
