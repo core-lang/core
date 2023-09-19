@@ -1,6 +1,7 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 
 pub mod arm64;
+pub mod rv64;
 pub mod x64;
 
 use std::convert::TryInto;

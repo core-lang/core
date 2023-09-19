@@ -28,6 +28,12 @@ pub use self::arm64::*;
 #[cfg(target_arch = "aarch64")]
 pub mod arm64;
 
+#[cfg(target_arch = "riscv64")]
+pub use self::rv64::*;
+
+#[cfg(target_arch = "riscv64")]
+pub mod rv64;
+
 pub struct CodeDescriptor {
     pub constpool: ConstPool,
     pub code: Vec<u8>,

@@ -131,3 +131,11 @@ fn get_engine(_asm_syntax: AsmSyntax) -> CsResult<Capstone> {
         .mode(arch::arm64::ArchMode::Arm)
         .build()
 }
+
+#[cfg(target_arch = "riscv64")]
+fn get_engine(_asm_syntax: AsmSyntax) -> CsResult<Capstone> {
+    Capstone::new()
+        .riscv()
+        .mode(arch::riscv::ArchMode::RiscV64)
+        .build()
+}
