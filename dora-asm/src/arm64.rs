@@ -907,6 +907,7 @@ impl AssemblerArm64 {
         self.emit_u32(cls::fp_dataproc1(0, 0, FLOAT_TYPE_SINGLE, 0b000000, rn, rd));
     }
 
+    // 64-bit to double-precision
     pub fn fmov_fs_d(&mut self, rd: NeonRegister, rn: Register) {
         self.emit_u32(cls::fp_int(
             1,
@@ -919,6 +920,7 @@ impl AssemblerArm64 {
         ));
     }
 
+    // 64-bit to half-precision
     pub fn fmov_fs_h(&mut self, rd: NeonRegister, rn: Register) {
         self.emit_u32(cls::fp_int(
             1,
@@ -931,30 +933,7 @@ impl AssemblerArm64 {
         ));
     }
 
-    pub fn fmov_fs_s(&mut self, rd: NeonRegister, rn: Register) {
-        self.emit_u32(cls::fp_int(
-            1,
-            0,
-            FLOAT_TYPE_SINGLE,
-            0b00,
-            0b111,
-            rn.encoding(),
-            rd.encoding(),
-        ));
-    }
-
-    pub fn fmov_fs_wd(&mut self, rd: NeonRegister, rn: Register) {
-        self.emit_u32(cls::fp_int(
-            0,
-            0,
-            FLOAT_TYPE_DOUBLE,
-            0b00,
-            0b111,
-            rn.encoding(),
-            rd.encoding(),
-        ));
-    }
-
+    // 32-bit to half-precision
     pub fn fmov_fs_wh(&mut self, rd: NeonRegister, rn: Register) {
         self.emit_u32(cls::fp_int(
             0,
@@ -967,6 +946,7 @@ impl AssemblerArm64 {
         ));
     }
 
+    // 32-bit to single-precision
     pub fn fmov_fs_ws(&mut self, rd: NeonRegister, rn: Register) {
         self.emit_u32(cls::fp_int(
             0,
@@ -979,6 +959,7 @@ impl AssemblerArm64 {
         ));
     }
 
+    // Double-precision to 64-bit
     pub fn fmov_sf_d(&mut self, rd: Register, rn: NeonRegister) {
         self.emit_u32(cls::fp_int(
             1,
@@ -991,6 +972,7 @@ impl AssemblerArm64 {
         ));
     }
 
+    // Half-precision to 64-bit
     pub fn fmov_sf_h(&mut self, rd: Register, rn: NeonRegister) {
         self.emit_u32(cls::fp_int(
             1,
@@ -1003,30 +985,7 @@ impl AssemblerArm64 {
         ));
     }
 
-    pub fn fmov_sf_s(&mut self, rd: Register, rn: NeonRegister) {
-        self.emit_u32(cls::fp_int(
-            1,
-            0,
-            FLOAT_TYPE_SINGLE,
-            0b00,
-            0b110,
-            rn.encoding(),
-            rd.encoding(),
-        ));
-    }
-
-    pub fn fmov_sf_wd(&mut self, rd: Register, rn: NeonRegister) {
-        self.emit_u32(cls::fp_int(
-            0,
-            0,
-            FLOAT_TYPE_DOUBLE,
-            0b00,
-            0b110,
-            rn.encoding(),
-            rd.encoding(),
-        ));
-    }
-
+    // Half-precision to 32-bit
     pub fn fmov_sf_wh(&mut self, rd: Register, rn: NeonRegister) {
         self.emit_u32(cls::fp_int(
             0,
@@ -1039,6 +998,7 @@ impl AssemblerArm64 {
         ));
     }
 
+    // Single-precision to 32-bit
     pub fn fmov_sf_ws(&mut self, rd: Register, rn: NeonRegister) {
         self.emit_u32(cls::fp_int(
             0,
