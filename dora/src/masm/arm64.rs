@@ -202,8 +202,38 @@ impl MacroAssembler {
         }
     }
 
-    pub fn float_srt(&mut self, _mode: MachineMode, _dest: Reg, _lhs: FReg, _rhs: FReg) {
-        unreachable!("float_srt not intrinsified on ARM64")
+    pub fn float_srt(&mut self, mode: MachineMode, dest: Reg, lhs: FReg, rhs: FReg) {
+        match mode {
+            MachineMode::Float32 => {
+                self.asm.fmov_sf_ws(R0.into(), lhs.into());
+                self.asm.fmov_sf_ws(R1.into(), rhs.into());
+                self.asm.asr_imm_w(R2.into(), R0.into(), 31);
+                self.asm.asr_imm_w(R3.into(), R1.into(), 31);
+                self.asm
+                    .eor_sh_w(R0.into(), R0.into(), R2.into(), Shift::LSR, 1);
+                self.asm
+                    .eor_sh_w(R1.into(), R1.into(), R3.into(), Shift::LSR, 1);
+                self.asm.cmp_w(R0.into(), R1.into());
+                self.asm.cset_w(R0.into(), Cond::NE);
+                self.asm
+                    .csinv_w(dest.into(), R0.into(), REG_ZERO.into(), Cond::GE);
+            }
+            MachineMode::Float64 => {
+                self.asm.fmov_sf_d(R0.into(), lhs.into());
+                self.asm.fmov_sf_d(R1.into(), rhs.into());
+                self.asm.asr_imm(R2.into(), R0.into(), 63);
+                self.asm.asr_imm(R3.into(), R1.into(), 63);
+                self.asm
+                    .eor_sh(R0.into(), R0.into(), R2.into(), Shift::LSR, 1);
+                self.asm
+                    .eor_sh(R1.into(), R1.into(), R3.into(), Shift::LSR, 1);
+                self.asm.cmp(R0.into(), R1.into());
+                self.asm.cset(R0.into(), Cond::NE);
+                self.asm
+                    .csinv(dest.into(), R0.into(), REG_ZERO.into(), Cond::GE);
+            }
+            _ => unreachable!(),
+        }
     }
 
     pub fn test_and_jump_if(&mut self, cond: CondCode, reg: Reg, lbl: Label) {
