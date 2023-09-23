@@ -399,6 +399,14 @@ impl AssemblerArm64 {
         self.emit_u32(cls::logical_shreg(0, 0b11, shift, 0, rm, imm6, rn, rd));
     }
 
+    pub fn asr_imm(&mut self, rd: Register, rn: Register, shift: u32) {
+        self.sbfm(rd, rn, shift, 63);
+    }
+
+    pub fn asr_imm_w(&mut self, rd: Register, rn: Register, shift: u32) {
+        self.sbfm_w(rd, rn, shift, 31);
+    }
+
     pub fn asrv(&mut self, rd: Register, rn: Register, rm: Register) {
         self.emit_u32(cls::dataproc2(1, 0, rm, 0b1010, rn, rd));
     }
