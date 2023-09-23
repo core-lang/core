@@ -1184,7 +1184,6 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         "compareTo",
         Intrinsic::Float32Cmp,
     );
-    #[cfg(target_arch = "x86_64")]
     intrinsic_method(
         sa,
         stdlib_id,
@@ -1340,7 +1339,6 @@ pub fn resolve_internal_functions(sa: &mut SemAnalysis) {
         "compareTo",
         Intrinsic::Float64Cmp,
     );
-    #[cfg(target_arch = "x86_64")]
     intrinsic_method(
         sa,
         stdlib_id,
