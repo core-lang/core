@@ -158,7 +158,7 @@ impl MacroAssembler {
     }
 
     pub fn set(&mut self, dest: Reg, cond: CondCode) {
-        self.asm.setcc_r(convert_into_condition(cond), dest.into());
+        self.asm.setcc_r(cond.into(), dest.into());
         self.asm.movzxb_rr(dest.into(), dest.into());
     }
 
@@ -390,7 +390,7 @@ impl MacroAssembler {
     }
 
     pub fn jump_if(&mut self, cond: CondCode, target: Label) {
-        self.asm.jcc(convert_into_condition(cond), target)
+        self.asm.jcc(cond.into(), target)
     }
 
     pub fn jump(&mut self, target: Label) {
@@ -1547,23 +1547,6 @@ impl MacroAssembler {
         } else {
             self.asm.movl_rr(lhs, rhs);
         }
-    }
-}
-
-fn convert_into_condition(cond: CondCode) -> Condition {
-    match cond {
-        CondCode::Zero => Condition::Zero,
-        CondCode::NonZero => Condition::NotZero,
-        CondCode::Equal => Condition::Equal,
-        CondCode::NotEqual => Condition::NotEqual,
-        CondCode::Less => Condition::Less,
-        CondCode::LessEq => Condition::LessOrEqual,
-        CondCode::Greater => Condition::Greater,
-        CondCode::GreaterEq => Condition::GreaterOrEqual,
-        CondCode::UnsignedGreater => Condition::Above, // above
-        CondCode::UnsignedGreaterEq => Condition::AboveOrEqual, // above or equal
-        CondCode::UnsignedLess => Condition::Below,    // below
-        CondCode::UnsignedLessEq => Condition::BelowOrEqual, // below or equal
     }
 }
 
