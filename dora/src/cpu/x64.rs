@@ -2,6 +2,8 @@ use lazy_static::lazy_static;
 use std::sync::atomic::{compiler_fence, Ordering};
 
 use crate::language::ty::SourceType;
+use crate::masm::CondCode;
+use dora_asm::x64::Condition;
 use dora_asm::x64::Register;
 
 pub fn flush_icache(_: *const u8, _: usize) {
@@ -161,6 +163,25 @@ impl FReg {
 
     pub fn and7(self) -> u8 {
         self.0 & 0x07
+    }
+}
+
+impl From<CondCode> for Condition {
+    fn from(cond: CondCode) -> Condition {
+        match cond {
+            CondCode::Zero => Condition::Zero,
+            CondCode::NonZero => Condition::NotZero,
+            CondCode::Equal => Condition::Equal,
+            CondCode::NotEqual => Condition::NotEqual,
+            CondCode::Less => Condition::Less,
+            CondCode::LessEq => Condition::LessOrEqual,
+            CondCode::Greater => Condition::Greater,
+            CondCode::GreaterEq => Condition::GreaterOrEqual,
+            CondCode::UnsignedGreater => Condition::Above, // above
+            CondCode::UnsignedGreaterEq => Condition::AboveOrEqual, // above or equal
+            CondCode::UnsignedLess => Condition::Below,    // below
+            CondCode::UnsignedLessEq => Condition::BelowOrEqual, // below or equal
+        }
     }
 }
 
