@@ -541,7 +541,41 @@ impl MacroAssembler {
 
     pub fn float_cmp_nan(&mut self, mode: MachineMode, dest: Reg, src: FReg) {}
 
-    pub fn float_srt(&mut self, _mode: MachineMode, _dest: Reg, _lhs: FReg, _rhs: FReg) {}
+    pub fn float_srt(&mut self, mode: MachineMode, dest: Reg, lhs: FReg, rhs: FReg) {
+        match mode {
+            MachineMode::Float64 => {
+                self.asm.fmv_x_d(R10.into(), lhs.into());
+                self.asm.fmv_x_d(R11.into(), rhs.into());
+                self.asm.srai(R12.into(), R10.into(), 63);
+                self.asm.srli(R12.into(), R12.into(), 1);
+                self.asm.xor(R10.into(), R10.into(), R12.into());
+                self.asm.srai(R12.into(), R11.into(), 63);
+                self.asm.srli(R12.into(), R12.into(), 1);
+                self.asm.xor(R11.into(), R11.into(), R12.into());
+                self.asm.slt(R12.into(), R10.into(), R11.into());
+                self.asm.xor(R10.into(), R10.into(), R11.into());
+                self.asm.snez(R10.into(), R10.into());
+                self.asm.neg(R11.into(), R12.into());
+                self.asm.or(dest.into(), R10.into(), R11.into())
+            }
+            MachineMode::Float32 => {
+                self.asm.fmv_x_w(R10.into(), lhs.into());
+                self.asm.fmv_x_w(R11.into(), rhs.into());
+                self.asm.sraiw(R12.into(), R10.into(), 31);
+                self.asm.srliw(R12.into(), R12.into(), 1);
+                self.asm.xor(R10.into(), R10.into(), R12.into());
+                self.asm.sraiw(R12.into(), R11.into(), 31);
+                self.asm.srliw(R12.into(), R12.into(), 1);
+                self.asm.xor(R11.into(), R11.into(), R12.into());
+                self.asm.slt(R12.into(), R10.into(), R11.into());
+                self.asm.xor(R10.into(), R10.into(), R11.into());
+                self.asm.snez(R10.into(), R10.into());
+                self.asm.neg(R11.into(), R12.into());
+                self.asm.or(dest.into(), R10.into(), R11.into())
+            }
+            _ => unreachable!(),
+        }
+    }
 
     pub fn load_float_const(&mut self, mode: MachineMode, dest: FReg, imm: f64) {}
 
