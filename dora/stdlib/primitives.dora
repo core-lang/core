@@ -83,7 +83,7 @@ impl Int32 {
   @pub @internal fun countOneBits(): Int32 {
     var x = self;
     var c = 0i32;
-    while (x != 0i32) {
+    while x != 0i32 {
       c = c + 1i32;
       x = x.bitwiseAnd(x.wrappingSub(1i32));
     }
@@ -260,7 +260,7 @@ impl Int64 {
   @pub @internal fun countOneBits(): Int32 {
     var x = self;
     var c = 0i32;
-    while (x != 0i64) {
+    while x != 0i64 {
       c = c + 1i32;
       x = x.bitwiseAnd(x.wrappingSub(1i64));
     }
@@ -272,7 +272,7 @@ impl Int64 {
     }
     var t = 1i64.shiftLeft(Int64::bits() - 1i32);
     var r = 0i32;
-    while (self.bitwiseAnd(t)) == 0i64 {
+    while self.bitwiseAnd(t) == 0i64 {
       t = t.shiftRight(1i32);
       r = r + 1i32;
     }
@@ -285,7 +285,7 @@ impl Int64 {
     }
     var t = 1i64;
     var r = 0i32;
-    while (self.bitwiseAnd(t)) == 0i64 {
+    while self.bitwiseAnd(t) == 0i64 {
       t = t.shiftLeft(1i32);
       r = r + 1i32
     }
