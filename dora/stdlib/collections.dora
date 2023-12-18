@@ -805,43 +805,212 @@ impl[K: Hash + Identity + Equals, V] HashMapIterator[K, V] {
 }
 
 @pub class HashSet[K: Hash + Identity + Equals] {
-  map: HashMap[K, ()],
+  insertedAndDeleted: BitSet,
+  keys: Array[K],
+  entries: Int64,
+  cap: Int64,
 }
 
 impl[K: Hash + Identity + Equals] HashSet[K] {
   @pub @static fun new(keys: K...): HashSet[K] {
-    let map: HashMap[K, ()] = HashMap[K, ()]::new();
+    // BitSet.size == capacity * 2
+    // [bit 0: inserted; bit 1: deleted] * capacity
+    let set = HashSet[K](
+      BitSet::new(0),
+      Array[K]::new(),
+      0,
+      0,
+    );
 
     for key in keys {
-        map.insert(key, ());
+      set.insert(key);
     }
 
-    HashSet[K](map)
+    set
   }
 
-  @pub fun insert(key: K): Unit {
-    self.map.insert(key, ());
+  @pub fun size(): Int64 = self.entries;
+
+  @pub fun isEmpty(): Bool = self.entries == 0;
+
+  @pub fun capacity(): Int64 = self.cap;
+
+  @pub fun insert(key: K): Option[K] {
+    self.ensureCapacity(1);
+    assert(self.entries < self.cap);
+
+    var hash = key.hash();
+    var idx = hash.toInt64() & (self.cap - 1);
+    var insertIdx = None[Int64];
+
+    while true {
+      if self
+      ... .isLive(idx) {
+        let currentKey = self.keys.get(idx);
+
+        if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
+          let oldKey = self.keys.get(idx);
+          self.keys.set(idx, key);
+          return Some[K](oldKey);
+        }
+      }
+      ... .isDeleted(idx) {
+        // There might be live entries after a deleted one.
+
+        if insertIdx.isNone() {
+          insertIdx = Some[Int64](idx);
+        }
+      }
+      else {
+        let insertIdx = insertIdx.unwrapOr(idx);
+
+        self.insertedAndDeleted.insert(2 * insertIdx);
+        self.insertedAndDeleted.remove(2 * insertIdx + 1);
+
+        self.keys.set(insertIdx, key);
+
+        self.entries = self.entries + 1;
+        return None[K];
+      }
+      idx = (idx + 1) & (self.cap - 1);
+    }
+
+    unreachable[Option[K]]()
   }
 
   @pub fun contains(key: K): Bool {
-    self.map.contains(key)
+    assert(self.entries <= self.cap);
+
+    if self.entries == 0 {
+        return false;
+    }
+
+    var hash = key.hash();
+    var idx = hash.toInt64() & (self.cap - 1);
+
+    while true {
+      if self
+      ... .isLive(idx) {
+        let currentKey = self.keys.get(idx);
+
+        if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
+          return true;
+        }
+        idx = (idx + 1) & (self.cap - 1);
+      }
+      ... .isDeleted(idx) {
+        // There might be live entries after a deleted one.
+        idx = (idx + 1) & (self.cap - 1);
+      }
+      else {
+        return false;
+      }
+    }
+
+    false
   }
 
-  @pub fun remove(key: K): Bool {
-    self.map.remove(key).isSome()
+  @pub fun remove(key: K): Option[K] {
+    self.shrink();
+
+    var hash = key.hash();
+    var idx = hash.toInt64() & (self.cap - 1);
+
+    while true {
+      if self
+      ... .isLive(idx) {
+        let currentKey = self.keys.get(idx);
+
+        if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
+          self.insertedAndDeleted.insert(2 * idx + 1);
+
+          unsafeKillRefs[K](self.keys, idx);
+
+          self.entries = self.entries - 1;
+          return Option[K]::Some(currentKey);
+        }
+        idx = (idx + 1) & (self.cap - 1);
+      }
+      ... .isDeleted(idx) {
+        // There might be live entries after a deleted one.
+        idx = (idx + 1) & (self.cap - 1);
+      }
+      else {
+        return Option[K]::None;
+      }
+    }
+
+    Option[K]::None
   }
 
-  @pub fun size(): Int64 {
-    self.map.size()
+  fun ensureCapacity(elementsToAdd: Int64): Unit {
+    if self.entries + elementsToAdd < self.cap {
+      if self.entries <= (self.cap - (self.cap / 4)) {
+        return;
+      }
+    }
+
+    var newCapacity = 4;
+    let oldCapacity = self.cap;
+
+    if oldCapacity > 0 {
+      newCapacity = oldCapacity * 2;
+    }
+
+    assert(self.entries + elementsToAdd < newCapacity);
+
+    self.rehash(newCapacity);
   }
 
-  @pub fun isEmpty(): Bool {
-    self.map.isEmpty()
+  fun shrink(): Unit {
+    if self.entries > (self.cap / 4) {
+      return;
+    }
+
+    let newCapacity = self.cap / 2;
+
+    if newCapacity < 4 {
+      return;
+    }
+
+    assert(self.entries < newCapacity);
+
+    self.rehash(newCapacity);
   }
 
-  @pub fun capacity(): Int64 {
-    self.map.capacity()
+  fun rehash(newCapacity: Int64): Unit {
+    let oldCapacity = self.cap;
+
+    let newSet = HashSet[K]::new();
+    newSet.insertedAndDeleted = BitSet::new(2 * newCapacity);
+    newSet.keys = Array[K]::unsafeNew(newCapacity);
+    newSet.entries = 0;
+    newSet.cap = newCapacity;
+
+    var idx = 0;
+
+    while idx < oldCapacity {
+      if self.isLive(idx) {
+        let key = self.keys.get(idx);
+
+        newSet.insert(key);
+      }
+
+      idx = idx + 1;
+    }
+
+    self.insertedAndDeleted = newSet.insertedAndDeleted;
+    self.keys = newSet.keys;
+    self.entries = newSet.entries;
+    self.cap = newCapacity;
   }
+
+  fun isLive(idx: Int64): Bool =
+    self.insertedAndDeleted.contains(2 * idx)
+        && self.insertedAndDeleted.contains(2 * idx + 1).not();
+
+  fun isDeleted(idx: Int64): Bool =
+    self.insertedAndDeleted.contains(2 * idx + 1);
 }
 
 @pub class List[T] {
