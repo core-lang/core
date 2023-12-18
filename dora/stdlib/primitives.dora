@@ -1,4 +1,4 @@
-use std.traits.{Default, Equals, Hash, Iterator, Zero};
+use std.traits.{Default, Equals, Hash, Identity, Iterator, Zero};
 use std.string.Stringable;
 use std.fatalError;
 
@@ -510,6 +510,10 @@ impl[T] Option[Option[T]] {
     ... is None      { None[T] };
 }
 
+impl[T: Identity] Identity for Option[T] {
+  @pub fun identicalTo(rhs: Option[T]): Bool = self === rhs;
+}
+
 impl[T: Equals] Equals for Option[T] {
   @pub fun equals(rhs: Option[T]): Bool {
     if self.isSome() {
@@ -624,6 +628,10 @@ impl[T, E] Result[T, E] {
   @pub fun toOption(): Option[T] = if self
     ... is Ok(val) { Some[T](val) }
     ... is Err(_)  { None[T] };
+}
+
+impl[T: Identity, E] Identity for Result[T, E] {
+  @pub fun identicalTo(rhs: Result[T, E]): Bool = self === rhs;
 }
 
 impl[T: Equals, E] Result[T, E] {
