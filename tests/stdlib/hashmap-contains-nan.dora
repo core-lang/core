@@ -1,0 +1,20 @@
+fun main(): Unit {
+  float64();
+  float32();
+}
+
+fun float64(): Unit {
+  let map = std::HashMap[Float64, String]::new((Float64::notANumber(), "a"));
+
+  assert(map.size() == 1);
+  assert(map.contains(Float64::notANumber()));
+  assert(map.get(Float64::notANumber()).getOrPanic() == "a");
+}
+
+fun float32(): Unit {
+  let map = std::HashMap[Float32, String]::new((Float32::notANumber(), "a"));
+
+  assert(map.size() == 1);
+  assert(map.contains(Float32::notANumber()));
+  assert(map.get(Float32::notANumber()).getOrPanic() == "a");
+}

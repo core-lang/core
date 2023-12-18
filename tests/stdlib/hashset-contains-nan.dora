@@ -1,0 +1,18 @@
+fun main(): Unit {
+  float64();
+  float32();
+}
+
+fun float64(): Unit {
+  let set = std::HashSet[Float64]::new(Float64::notANumber());
+
+  assert(set.size() == 1);
+  assert(set.contains(Float64::notANumber()));
+}
+
+fun float32(): Unit {
+  let set = std::HashSet[Float32]::new(Float32::notANumber());
+
+  assert(set.size() == 1);
+  assert(set.contains(Float32::notANumber()));
+}

@@ -520,7 +520,7 @@ impl[T] Queue[T] {
   }
 }
 
-@pub class HashMap[K: Hash + Equals, V] {
+@pub class HashMap[K: Hash + Identity + Equals, V] {
   inserted_and_deleted: BitSet,
   keys: Array[K],
   values: Array[V],
@@ -528,7 +528,7 @@ impl[T] Queue[T] {
   cap: Int64,
 }
 
-impl[K: Hash + Equals, V] HashMap[K, V] {
+impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
   @pub @static fun new(entries: (K, V)...): HashMap[K, V] {
     // BitSet.size == capacity * 2
     // [bit 0: inserted; bit 1: deleted] * capacity
@@ -561,7 +561,7 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
             ... .isLive(idx) {
                 let current_key = self.keys.get(idx);
 
-                if current_key.hash() == hash && current_key.equals(key) {
+                if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
                     let old_value = self.values.get(idx);
                     self.values.set(idx, value);
                     return Some[V](old_value);
@@ -607,7 +607,7 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
             ... .isLive(idx) {
                 let current_key = self.keys.get(idx);
 
-                if current_key.hash() == hash && current_key.equals(key) {
+                if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
                     return true;
                 }
                 idx = (idx + 1i64) & (self.cap - 1i64);
@@ -639,7 +639,7 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
             ... .isLive(idx) {
                 let current_key = self.keys.get(idx);
 
-                if current_key.hash() == hash && current_key.equals(key) {
+                if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
                     return Option[V]::Some(self.values.get(idx));
                 }
                 idx = (idx + 1i64) & (self.cap - 1i64);
@@ -667,7 +667,7 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
             ... .isLive(idx) {
                 let current_key = self.keys.get(idx);
 
-                if current_key.hash() == hash && current_key.equals(key) {
+                if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
                     let value = self.values.get(idx);
                     self.inserted_and_deleted.insert(2i64 * idx + 1i64);
 
@@ -780,12 +780,12 @@ impl[K: Hash + Equals, V] HashMap[K, V] {
     @pub fun iterator(): HashMapIterator[K, V] = HashMapIterator[K, V]::new(self);
 }
 
-@pub class HashMapIterator[K: Hash + Equals, V] {
+@pub class HashMapIterator[K: Hash + Identity + Equals, V] {
   map: HashMap[K, V],
   idx: Int64,
 }
 
-impl[K: Hash + Equals, V] HashMapIterator[K, V] {
+impl[K: Hash + Identity + Equals, V] HashMapIterator[K, V] {
     @pub @static fun new(map: HashMap[K, V]): HashMapIterator[K, V] = HashMapIterator[K, V](map, 0);
 
     @pub fun next(): Option[(K, V)] {
@@ -804,11 +804,11 @@ impl[K: Hash + Equals, V] HashMapIterator[K, V] {
     }
 }
 
-@pub class HashSet[K: Hash + Equals] {
+@pub class HashSet[K: Hash + Identity + Equals] {
   map: HashMap[K, ()],
 }
 
-impl[K: Hash + Equals] HashSet[K] {
+impl[K: Hash + Identity + Equals] HashSet[K] {
   @pub @static fun new(keys: K...): HashSet[K] {
     let map: HashMap[K, ()] = HashMap[K, ()]::new();
 

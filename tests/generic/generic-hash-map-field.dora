@@ -1,5 +1,9 @@
 class MyOwnType
 
+impl std::Identity for MyOwnType {
+    fun identicalTo(other: MyOwnType): Bool = true;
+}
+
 impl std::Equals for MyOwnType {
     fun equals(other: MyOwnType): Bool = true;
 }
