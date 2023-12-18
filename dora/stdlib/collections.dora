@@ -624,6 +624,38 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
         false
     }
 
+    @pub fun includes(key: K): Bool {
+      assert(self.entries <= self.cap);
+
+      if self.entries == 0i64 {
+        return false;
+      }
+
+      var hash = key.hash();
+      var idx = hash.toInt64() & (self.cap - 1i64);
+
+      while true {
+        if self
+        ... .isLive(idx) {
+          let currentKey = self.keys.get(idx);
+
+          if currentKey.hash() == hash && currentKey.identicalTo(key) {
+            return true;
+          }
+          idx = (idx + 1i64) & (self.cap - 1i64);
+        }
+        ... .isDeleted(idx) {
+          // There might be live entries after a deleted one.
+          idx = (idx + 1i64) & (self.cap - 1i64);
+        }
+        else {
+          return false;
+        }
+      }
+
+      false
+    }
+
     @pub fun get(key: K): Option[V] {
         assert(self.entries <= self.cap);
 
@@ -876,6 +908,38 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
     }
 
     unreachable[Option[K]]()
+  }
+
+  @pub fun includes(key: K): Bool {
+    assert(self.entries <= self.cap);
+
+    if self.entries == 0i64 {
+      return false;
+    }
+
+    var hash = key.hash();
+    var idx = hash.toInt64() & (self.cap - 1i64);
+
+    while true {
+      if self
+      ... .isLive(idx) {
+        let currentKey = self.keys.get(idx);
+
+        if currentKey.hash() == hash && currentKey.identicalTo(key) {
+          return true;
+        }
+        idx = (idx + 1i64) & (self.cap - 1i64);
+      }
+      ... .isDeleted(idx) {
+        // There might be live entries after a deleted one.
+        idx = (idx + 1i64) & (self.cap - 1i64);
+      }
+      else {
+        return false;
+      }
+    }
+
+    false
   }
 
   @pub fun contains(key: K): Bool {
