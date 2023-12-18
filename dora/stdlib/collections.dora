@@ -278,11 +278,11 @@ impl[T: Equals] Array[T] {
 }
 
 impl[T: Identity] Array[T] {
-  @pub fun has(value: T): Bool {
+  @pub fun includes(val: T): Bool {
     var i = 0i64;
 
     while i < self.size() {
-      if self.get(i).identicalTo(value) {
+      if self.get(i).identicalTo(val) {
         return true;
       }
       i = i + 1i64;
@@ -1347,11 +1347,11 @@ impl[T: Equals] List[T] {
 }
 
 impl[T: Identity] List[T] {
-  @pub fun has(value: T): Bool {
+  @pub fun includes(val: T): Bool {
     var i = 0i64;
 
     while i < self.size() {
-      if self.get(i).identicalTo(value) {
+      if self.get(i).identicalTo(val) {
         return true;
       }
       i = i + 1i64;

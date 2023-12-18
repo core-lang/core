@@ -9,11 +9,11 @@ fun main(): Unit {
 }
 
 fun testBothEmpty(): Unit {
-  assert("".indexOfFirst("").has(0i64));
+  assert("".indexOfFirst("").includes(0i64));
 }
 
 fun testNeedleEmpty(): Unit {
-  assert("abc".indexOfFirst("").has(0i64));
+  assert("abc".indexOfFirst("").includes(0i64));
 }
 
 fun testHaystackEmpty(): Unit {
@@ -25,14 +25,14 @@ fun testNeedleLarger(): Unit {
 }
 
 fun testSuccess(): Unit {
-  assert("abcdef".indexOfFirst("abc").has(0i64));
-  assert("defabc".indexOfFirst("abc").has(3i64));
-  assert("ababbaadef".indexOfFirst("aa").has(5i64));
-  assert("apapplapple".indexOfFirst("apple").has(6i64));
+  assert("abcdef".indexOfFirst("abc").includes(0i64));
+  assert("defabc".indexOfFirst("abc").includes(3i64));
+  assert("ababbaadef".indexOfFirst("aa").includes(5i64));
+  assert("apapplapple".indexOfFirst("apple").includes(6i64));
 }
 
 fun testMultipleMatch(): Unit {
-  assert("abcdefabc".indexOfFirst("abc").has(0i64));
+  assert("abcdefabc".indexOfFirst("abc").includes(0i64));
 }
 
 fun testFailure(): Unit {

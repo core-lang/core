@@ -4,8 +4,8 @@ fun main(): Unit {
   let er1 = Result[Int32, String]::Err("err1");
   let nan = Result[Float64, String]::Ok(0.0/0.0);
 
-  assert(ok1.has(ok));
-  assert(ok1.has("ok").not());
-  assert(er1.has(23i32).not());
-  assert(nan.has(0.0/0.0));
+  assert(ok1.includes(ok));
+  assert(ok1.includes("ok").not());
+  assert(er1.includes(23i32).not());
+  assert(nan.includes(0.0/0.0));
 }
