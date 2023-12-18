@@ -1,0 +1,20 @@
+fun main(): Unit {
+  float64();
+  float32();
+}
+
+fun float64(): Unit {
+  let set = std::HashSet[Float64]::new(0.0);
+
+  assert(set.size() == 1);
+  assert(set.contains(0.0));
+  assert(set.contains(-0.0)); // FIXME: this only works by coincidence, because the hash function sucks
+}
+
+fun float32(): Unit {
+  let set = std::HashSet[Float32]::new(0.0f32);
+
+  assert(set.size() == 1);
+  assert(set.contains(0.0f32));
+  assert(set.contains(-0.0f32).not()); // FIXME: should be true instead
+}
