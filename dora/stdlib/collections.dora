@@ -910,6 +910,38 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
     false
   }
 
+  @pub fun get(key: K): Option[K] {
+    assert(self.entries <= self.cap);
+
+    if self.entries == 0 {
+      return Option[K]::None;
+    }
+
+    var hash = key.hash();
+    var idx = hash.toInt64() & (self.cap - 1);
+
+    while true {
+      if self
+      ... .isLive(idx) {
+        let currentKey = self.keys.get(idx);
+
+        if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
+          return Option[K]::Some(currentKey);
+        }
+        idx = (idx + 1) & (self.cap - 1);
+      }
+      ... .isDeleted(idx) {
+        // There might be live entries after a deleted one.
+        idx = (idx + 1) & (self.cap - 1);
+      }
+      else {
+        return Option[K]::None;
+      }
+    }
+
+    Option[K]::None
+  }
+
   @pub fun remove(key: K): Option[K] {
     self.shrink();
 
