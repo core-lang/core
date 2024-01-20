@@ -6,6 +6,7 @@
 @pub use thread.{AtomicInt32, AtomicInt64, Condition, Mutex, Thread};
 
 @pub mod annotations;
+@pub mod base64;
 @pub mod collections;
 @pub mod primitives
 @pub mod rand

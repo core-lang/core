@@ -1,0 +1,44 @@
+fun main(): Unit {
+  bytes0()
+  bytes1()
+  bytes2()
+  bytes3()
+  bytes13()
+  bytes15()
+}
+
+fun bytes0(): Unit {
+  let bytes = Array[UInt8]::new()
+  let string = std::base64::encodeStandard(bytes)
+  assert(string == "")
+}
+
+fun bytes1(): Unit {
+  let bytes = Array[UInt8]::new(0u8)
+  let string = std::base64::encodeStandard(bytes)
+  assert(string == "AA")
+}
+
+fun bytes2(): Unit {
+  let bytes = Array[UInt8]::new(0u8, 12u8)
+  let string = std::base64::encodeStandard(bytes)
+  assert(string == "AAw")
+}
+
+fun bytes3(): Unit {
+  let bytes = Array[UInt8]::new(0u8, 12u8, 23u8);
+  let string = std::base64::encodeStandard(bytes);
+  assert(string == "AAwX");
+}
+
+fun bytes13(): Unit {
+  let bytes = Array[UInt8]::new(255u8, 234u8, 23u8, 45u8, 238u8, 78u8, 89u8, 23u8, 45u8, 67u8, 78u8, 89u8, 91u8);
+  let string = std::base64::encodeStandard(bytes);
+  assert(string == "/+oXLe5OWRctQ05ZWw");
+}
+
+fun bytes15(): Unit {
+  let bytes = Array[UInt8]::new(0u8, 12u8, 23u8, 45u8, 67u8, 78u8, 89u8, 91u8, 12u8, 23u8, 45u8, 67u8, 78u8, 89u8, 91u8);
+  let string = std::base64::encodeStandard(bytes);
+  assert(string == "AAwXLUNOWVsMFy1DTllb");
+}
