@@ -1,0 +1,46 @@
+// Base64-functionality is not intended to stay in stdlib root.
+// It's only here because we lack the infrastructure for it to be somewhere else.
+
+use std.string.StringBuffer
+
+let STANDARD: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+let STANDARD_URL_SAFE: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+let ORDERED: String = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"
+
+@pub
+fun encodeStandard(src: Array[UInt8]): String = encode(src, STANDARD)
+
+@pub
+fun encodeUrlSafe(src: Array[UInt8]): String = encode(src, STANDARD_URL_SAFE)
+
+@pub
+fun encodeOrdered(src: Array[UInt8]): String = encode(src, ORDERED)
+
+fun encode(src: Array[UInt8], alphabet: String): String {
+  let buffer = StringBuffer::new()
+  var srcSize = src.size()
+  let remainder = srcSize.remainder(3)
+  srcSize = srcSize - remainder
+  var i = 0
+  while (i < srcSize) {
+    let bits = src(i).toInt32().shiftLeft(16i32) | src(i+1).toInt32().shiftLeft(8i32) | src(i+2).toInt32()
+    i = i + 3
+    buffer.appendChar(alphabet.getByte(bits.shiftRight(18i32).asInt64() & 0b111111).toChar())
+    buffer.appendChar(alphabet.getByte(bits.shiftRight(12i32).asInt64() & 0b111111).toChar())
+    buffer.appendChar(alphabet.getByte(bits.shiftRight( 6i32).asInt64() & 0b111111).toChar())
+    buffer.appendChar(alphabet.getByte(bits                  .asInt64() & 0b111111).toChar())
+  }
+  if remainder
+  ... == 2 {
+    let bits = src(i).toInt32().shiftLeft(16i32) | src(i+1).toInt32().shiftLeft(8i32)
+    buffer.appendChar(alphabet.getByte(bits.shiftRight(18i32).asInt64() & 0b111111).toChar())
+    buffer.appendChar(alphabet.getByte(bits.shiftRight(12i32).asInt64() & 0b111111).toChar())
+    buffer.appendChar(alphabet.getByte(bits.shiftRight( 6i32).asInt64() & 0b111111).toChar())
+  }
+  ... == 1 {
+    let bits = src(i).toInt32().shiftLeft(16i32)
+    buffer.appendChar(alphabet.getByte(bits.shiftRight(18i32).asInt64() & 0b111111).toChar())
+    buffer.appendChar(alphabet.getByte(bits.shiftRight(12i32).asInt64() & 0b111111).toChar())
+  }
+  buffer.toString()
+}
