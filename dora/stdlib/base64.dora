@@ -1,0 +1,18 @@
+use std.string.StringBuffer;
+
+let CHARS: String = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+
+@pub
+fun encode(src: Array[UInt8]): String {
+  let buffer = StringBuffer::new();
+  var i = 0;
+  while (i < src.size()) {
+    let bits = src(i).toInt32().shiftLeft(16i32) | src(i+1).toInt32().shiftLeft(8i32) | src(i+2).toInt32();
+    i = i + 3;
+    buffer.appendChar(CHARS.getByte(bits.shiftRight(18i32).asInt64() & 0b111111).toChar());
+    buffer.appendChar(CHARS.getByte(bits.shiftRight(12i32).asInt64() & 0b111111).toChar());
+    buffer.appendChar(CHARS.getByte(bits.shiftRight( 6i32).asInt64() & 0b111111).toChar());
+    buffer.appendChar(CHARS.getByte(bits                  .asInt64() & 0b111111).toChar());
+  }
+  return buffer.toString();
+}

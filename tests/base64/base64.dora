@@ -1,0 +1,16 @@
+fun main(): Unit {
+  bytes3();
+  bytes15();
+}
+
+fun bytes3(): Unit {
+  let bytes = Array[UInt8]::new(0u8, 12u8, 23u8);
+  let string = std::base64::encode(bytes);
+  println(string);
+}
+
+fun bytes15(): Unit {
+  let bytes = Array[UInt8]::new(0u8, 12u8, 23u8, 45u8, 67u8, 78u8, 89u8, 91u8, 12u8, 23u8, 45u8, 67u8, 78u8, 89u8, 91u8);
+  let string = std::base64::encode(bytes);
+  println(string);
+}
