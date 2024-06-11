@@ -1,238 +1,238 @@
-use std.fatalError;
+use std.fatalError
 
 @pub @internal class String
 
 impl String {
   @pub fun equals(rhs: String): Bool {
-    var i = 0i64;
+    var i = 0i64
 
     if self.size() != rhs.size() {
-        return false;
+        return false
     }
 
-    let len = self.size();
+    let len = self.size()
 
     while i < len {
         if self.getByte(i) != rhs.getByte(i) {
-            return false;
+            return false
         }
 
-        i = i + 1i64;
+        i = i + 1i64
     }
 
-    return true;
+    true
   }
 
-  @pub @internal fun hash(): Int32;
+  @pub @internal fun hash(): Int32
 
-  @pub fun toString(): String = self;
+  @pub fun toString(): String = self
 
-  @pub @internal fun compareTo(rhs: String): Int32;
+  @pub @internal fun compareTo(rhs: String): Int32
 
-  @pub @internal fun size(): Int64;
+  @pub @internal fun size(): Int64
 
-  @internal fun toInt32Success(): Bool;
-  @internal fun toInt64Success(): Bool;
+  @internal fun toInt32Success(): Bool
+  @internal fun toInt64Success(): Bool
 
-  @internal fun toInt32OrZero(): Int32;
-  @internal fun toInt64OrZero(): Int64;
+  @internal fun toInt32OrZero(): Int32
+  @internal fun toInt64OrZero(): Int64
 
-  @internal fun toFloat32Success(): Bool;
-  @internal fun toFloat64Success(): Bool;
+  @internal fun toFloat32Success(): Bool
+  @internal fun toFloat64Success(): Bool
 
-  @internal fun toFloat32OrZero(): Float32;
-  @internal fun toFloat64OrZero(): Float64;
+  @internal fun toFloat32OrZero(): Float32
+  @internal fun toFloat64OrZero(): Float64
 
   @pub fun toInt32(): Option[Int32] =
     if self.toInt32Success() {
       Option[Int32]::Some(self.toInt32OrZero())
     } else {
       Option[Int32]::None
-    };
+    }
 
   @pub fun toInt64(): Option[Int64] =
     if self.toInt64Success() {
       Option[Int64]::Some(self.toInt64OrZero())
     } else {
       Option[Int64]::None
-    };
+    }
 
   @pub fun toFloat32(): Option[Float32] =
     if self.toFloat32Success() {
       Option[Float32]::Some(self.toFloat32OrZero())
     } else {
       Option[Float32]::None
-    };
+    }
 
   @pub fun toFloat64(): Option[Float64] =
     if self.toFloat64Success() {
       Option[Float64]::Some(self.toFloat64OrZero())
     } else {
       Option[Float64]::None
-    };
+    }
 
-  @pub @internal fun plus(rhs: String): String;
+  @pub @internal fun plus(rhs: String): String
 
-  @pub @internal fun getByte(idx: Int64): UInt8;
+  @pub @internal fun getByte(idx: Int64): UInt8
 
-  @pub @internal fun clone(): String;
+  @pub @internal fun clone(): String
 
-  @pub fun isEmpty(): Bool = self.size() == 0i64;
+  @pub fun isEmpty(): Bool = self.size() == 0i64
 
-  @pub fun contains(val: String): Bool = self.indexOfFirst(val).isSome();
+  @pub fun contains(val: String): Bool = self.indexOfFirst(val).isSome()
 
   @pub fun indexOfFirst(val: String): Option[Int64] {
-    let m = val.size();
+    let m = val.size()
     if m == 0i64 {
-      return Some(0i64);
+      return Some(0i64)
     }
 
-    let n = self.size();
+    let n = self.size()
     if m > n {
-      return None;
+      return None
     }
 
-    var j = 0i64;
-    var k = 0i64;
-    var ell = 0i64;
+    var j = 0i64
+    var k = 0i64
+    var ell = 0i64
 
     if val.getByte(0i64) == val.getByte(1i64) {
-       k = 2i64;
-       ell = 1i64;
+       k = 2i64
+       ell = 1i64
     } else {
-       k = 1i64;
-       ell = 2i64;
+       k = 1i64
+       ell = 2i64
     }
 
-    j = 0i64;
+    j = 0i64
     while j <= n - m {
       if val.getByte(1i64) != self.getByte(j + 1i64) {
-        j = j + k;
+        j = j + k
       } else {
         if String::compare(val, 2i64, self, j + 2i64, m - 2i64) && val.getByte(0i64) == self.getByte(j) {
-          return Option[Int64]::Some(j);
+          return Option[Int64]::Some(j)
         }
-        j = j + ell;
+        j = j + ell
       }
     }
-    return Option[Int64]::None;
+    Option[Int64]::None
   }
 
   @static fun compare(a: String, aPos: Int64, b: String, bPos: Int64, len: Int64): Bool {
-    var i = 0i64;
+    var i = 0i64
 
     while i < len {
       if a.getByte(aPos+i) != b.getByte(bPos+i) {
-        return false;
+        return false
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
 
-    return true;
+    true
   }
 
   @pub fun startsWith(val: String): Bool {
-    let valLen = val.size();
+    let valLen = val.size()
     if valLen > self.size() {
-      return false;
+      return false
     }
-    var i = 0i64;
+    var i = 0i64
     while i < valLen {
       if self.getByte(i) !== val.getByte(i) {
-        return false;
+        return false
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
-    return true;
+    true
   }
 
   @pub fun endsWith(val: String): Bool {
-    let slfLen = self.size();
-    let valLen = val.size();
+    let slfLen = self.size()
+    let valLen = val.size()
     if valLen > slfLen {
-      return false;
+      return false
     }
-    var iSlf = 0i64;
-    var iVal = slfLen - valLen;
+    var iSlf = 0i64
+    var iVal = slfLen - valLen
     while iSlf < valLen {
       if self.getByte(iSlf + iVal) !== val.getByte(iSlf) {
-        return false;
+        return false
       }
-      iSlf = iSlf + 1i64;
+      iSlf = iSlf + 1i64
     }
-    return true;
+    true
   }
 
-  @pub fun codePoints(): CodepointIterator = CodepointIterator(self, 0i64);
+  @pub fun codePoints(): CodepointIterator = CodepointIterator(self, 0i64)
 
-  @pub @static @internal fun fromBytesPart(val: Array[UInt8], offset: Int64, len: Int64): Option[String] ;
+  @pub @static @internal fun fromBytesPart(val: Array[UInt8], offset: Int64, len: Int64): Option[String]
 
-  @pub @static fun fromBytes(val: Array[UInt8]): Option[String] = String::fromBytesPart(val, 0i64, val.size());
+  @pub @static fun fromBytes(val: Array[UInt8]): Option[String] = String::fromBytesPart(val, 0i64, val.size())
 
-  @pub @static @internal fun fromStringPart(val: String, offset: Int64, len: Int64): Option[String];
+  @pub @static @internal fun fromStringPart(val: String, offset: Int64, len: Int64): Option[String]
 
   @pub @static fun binary(data: Int64, bits: Int32): String {
-    let bits = bits.toInt64();
-    let array = Array[UInt8]::zero(bits);
-    var at = array.size() - 1;
+    let bits = bits.toInt64()
+    let array = Array[UInt8]::zero(bits)
+    var at = array.size() - 1
     while at >= 0 {
-      array(bits - 1 - at) = (('0'.toInt64()) + (data.shiftRight(at.toInt32()) & 1)).toUInt8();
-      at = at - 1;
+      array(bits - 1 - at) = (('0'.toInt64()) + (data.shiftRight(at.toInt32()) & 1)).toUInt8()
+      at = at - 1
     }
-    return String::fromBytes(array).getOrPanic();
+    String::fromBytes(array).getOrPanic()
   }
 
   @pub @static fun hex(data: Int64, bits: Int32): String {
-    let bits = bits.toInt64() / 4;
-    let array = Array[UInt8]::zero(bits);
-    var at = array.size() - 1;
+    let bits = bits.toInt64() / 4
+    let array = Array[UInt8]::zero(bits)
+    var at = array.size() - 1
     while at >= 0 {
-      let digit = (data.shiftRight(at.toInt32() * 4i32) & 0xF).toInt32();
+      let digit = (data.shiftRight(at.toInt32() * 4i32) & 0xF).toInt32()
       if digit < 10i32 {
-        array(bits - 1 - at) = ('0'.toInt32() + digit).toUInt8();
+        array(bits - 1 - at) = ('0'.toInt32() + digit).toUInt8()
       } else {
-        array(bits - 1 - at) = ('A'.toInt32() + digit - 10i32).toUInt8();
+        array(bits - 1 - at) = ('A'.toInt32() + digit - 10i32).toUInt8()
       }
-      at = at - 1;
+      at = at - 1
     }
-    return String::fromBytes(array).getOrPanic();
+    String::fromBytes(array).getOrPanic()
   }
 }
 
 @pub trait Stringable {
-  fun toString(): String;
+  fun toString(): String
 }
 
 impl Stringable for Bool {
-  fun toString(): String = self.toString();
+  fun toString(): String = self.toString()
 }
 
 impl Stringable for UInt8 {
-  fun toString(): String = self.toString();
+  fun toString(): String = self.toString()
 }
 
 impl Stringable for Int32 {
-  fun toString(): String = self.toString();
+  fun toString(): String = self.toString()
 }
 
 impl Stringable for Int64 {
-  fun toString(): String = self.toString();
+  fun toString(): String = self.toString()
 }
 
 impl Stringable for Float32 {
-  fun toString(): String = self.toString();
+  fun toString(): String = self.toString()
 }
 
 impl Stringable for Float64 {
-  fun toString(): String = self.toString();
+  fun toString(): String = self.toString()
 }
 
 impl Stringable for String {
-  fun toString(): String = self.toString();
+  fun toString(): String = self.toString()
 }
 
 impl Stringable for Char {
-  fun toString(): String = self.toString();
+  fun toString(): String = self.toString()
 }
 
 @pub class StringBuffer {
@@ -241,40 +241,40 @@ impl Stringable for Char {
 }
 
 impl StringBuffer {
-  @pub @static fun new(): StringBuffer = StringBuffer(Array[UInt8]::new(), 0);
+  @pub @static fun new(): StringBuffer = StringBuffer(Array[UInt8]::new(), 0)
 
-  @pub fun size(): Int64 = self.len;
+  @pub fun size(): Int64 = self.len
 
-  @pub fun capacity(): Int64 = self.buf.size();
+  @pub fun capacity(): Int64 = self.buf.size()
 
   // reserve `elements` bytes
   // (capacity - length >= elements)
   @pub fun reserve(elements: Int64): Unit {
     if self.capacity() - self.size() >= elements {
-      return;
+      return
     }
 
-    let newcap = self.newCapacity(elements);
-    let newbuf = Array[UInt8]::zero(newcap);
-    var i = 0i64;
+    let newcap = self.newCapacity(elements)
+    let newbuf = Array[UInt8]::zero(newcap)
+    var i = 0i64
 
     while i < self.buf.size() {
-      newbuf.set(i, self.buf.get(i));
-      i = i + 1i64;
+      newbuf.set(i, self.buf.get(i))
+      i = i + 1i64
     }
 
-    self.buf = newbuf;
+    self.buf = newbuf
   }
 
   @pub fun newCapacity(reserve: Int64): Int64 {
-    var len = self.len;
+    var len = self.len
 
     if len == 0i64 {
-      len = 4i64;
+      len = 4i64
     }
 
-    let c1 = (len + reserve + 7i64) & 7i64.not();
-    let c2 = len * 2i64;
+    let c1 = (len + reserve + 7i64) & 7i64.not()
+    let c2 = len * 2i64
 
     if c1 > c2 {
       c1
@@ -286,37 +286,37 @@ impl StringBuffer {
   }
 
   @pub fun appendChar(ch: Char): StringBuffer {
-    let chLen = ch.lenUtf8();
-    self.reserve(chLen.toInt64());
-    ch.encodeUtf8(self.buf, self.len);
-    self.len = self.len + chLen.toInt64();
+    let chLen = ch.lenUtf8()
+    self.reserve(chLen.toInt64())
+    ch.encodeUtf8(self.buf, self.len)
+    self.len = self.len + chLen.toInt64()
     self
   }
 
   @pub fun append(value: String): StringBuffer {
-    self.reserve(value.size());
-    var i = 0i64;
+    self.reserve(value.size())
+    var i = 0i64
 
     while i < value.size() {
-      self.buf.set(self.len + i, value.getByte(i));
-      i = i + 1i64;
+      self.buf.set(self.len + i, value.getByte(i))
+      i = i + 1i64
     }
 
-    self.len = self.len + value.size();
+    self.len = self.len + value.size()
     self
   }
 
-  @pub fun appendNewline(): StringBuffer = self.appendChar('\n');
+  @pub fun appendNewline(): StringBuffer = self.appendChar('\n')
 
-  @pub fun toString(): String = String::fromBytesPart(self.buf, 0i64, self.size()).getOrPanic();
+  @pub fun toString(): String = String::fromBytesPart(self.buf, 0i64, self.size()).getOrPanic()
 
-  @pub @static fun empty(): StringBuffer = StringBuffer::new();
+  @pub @static fun empty(): StringBuffer = StringBuffer::new()
 }
 
 @pub class CodepointIterator(value: String, start: Int64)
 
 impl CodepointIterator {
-  @pub @static fun new(value: String): CodepointIterator = CodepointIterator(value, 0);
+  @pub @static fun new(value: String): CodepointIterator = CodepointIterator(value, 0)
 
   @pub fun next(): Option[Char] {
     if self.start < self.value.size() {
@@ -327,45 +327,45 @@ impl CodepointIterator {
   }
 
   fun readChar(): Char {
-    let byte = self.value.getByte(self.start);
+    let byte = self.value.getByte(self.start)
 
     if byte
     ... <= 0x7Fu8 {
-      self.start = self.start + 1i64;
+      self.start = self.start + 1i64
       byte.toInt32().toCharUnchecked()
     }
     ... <= 0xBFu8 {
-      fatalError("unexpected continuation byte");
+      fatalError("unexpected continuation byte")
       unreachable[Char]()
     }
     ... <= 0xDFu8 {
-      let cp = (byte.toInt32() & 0x1Fi32).shiftLeft(6i32) | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32);
-      self.start = self.start + 2i64;
+      let cp = (byte.toInt32() & 0x1Fi32).shiftLeft(6i32) | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32)
+      self.start = self.start + 2i64
       cp.toCharUnchecked()
     }
     ... <= 0xEFu8 {
       let cp = (byte.toInt32() & 0xFi32).shiftLeft(12i32)
         | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(6i32)
-        | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32);
-      self.start = self.start + 3i64;
+        | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32)
+      self.start = self.start + 3i64
       cp.toCharUnchecked()
     }
     ... <= 0xF7u8 {
       let cp = (byte.toInt32() & 0x03i32).shiftLeft(18i32)
         | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(12i32)
         | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32).shiftLeft(6i32)
-        | (self.value.getByte(self.start + 3i64).toInt32() & 0x3Fi32);
-      self.start = self.start + 4i64;
+        | (self.value.getByte(self.start + 3i64).toInt32() & 0x3Fi32)
+      self.start = self.start + 4i64
       cp.toCharUnchecked()
     }
     else {
-      fatalError("invalid utf8: " + byte.toInt32().toString());
+      fatalError("invalid utf8: " + byte.toInt32().toString())
       unreachable[Char]()
     }
   }
 
   @pub fun peek(): Char {
-    let byte = self.value.getByte(self.start);
+    let byte = self.value.getByte(self.start)
 
     if byte
     ... <= 0x7Fu8 {
@@ -375,37 +375,37 @@ impl CodepointIterator {
       fatalError("unexpected continuation byte"); unreachable[Char]()
     }
     ... <= 0xDFu8 {
-      let cp = (byte.toInt32() & 0x1Fi32).shiftLeft(6i32) | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32);
+      let cp = (byte.toInt32() & 0x1Fi32).shiftLeft(6i32) | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32)
       cp.toCharUnchecked()
     }
     ... <= 0xEFu8 {
       let cp = (byte.toInt32() & 0xFi32).shiftLeft(12i32)
         | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(6i32)
-        | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32);
+        | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32)
       cp.toCharUnchecked()
     }
     ... <= 0xF7u8 {
       let cp = (byte.toInt32() & 0x03i32).shiftLeft(18i32)
         | (self.value.getByte(self.start + 1i64).toInt32() & 0x3Fi32).shiftLeft(12i32)
         | (self.value.getByte(self.start + 2i64).toInt32() & 0x3Fi32).shiftLeft(6i32)
-        | (self.value.getByte(self.start + 3i64).toInt32() & 0x3Fi32);
+        | (self.value.getByte(self.start + 3i64).toInt32() & 0x3Fi32)
       cp.toCharUnchecked()
     }
     else {
-      fatalError("invalid utf8: " + byte.toInt32().toString());
+      fatalError("invalid utf8: " + byte.toInt32().toString())
       unreachable[Char]()
     }
   }
 
   @pub fun size(): Int64 {
-    var i = 0;
+    var i = 0
 
     while self.next().isSome() {
-      i = i + 1;
+      i = i + 1
     }
 
-    return i;
+    i
   }
 
-  @pub fun toString(): String = String::fromStringPart(self.value, self.start, self.value.size() - self.start).getOrPanic();
+  @pub fun toString(): String = String::fromStringPart(self.value, self.start, self.value.size() - self.start).getOrPanic()
 }

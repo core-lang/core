@@ -1,5 +1,6 @@
 fun main(): Unit {
   Foo();
+  ()
 }
 
 class Foo

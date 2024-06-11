@@ -11,4 +11,5 @@ fun main(): Unit {
 
     Option[String]::None.isNone();
     Option[Int32]::Some(12i32).isNone();
+    ()
 }

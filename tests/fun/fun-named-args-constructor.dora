@@ -6,6 +6,7 @@ fun main(): Unit {
   Bar(x = 23, y = true);
   Bar(x = 23, true);
   Bar(23, y = true);
+  ()
 }
 
 class Foo(x: Int64, y: Bool)

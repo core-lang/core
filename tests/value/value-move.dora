@@ -8,4 +8,5 @@ fun f(): Foo {
 
 fun main(): Unit {
     f();
+    ()
 }

@@ -1,153 +1,151 @@
-use std.traits.{Hash, Equals, Iterator, Default, Zero, Sortable, Identity};
-use std.string.{Stringable, StringBuffer};
-use std.{fatalError, unsafeKillRefs};
+use std.traits.{Hash, Equals, Iterator, Default, Zero, Sortable, Identity}
+use std.string.{Stringable, StringBuffer}
+use std.{fatalError, unsafeKillRefs}
 
 @pub @internal class Array[T]
 
 impl[T] Array[T] {
-  @pub @static @internal fun new(values: T...): Array[T];
+  @pub @static @internal fun new(values: T...): Array[T]
 
-  @pub @internal fun size(): Int64;
-  @pub @internal fun get(idx: Int64): T;
-  @pub @internal fun set(idx: Int64, val: T): Unit;
+  @pub @internal fun size(): Int64
+  @pub @internal fun get(idx: Int64): T
+  @pub @internal fun set(idx: Int64, val: T): Unit
 
-  @pub fun isEmpty(): Bool = self.size() == 0i64;
+  @pub fun isEmpty(): Bool = self.size() == 0i64
 
-  @pub fun first(): Option[T] {
+  @pub fun first(): Option[T] =
     if self.size() == 0 {
       Option[T]::None
     } else {
       Option[T]::Some(self(0))
     }
-  }
 
-  @pub fun last(): Option[T] {
+  @pub fun last(): Option[T] =
     if self.size() == 0 {
       Option[T]::None
     } else {
       Option[T]::Some(self(self.size() - 1i64))
     }
-  }
 
   @pub fun all(fct: (T): Bool): Bool {
-    let len = self.size();
-    var idx = 0;
+    let len = self.size()
+    var idx = 0
     while idx < len {
       if fct(self(idx)).not() {
-        return false;
+        return false
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return true;
+    return true
   }
 
   @pub fun any(fct: (T): Bool): Bool {
-    let len = self.size();
-    var idx = 0;
+    let len = self.size()
+    var idx = 0
     while idx < len {
       if fct(self(idx)) {
-        return true;
+        return true
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return false;
+    return false
   }
 
   @pub fun each(fct: (T): Unit): Unit {
-    let len = self.size();
-    var idx = 0;
+    let len = self.size()
+    var idx = 0
     while idx < len {
-      fct(self(idx));
-      idx = idx + 1;
+      fct(self(idx))
+      idx = idx + 1
     }
   }
 
   @pub fun map[U](fct: (T): U): Array[U] {
-    let len = self.size();
-    let result = Array[U]::unsafeNew(len);
-    var idx = 0;
+    let len = self.size()
+    let result = Array[U]::unsafeNew(len)
+    var idx = 0
     while idx < len {
-      result.set(idx, fct(self(idx)));
-      idx = idx + 1;
+      result.set(idx, fct(self(idx)))
+      idx = idx + 1
     }
-    return result;
+    return result
   }
 
   @pub fun retain(fct: (T): Bool): Array[T] {
-    let result = List[T]::new();
-    let len = self.size();
-    var idx = 0;
+    let result = List[T]::new()
+    let len = self.size()
+    var idx = 0
     while idx < len {
-      let val = self(idx);
+      let val = self(idx)
       if fct(val) {
-        result.push(val);
+        result.push(val)
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result.toArray();
+    return result.toArray()
   }
 
   @pub fun reject(fct: (T): Bool): Array[T] {
-    let result = List[T]::new();
-    let len = self.size();
-    var idx = 0;
+    let result = List[T]::new()
+    let len = self.size()
+    var idx = 0
     while idx < len {
-      let val = self(idx);
+      let val = self(idx)
       if fct(val).not() {
-        result.push(val);
+        result.push(val)
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result.toArray();
+    result.toArray()
   }
 
-  @pub fun iterator(): ArrayIterator[T] = ArrayIterator[T]::new(self);
+  @pub fun iterator(): ArrayIterator[T] = ArrayIterator[T]::new(self)
 
-  @pub fun iteratorReverse(): ArrayIteratorReverse[T] = ArrayIteratorReverse[T]::new(self);
+  @pub fun iteratorReverse(): ArrayIteratorReverse[T] = ArrayIteratorReverse[T]::new(self)
 
-  @pub fun enumerate(): ArrayEnumerator[T] = ArrayEnumerator[T]::new(self);
+  @pub fun enumerate(): ArrayEnumerator[T] = ArrayEnumerator[T]::new(self)
 
-  @static @internal fun unsafeNew(size: Int64): Array[T];
+  @static @internal fun unsafeNew(size: Int64): Array[T]
 
   @pub @static fun fill(len: Int64, value: T): Array[T] {
-    let array = Array[T]::unsafeNew(len);
-    var i = 0i64;
+    let array = Array[T]::unsafeNew(len)
+    var i = 0i64
 
     while i < len {
-      array(i) = value;
-      i = i + 1i64;
+      array(i) = value
+      i = i + 1i64
     }
 
-    return array;
+    return array
   }
 
   @pub @static fun copy(src: Array[T], srcPos: Int64, dest: Array[T], destPos: Int64, len: Int64): Unit {
-    var i = 0i64;
+    var i = 0i64
 
     while i < len {
-      dest.set(destPos+i, src.get(srcPos+i));
-      i = i + 1i64;
+      dest.set(destPos+i, src.get(srcPos+i))
+      i = i + 1i64
     }
   }
 }
 
 impl[T: Default] Array[T] {
   @pub @static fun newDefault(len: Int64): Array[T] {
-    let array = Array[T]::unsafeNew(len);
-    var i = 0i64;
-    let value = T::default();
+    let array = Array[T]::unsafeNew(len)
+    var i = 0i64
+    let value = T::default()
 
     while i < len {
-      array.set(i, value);
-      i = i + 1i64;
+      array.set(i, value)
+      i = i + 1i64
     }
 
-    return array;
+    return array
   }
 }
 
 impl[T: Zero] Array[T] {
-  @pub @static fun zero(len: Int64): Array[T] = Array[T]::unsafeNew(len);
+  @pub @static fun zero(len: Int64): Array[T] = Array[T]::unsafeNew(len)
 }
 
 @pub class ArrayIterator[T] {
@@ -156,12 +154,12 @@ impl[T: Zero] Array[T] {
 }
 
 impl[T] ArrayIterator[T] {
-  @static fun new(data: Array[T]): ArrayIterator[T] = ArrayIterator[T](data, 0);
+  @static fun new(data: Array[T]): ArrayIterator[T] = ArrayIterator[T](data, 0)
 
   @pub fun next(): Option[T] {
     if self.idx < self.array.size() {
-      let current = self.array(self.idx);
-      self.idx = self.idx + 1;
+      let current = self.array(self.idx)
+      self.idx = self.idx + 1
       Some[T](current)
     } else {
       None[T]
@@ -175,12 +173,12 @@ impl[T] ArrayIterator[T] {
 }
 
 impl[T] ArrayIteratorReverse[T] {
-  @static fun new(data: Array[T]): ArrayIteratorReverse[T] = ArrayIteratorReverse[T](data, data.size() - 1);
+  @static fun new(data: Array[T]): ArrayIteratorReverse[T] = ArrayIteratorReverse[T](data, data.size() - 1)
 
   @pub fun next(): Option[T] {
     if self.idx != -1 {
-      let result = self.array(self.idx);
-      self.idx = self.idx - 1i64;
+      let result = self.array(self.idx)
+      self.idx = self.idx - 1i64
       Some[T](result)
     } else {
       None[T]
@@ -194,12 +192,12 @@ impl[T] ArrayIteratorReverse[T] {
 }
 
 impl[T] ArrayEnumerator[T] {
-  @static fun new(data: Array[T]): ArrayEnumerator[T] = ArrayEnumerator[T](data, 0);
+  @static fun new(data: Array[T]): ArrayEnumerator[T] = ArrayEnumerator[T](data, 0)
 
   @pub fun next(): Option[(Int64, T)] {
     if self.idx < self.array.size() {
-      let current_idx = self.idx;
-      self.idx = self.idx + 1i64;
+      let current_idx = self.idx
+      self.idx = self.idx + 1i64
       Some[(Int64, T)]((current_idx, self.array(current_idx)))
     } else {
       None[(Int64, T)]
@@ -211,16 +209,16 @@ impl[T: Sortable] Array[T] {
   // a stable in-place sort, currently implemented by insertion sort
   @pub @static
   fun sortStable(array: Array[T]): Unit {
-    var i = 1i64;
+    var i = 1i64
     while i < array.size() {
-      var temp: T = array.get(i);
-      var j = i;
+      var temp: T = array.get(i)
+      var j = i
       while j > 0i64 && array(j - 1i64).sortsAfter(temp) {
-        array(j) = array(j - 1i64);
-        j = j - 1i64;
+        array(j) = array(j - 1i64)
+        j = j - 1i64
       }
-      array(j) = temp;
-      i = i + 1i64;
+      array(j) = temp
+      i = i + 1i64
     }
   }
 }
@@ -228,86 +226,86 @@ impl[T: Sortable] Array[T] {
 impl[T: Equals] Array[T] {
   @pub fun equals(other: Array[T]): Bool {
     if self.size() != other.size() {
-      return false;
+      return false
     }
-    var i = 0i64;
+    var i = 0i64
     while i < self.size() {
       if self(i).equals(other(i)).not() {
-        return false;
+        return false
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
-    return true;
+    true
   }
 
   @pub fun contains(value: T): Bool {
-    var i = 0i64;
+    var i = 0i64
 
     while i < self.size() {
-      let x = self.get(i);
+      let x = self.get(i)
       if x.equals(value) {
-        return true;
+        return true
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
 
-    return false;
+    false
   }
 
   @pub @static fun compare(a: Array[T], aPos: Int64, b: Array[T], bPos: Int64, len: Int64): Bool {
-    let aSize = a.size() - aPos;
-    let bSize = b.size() - bPos;
+    let aSize = a.size() - aPos
+    let bSize = b.size() - bPos
     if aSize < len || bSize < len {
-      fatalError("len ${len} exceeds size of array");
+      fatalError("len ${len} exceeds size of array")
     }
     if aSize < 0i64 || bSize < 0i64 {
-      return false;
+      return false
     }
 
-    var i = 0i64;
+    var i = 0i64
 
     while i < len {
       if a(aPos+i).equals(b(bPos+i)).not() {
-        return false;
+        return false
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
 
-    return true;
+    true
   }
 }
 
 impl[T: Identity] Array[T] {
   @pub fun includes(val: T): Bool {
-    var i = 0i64;
+    var i = 0i64
 
     while i < self.size() {
       if self.get(i).identicalTo(val) {
-        return true;
+        return true
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
 
-    return false;
+    false
   }
 }
 
 impl[T: Stringable] Array[T] {
   @pub fun toString(): String {
-    let sb = StringBuffer::new();
-    sb.append("Array(");
-    let size = self.size();
+    let sb = StringBuffer::new()
+    sb.append("Array(")
+    let size = self.size()
     if size != 0i64 {
-      var i = 0i64;
+      var i = 0i64
       while i < size - 1i64 {
-        sb.append(self.get(i).toString());
-        sb.append(", ");
-        i = i + 1i64;
+        sb.append(self.get(i).toString())
+        sb.append(", ")
+        i = i + 1i64
       }
-      sb.append(self.get(i).toString());
+      sb.append(self.get(i).toString())
     }
-    sb.append(")");
-    return sb.toString();
+    sb.append(")")
+    sb.toString()
   }
 }
 
@@ -321,7 +319,7 @@ impl BitSet {
     if capacity == 0 {
       BitSet(Array[Int32]::new(), 0)
     } else {
-      let entries = (capacity + 31) / 32;
+      let entries = (capacity + 31) / 32
       BitSet(Array[Int32]::zero(entries), capacity)
     }
   }
@@ -332,42 +330,42 @@ impl BitSet {
 
   @pub fun contains(idx: Int64): Bool {
     if idx < 0i64 || idx >= self.capacity {
-      fatalError("index out of bounds");
+      fatalError("index out of bounds")
     }
 
-    let entry_idx = idx / 32i64;
-    let value = self.data.get(entry_idx);
-    let value_idx = idx - entry_idx;
+    let entry_idx = idx / 32i64
+    let value = self.data.get(entry_idx)
+    let value_idx = idx - entry_idx
 
-    return value & 1i32.shiftLeft(value_idx.toInt32()) != 0i32;
+    return value & 1i32.shiftLeft(value_idx.toInt32()) != 0i32
   }
 
   @pub fun insert(idx: Int64): Unit {
     if idx < 0i64 || idx >= self.capacity {
-      fatalError("index out of bounds");
+      fatalError("index out of bounds")
     }
 
-    let entry_idx = idx / 32i64;
-    var value = self.data.get(entry_idx);
-    let value_idx = idx - entry_idx;
+    let entry_idx = idx / 32i64
+    var value = self.data.get(entry_idx)
+    let value_idx = idx - entry_idx
 
-    value = value | 1i32.shiftLeft(value_idx.toInt32());
+    value = value | 1i32.shiftLeft(value_idx.toInt32())
 
-    self.data.set(entry_idx, value);
+    self.data.set(entry_idx, value)
   }
 
   @pub fun remove(idx: Int64): Unit {
     if idx < 0i64 || idx >= self.capacity {
-      fatalError("index out of bounds");
+      fatalError("index out of bounds")
     }
 
-    let entry_idx = idx / 32i64;
-    var value = self.data.get(entry_idx);
-    let value_idx = idx - entry_idx;
+    let entry_idx = idx / 32i64
+    var value = self.data.get(entry_idx)
+    let value_idx = idx - entry_idx
 
-    value = value & 1i32.shiftLeft(value_idx.toInt32()).not();
+    value = value & 1i32.shiftLeft(value_idx.toInt32()).not()
 
-    self.data.set(entry_idx, value);
+    self.data.set(entry_idx, value)
   }
 }
 
@@ -382,64 +380,64 @@ impl BitVec {
 
   @pub fun contains(idx: Int64): Bool {
     if idx < 0i64 {
-      fatalError("index out of bounds");
+      fatalError("index out of bounds")
     }
 
     if idx >= self.data.size() * 32i64 {
-      return false;
+      return false
     }
 
-    let entry_idx = idx / 32i64;
-    let value = self.data.get(entry_idx);
-    let value_idx = idx - entry_idx;
+    let entry_idx = idx / 32i64
+    let value = self.data.get(entry_idx)
+    let value_idx = idx - entry_idx
 
-    return value & 1i32.shiftLeft(value_idx.toInt32()) != 0i32;
+    return value & 1i32.shiftLeft(value_idx.toInt32()) != 0i32
   }
 
   @pub fun insert(idx: Int64): Unit {
     if idx < 0i64 {
-      fatalError("index out of bounds");
+      fatalError("index out of bounds")
     }
 
-    self.ensureCapacity(idx+1i64);
+    self.ensureCapacity(idx+1i64)
 
-    let entry_idx = idx / 32i64;
-    var value = self.data.get(entry_idx);
-    let value_idx = idx - entry_idx;
+    let entry_idx = idx / 32i64
+    var value = self.data.get(entry_idx)
+    let value_idx = idx - entry_idx
 
-    value = value | 1i32.shiftLeft(value_idx.toInt32());
+    value = value | 1i32.shiftLeft(value_idx.toInt32())
 
-    self.data.set(entry_idx, value);
+    self.data.set(entry_idx, value)
   }
 
   @pub fun remove(idx: Int64): Unit {
     if idx < 0i64 {
-      fatalError("index out of bounds");
+      fatalError("index out of bounds")
     }
 
     if idx >= self.data.size() * 32i64 {
-        return;
+        return
     }
 
-    let entry_idx = idx / 32i64;
-    var value = self.data.get(entry_idx);
-    let value_idx = idx - entry_idx;
+    let entry_idx = idx / 32i64
+    var value = self.data.get(entry_idx)
+    let value_idx = idx - entry_idx
 
-    value = value & 1i32.shiftLeft(value_idx.toInt32()).not();
+    value = value & 1i32.shiftLeft(value_idx.toInt32()).not()
 
-    self.data.set(entry_idx, value);
+    self.data.set(entry_idx, value)
   }
 
   @pub fun ensureCapacity(newcap: Int64): Unit {
     if newcap < self.data.size() * 32i64 || newcap == 0i64 {
-      return;
+      return
     }
 
-    let newcap = (newcap + 31i64) / 32i64;
+    let newcap = (newcap + 31i64) / 32i64
 
-    let newarray = Array[Int32]::zero(newcap);
-    Array[Int32]::copy(self.data, 0i64, newarray, 0i64, self.data.size());
-    self.data = newarray;
+    let newarray = Array[Int32]::zero(newcap)
+    Array[Int32]::copy(self.data, 0i64, newarray, 0i64, self.data.size())
+    self.data = newarray
   }
 
   @pub fun capacity(): Int64 {
@@ -461,48 +459,48 @@ impl[T] Queue[T] {
   @pub fun enqueue(value: T): Unit {
     if self.count == self.elements.size() {
       // copy into larger array
-      let newelements = Array[T]::unsafeNew(self.elements.size() * 2i64);
-      let len = self.elements.size() - self.front;
-      Array[T]::copy(self.elements, self.front, newelements, 0i64, len);
+      let newelements = Array[T]::unsafeNew(self.elements.size() * 2i64)
+      let len = self.elements.size() - self.front
+      Array[T]::copy(self.elements, self.front, newelements, 0i64, len)
 
       if len < self.count {
-        Array[T]::copy(self.elements, 0i64, newelements, len, self.count - len);
+        Array[T]::copy(self.elements, 0i64, newelements, len, self.count - len)
       }
 
-      self.front = 0i64;
+      self.front = 0i64
       // self.count stays the same
-      self.elements = newelements;
+      self.elements = newelements
     }
 
-    let end = self.getEnd();
-    self.elements.set(end, value);
-    self.count = self.count + 1i64;
+    let end = self.getEnd()
+    self.elements.set(end, value)
+    self.count = self.count + 1i64
   }
 
   @pub fun dequeue(): T {
-    assert(self.count > 0i64);
+    assert(self.count > 0i64)
 
-    let value = self.elements.get(self.front);
-    std::unsafeKillRefs[T](self.elements, self.front);
+    let value = self.elements.get(self.front)
+    std::unsafeKillRefs[T](self.elements, self.front)
 
-    self.moveFront();
-    self.count = self.count - 1i64;
+    self.moveFront()
+    self.count = self.count - 1i64
 
-    return value;
+    value
   }
 
   fun moveFront(): Int64 {
-    self.front = self.front + 1i64;
+    self.front = self.front + 1i64
 
     if self.front == self.elements.size() {
-      self.front = 0i64;
+      self.front = 0i64
     }
 
-    return self.front;
+    self.front
   }
 
   fun getEnd(): Int64 {
-    let end = self.front + self.count;
+    let end = self.front + self.count
 
     if end < self.elements.size() {
       end
@@ -511,13 +509,9 @@ impl[T] Queue[T] {
     }
   }
 
-  @pub fun size(): Int64 {
-    return self.count;
-  }
+  @pub fun size(): Int64 = self.count
 
-  @pub fun isEmpty(): Bool {
-    return self.count == 0i64;
-  }
+  @pub fun isEmpty(): Bool = self.count == 0i64
 }
 
 @pub class HashMap[K: Hash + Identity + Equals, V] {
@@ -538,10 +532,10 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
       Array[V]::new(),
       0,
       0,
-    );
+    )
 
     for entry in entries {
-        map.insert(entry.0, entry.1);
+        map.insert(entry.0, entry.1)
     }
 
     map
@@ -549,75 +543,75 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
 
 
     @pub fun insert(key: K, value: V): Option[V] {
-        self.ensureCapacity(1i64);
-        assert(self.entries < self.cap);
+        self.ensureCapacity(1i64)
+        assert(self.entries < self.cap)
 
-        var hash = key.hash();
-        var idx = hash.toInt64() & (self.cap - 1i64);
-        var insert_idx = None[Int64];
+        var hash = key.hash()
+        var idx = hash.toInt64() & (self.cap - 1i64)
+        var insert_idx = None[Int64]
 
         while true {
             if self
             ... .isLive(idx) {
-                let current_key = self.keys.get(idx);
+                let current_key = self.keys.get(idx)
 
                 if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
-                    let old_value = self.values.get(idx);
-                    self.values.set(idx, value);
-                    return Some[V](old_value);
+                    let old_value = self.values.get(idx)
+                    self.values.set(idx, value)
+                    return Some[V](old_value)
                 }
             }
             ... .isDeleted(idx) {
                 // There might be live entries after a deleted one.
 
                 if insert_idx.isNone() {
-                    insert_idx = Some[Int64](idx);
+                    insert_idx = Some[Int64](idx)
                 }
             }
             else {
-                let insert_idx = insert_idx.unwrapOr(idx);
+                let insert_idx = insert_idx.unwrapOr(idx)
 
-                self.inserted_and_deleted.insert(2i64 * insert_idx);
-                self.inserted_and_deleted.remove(2i64 * insert_idx + 1i64);
+                self.inserted_and_deleted.insert(2i64 * insert_idx)
+                self.inserted_and_deleted.remove(2i64 * insert_idx + 1i64)
 
-                self.keys.set(insert_idx, key);
-                self.values.set(insert_idx, value);
+                self.keys.set(insert_idx, key)
+                self.values.set(insert_idx, value)
 
-                self.entries = self.entries + 1i64;
-                return None[V];
+                self.entries = self.entries + 1i64
+                return None[V]
             }
-            idx = (idx + 1i64) & (self.cap - 1i64);
+            idx = (idx + 1i64) & (self.cap - 1i64)
         }
 
         unreachable[Option[V]]()
     }
 
     @pub fun contains(key: K): Bool {
-        assert(self.entries <= self.cap);
+        assert(self.entries <= self.cap)
 
         if self.entries == 0i64 {
-            return false;
+            return false
         }
 
-        var hash = key.hash();
-        var idx = hash.toInt64() & (self.cap - 1i64);
+        var hash = key.hash()
+        var idx = hash.toInt64() & (self.cap - 1i64)
 
         while true {
             if self
             ... .isLive(idx) {
-                let current_key = self.keys.get(idx);
+                let current_key = self.keys.get(idx)
 
                 if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
-                    return true;
+                    return true
                 }
-                idx = (idx + 1i64) & (self.cap - 1i64);
+                idx = (idx + 1i64) & (self.cap - 1i64)
             }
             ... .isDeleted(idx) {
                 // There might be live entries after a deleted one.
-                idx = (idx + 1i64) & (self.cap - 1i64);
+                idx = (idx + 1i64) & (self.cap - 1i64)
             }
             else {
-                return false;
+                return false
             }
         }
 
@@ -625,31 +619,31 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
     }
 
     @pub fun includes(key: K): Bool {
-      assert(self.entries <= self.cap);
+      assert(self.entries <= self.cap)
 
       if self.entries == 0i64 {
-        return false;
+        return false
       }
 
-      var hash = key.hash();
-      var idx = hash.toInt64() & (self.cap - 1i64);
+      var hash = key.hash()
+      var idx = hash.toInt64() & (self.cap - 1i64)
 
       while true {
         if self
         ... .isLive(idx) {
-          let currentKey = self.keys.get(idx);
+          let currentKey = self.keys.get(idx)
 
           if currentKey.hash() == hash && currentKey.identicalTo(key) {
-            return true;
+            return true
           }
-          idx = (idx + 1i64) & (self.cap - 1i64);
+          idx = (idx + 1i64) & (self.cap - 1i64)
         }
         ... .isDeleted(idx) {
           // There might be live entries after a deleted one.
-          idx = (idx + 1i64) & (self.cap - 1i64);
+          idx = (idx + 1i64) & (self.cap - 1i64)
         }
         else {
-          return false;
+          return false
         }
       }
 
@@ -657,31 +651,31 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
     }
 
     @pub fun get(key: K): Option[V] {
-        assert(self.entries <= self.cap);
+        assert(self.entries <= self.cap)
 
         if self.entries == 0i64 {
-            return Option[V]::None;
+            return Option[V]::None
         }
 
-        var hash = key.hash();
-        var idx = hash.toInt64() & (self.cap - 1i64);
+        var hash = key.hash()
+        var idx = hash.toInt64() & (self.cap - 1i64)
 
         while true {
             if self
             ... .isLive(idx) {
-                let current_key = self.keys.get(idx);
+                let current_key = self.keys.get(idx)
 
                 if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
-                    return Option[V]::Some(self.values.get(idx));
+                    return Option[V]::Some(self.values.get(idx))
                 }
-                idx = (idx + 1i64) & (self.cap - 1i64);
+                idx = (idx + 1i64) & (self.cap - 1i64)
             }
             ... .isDeleted(idx) {
                 // There might be live entries after a deleted one.
-                idx = (idx + 1i64) & (self.cap - 1i64);
+                idx = (idx + 1i64) & (self.cap - 1i64)
             }
             else {
-                return Option[V]::None;
+                return Option[V]::None
             }
         }
 
@@ -689,34 +683,34 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
     }
 
     @pub fun remove(key: K): Option[V] {
-        self.shrink();
+        self.shrink()
 
-        var hash = key.hash();
-        var idx = hash.toInt64() & (self.cap - 1i64);
+        var hash = key.hash()
+        var idx = hash.toInt64() & (self.cap - 1i64)
 
         while true {
             if self
             ... .isLive(idx) {
-                let current_key = self.keys.get(idx);
+                let current_key = self.keys.get(idx)
 
                 if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
-                    let value = self.values.get(idx);
-                    self.inserted_and_deleted.insert(2i64 * idx + 1i64);
+                    let value = self.values.get(idx)
+                    self.inserted_and_deleted.insert(2i64 * idx + 1i64)
 
-                    unsafeKillRefs[K](self.keys, idx);
-                    unsafeKillRefs[V](self.values, idx);
+                    unsafeKillRefs[K](self.keys, idx)
+                    unsafeKillRefs[V](self.values, idx)
 
-                    self.entries = self.entries - 1i64;
-                    return Option[V]::Some(value);
+                    self.entries = self.entries - 1i64
+                    return Option[V]::Some(value)
                 }
-                idx = (idx + 1i64) & (self.cap - 1i64);
+                idx = (idx + 1i64) & (self.cap - 1i64)
             }
             ... .isDeleted(idx) {
                 // There might be live entries after a deleted one.
-                idx = (idx + 1i64) & (self.cap - 1i64);
+                idx = (idx + 1i64) & (self.cap - 1i64)
             }
             else {
-                return Option[V]::None;
+                return Option[V]::None
             }
         }
 
@@ -726,90 +720,84 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
     fun ensureCapacity(elements_to_add: Int64): Unit {
         if self.entries + elements_to_add < self.cap {
             if self.entries <= (self.cap - (self.cap / 4i64)) {
-                return;
+                return
             }
         }
 
-        var new_capacity = 4i64;
-        let old_capacity = self.cap;
+        var new_capacity = 4i64
+        let old_capacity = self.cap
 
         if old_capacity > 0i64 {
-            new_capacity = old_capacity * 2i64;
+            new_capacity = old_capacity * 2i64
         }
 
-        assert(self.entries + elements_to_add < new_capacity);
+        assert(self.entries + elements_to_add < new_capacity)
 
-        self.rehash(new_capacity);
+        self.rehash(new_capacity)
     }
 
     fun shrink(): Unit {
         if self.entries > (self.cap / 4i64) {
-            return;
+            return
         }
 
-        let new_capacity = self.cap / 2i64;
+        let new_capacity = self.cap / 2i64
 
         if new_capacity < 4i64 {
-            return;
+            return
         }
 
-        assert(self.entries < new_capacity);
+        assert(self.entries < new_capacity)
 
-        self.rehash(new_capacity);
+        self.rehash(new_capacity)
     }
 
     fun rehash(new_capacity: Int64): Unit {
-        let old_capacity = self.cap;
+        let old_capacity = self.cap
 
-        let new_map = HashMap[K, V]::new();
-        new_map.inserted_and_deleted = BitSet::new(2 * new_capacity);
-        new_map.keys = Array[K]::unsafeNew(new_capacity);
-        new_map.values = Array[V]::unsafeNew(new_capacity);
-        new_map.entries = 0i64;
-        new_map.cap = new_capacity;
+        let new_map = HashMap[K, V]::new()
+        new_map.inserted_and_deleted = BitSet::new(2 * new_capacity)
+        new_map.keys = Array[K]::unsafeNew(new_capacity)
+        new_map.values = Array[V]::unsafeNew(new_capacity)
+        new_map.entries = 0i64
+        new_map.cap = new_capacity
 
-        var idx = 0i64;
+        var idx = 0i64
 
         while idx < old_capacity {
             if self.isLive(idx) {
-                let key = self.keys.get(idx);
-                let value = self.values.get(idx);
+                let key = self.keys.get(idx)
+                let value = self.values.get(idx)
 
-                new_map.insert(key, value);
+                new_map.insert(key, value)
             }
 
-            idx = idx + 1i64;
+            idx = idx + 1i64
         }
 
-        self.inserted_and_deleted = new_map.inserted_and_deleted;
-        self.keys = new_map.keys;
-        self.values = new_map.values;
-        self.entries = new_map.entries;
-        self.cap = new_capacity;
+        self.inserted_and_deleted = new_map.inserted_and_deleted
+        self.keys = new_map.keys
+        self.values = new_map.values
+        self.entries = new_map.entries
+        self.cap = new_capacity
     }
 
     fun isLive(idx: Int64): Bool {
-        return self.inserted_and_deleted.contains(2i64 * idx) &&
-               self.inserted_and_deleted.contains(2i64 * idx + 1i64).not();
+        return self.inserted_and_deleted.contains(2i64 * idx)
+            && self.inserted_and_deleted.contains(2i64 * idx + 1i64).not()
     }
 
     fun isDeleted(idx: Int64): Bool {
         self.inserted_and_deleted.contains(2i64 * idx + 1i64)
     }
 
-    @pub fun size(): Int64 {
-        return self.entries;
-    }
+    @pub fun size(): Int64 = self.entries
 
-    @pub fun isEmpty(): Bool {
-        return self.entries == 0i64;
-    }
+    @pub fun isEmpty(): Bool = self.entries == 0i64
 
-    @pub fun capacity(): Int64 {
-        return self.cap;
-    }
+    @pub fun capacity(): Int64 = self.cap
 
-    @pub fun iterator(): HashMapIterator[K, V] = HashMapIterator[K, V]::new(self);
+    @pub fun iterator(): HashMapIterator[K, V] = HashMapIterator[K, V]::new(self)
 }
 
 @pub class HashMapIterator[K: Hash + Identity + Equals, V] {
@@ -818,18 +806,18 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
 }
 
 impl[K: Hash + Identity + Equals, V] HashMapIterator[K, V] {
-    @pub @static fun new(map: HashMap[K, V]): HashMapIterator[K, V] = HashMapIterator[K, V](map, 0);
+    @pub @static fun new(map: HashMap[K, V]): HashMapIterator[K, V] = HashMapIterator[K, V](map, 0)
 
     @pub fun next(): Option[(K, V)] {
         while self.idx < self.map.capacity() {
             if self.map.isLive(self.idx) {
-                let key = self.map.keys.get(self.idx);
-                let value = self.map.values.get(self.idx);
-                self.idx = self.idx + 1i64;
-                return Some[(K, V)]((key, value));
+                let key = self.map.keys.get(self.idx)
+                let value = self.map.values.get(self.idx)
+                self.idx = self.idx + 1i64
+                return Some[(K, V)]((key, value))
             }
 
-            self.idx = self.idx + 1i64;
+            self.idx = self.idx + 1i64
         }
 
         None[(K, V)]
@@ -852,90 +840,90 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
       Array[K]::new(),
       0,
       0,
-    );
+    )
 
     for key in keys {
-      set.insert(key);
+      set.insert(key)
     }
 
     set
   }
 
-  @pub fun size(): Int64 = self.entries;
+  @pub fun size(): Int64 = self.entries
 
-  @pub fun isEmpty(): Bool = self.entries == 0;
+  @pub fun isEmpty(): Bool = self.entries == 0
 
-  @pub fun capacity(): Int64 = self.cap;
+  @pub fun capacity(): Int64 = self.cap
 
   @pub fun insert(key: K): Option[K] {
-    self.ensureCapacity(1);
-    assert(self.entries < self.cap);
+    self.ensureCapacity(1)
+    assert(self.entries < self.cap)
 
-    var hash = key.hash();
-    var idx = hash.toInt64() & (self.cap - 1);
-    var insertIdx = None[Int64];
+    var hash = key.hash()
+    var idx = hash.toInt64() & (self.cap - 1)
+    var insertIdx = None[Int64]
 
     while true {
       if self
       ... .isLive(idx) {
-        let currentKey = self.keys.get(idx);
+        let currentKey = self.keys.get(idx)
 
         if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
-          let oldKey = self.keys.get(idx);
-          self.keys.set(idx, key);
-          return Some[K](oldKey);
+          let oldKey = self.keys.get(idx)
+          self.keys.set(idx, key)
+          return Some[K](oldKey)
         }
       }
       ... .isDeleted(idx) {
         // There might be live entries after a deleted one.
 
         if insertIdx.isNone() {
-          insertIdx = Some[Int64](idx);
+          insertIdx = Some[Int64](idx)
         }
       }
       else {
-        let insertIdx = insertIdx.unwrapOr(idx);
+        let insertIdx = insertIdx.unwrapOr(idx)
 
-        self.insertedAndDeleted.insert(2 * insertIdx);
-        self.insertedAndDeleted.remove(2 * insertIdx + 1);
+        self.insertedAndDeleted.insert(2 * insertIdx)
+        self.insertedAndDeleted.remove(2 * insertIdx + 1)
 
-        self.keys.set(insertIdx, key);
+        self.keys.set(insertIdx, key)
 
-        self.entries = self.entries + 1;
-        return None[K];
+        self.entries = self.entries + 1
+        return None[K]
       }
-      idx = (idx + 1) & (self.cap - 1);
+      idx = (idx + 1) & (self.cap - 1)
     }
 
     unreachable[Option[K]]()
   }
 
   @pub fun includes(key: K): Bool {
-    assert(self.entries <= self.cap);
+    assert(self.entries <= self.cap)
 
     if self.entries == 0i64 {
-      return false;
+      return false
     }
 
-    var hash = key.hash();
-    var idx = hash.toInt64() & (self.cap - 1i64);
+    var hash = key.hash()
+    var idx = hash.toInt64() & (self.cap - 1i64)
 
     while true {
       if self
       ... .isLive(idx) {
-        let currentKey = self.keys.get(idx);
+        let currentKey = self.keys.get(idx)
 
         if currentKey.hash() == hash && currentKey.identicalTo(key) {
-          return true;
+          return true
         }
-        idx = (idx + 1i64) & (self.cap - 1i64);
+        idx = (idx + 1i64) & (self.cap - 1i64)
       }
       ... .isDeleted(idx) {
         // There might be live entries after a deleted one.
-        idx = (idx + 1i64) & (self.cap - 1i64);
+        idx = (idx + 1i64) & (self.cap - 1i64)
       }
       else {
-        return false;
+        return false
       }
     }
 
@@ -943,31 +931,31 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
   }
 
   @pub fun contains(key: K): Bool {
-    assert(self.entries <= self.cap);
+    assert(self.entries <= self.cap)
 
     if self.entries == 0 {
-        return false;
+        return false
     }
 
-    var hash = key.hash();
-    var idx = hash.toInt64() & (self.cap - 1);
+    var hash = key.hash()
+    var idx = hash.toInt64() & (self.cap - 1)
 
     while true {
       if self
       ... .isLive(idx) {
-        let currentKey = self.keys.get(idx);
+        let currentKey = self.keys.get(idx)
 
         if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
-          return true;
+          return true
         }
-        idx = (idx + 1) & (self.cap - 1);
+        idx = (idx + 1) & (self.cap - 1)
       }
       ... .isDeleted(idx) {
         // There might be live entries after a deleted one.
-        idx = (idx + 1) & (self.cap - 1);
+        idx = (idx + 1) & (self.cap - 1)
       }
       else {
-        return false;
+        return false
       }
     }
 
@@ -975,31 +963,31 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
   }
 
   @pub fun get(key: K): Option[K] {
-    assert(self.entries <= self.cap);
+    assert(self.entries <= self.cap)
 
     if self.entries == 0 {
-      return Option[K]::None;
+      return Option[K]::None
     }
 
-    var hash = key.hash();
-    var idx = hash.toInt64() & (self.cap - 1);
+    var hash = key.hash()
+    var idx = hash.toInt64() & (self.cap - 1)
 
     while true {
       if self
       ... .isLive(idx) {
-        let currentKey = self.keys.get(idx);
+        let currentKey = self.keys.get(idx)
 
         if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
-          return Option[K]::Some(currentKey);
+          return Option[K]::Some(currentKey)
         }
-        idx = (idx + 1) & (self.cap - 1);
+        idx = (idx + 1) & (self.cap - 1)
       }
       ... .isDeleted(idx) {
         // There might be live entries after a deleted one.
-        idx = (idx + 1) & (self.cap - 1);
+        idx = (idx + 1) & (self.cap - 1)
       }
       else {
-        return Option[K]::None;
+        return Option[K]::None
       }
     }
 
@@ -1007,32 +995,32 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
   }
 
   @pub fun remove(key: K): Option[K] {
-    self.shrink();
+    self.shrink()
 
-    var hash = key.hash();
-    var idx = hash.toInt64() & (self.cap - 1);
+    var hash = key.hash()
+    var idx = hash.toInt64() & (self.cap - 1)
 
     while true {
       if self
       ... .isLive(idx) {
-        let currentKey = self.keys.get(idx);
+        let currentKey = self.keys.get(idx)
 
         if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
-          self.insertedAndDeleted.insert(2 * idx + 1);
+          self.insertedAndDeleted.insert(2 * idx + 1)
 
-          unsafeKillRefs[K](self.keys, idx);
+          unsafeKillRefs[K](self.keys, idx)
 
-          self.entries = self.entries - 1;
-          return Option[K]::Some(currentKey);
+          self.entries = self.entries - 1
+          return Option[K]::Some(currentKey)
         }
-        idx = (idx + 1) & (self.cap - 1);
+        idx = (idx + 1) & (self.cap - 1)
       }
       ... .isDeleted(idx) {
         // There might be live entries after a deleted one.
-        idx = (idx + 1) & (self.cap - 1);
+        idx = (idx + 1) & (self.cap - 1)
       }
       else {
-        return Option[K]::None;
+        return Option[K]::None
       }
     }
 
@@ -1042,71 +1030,71 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
   fun ensureCapacity(elementsToAdd: Int64): Unit {
     if self.entries + elementsToAdd < self.cap {
       if self.entries <= (self.cap - (self.cap / 4)) {
-        return;
+        return
       }
     }
 
-    var newCapacity = 4;
-    let oldCapacity = self.cap;
+    var newCapacity = 4
+    let oldCapacity = self.cap
 
     if oldCapacity > 0 {
-      newCapacity = oldCapacity * 2;
+      newCapacity = oldCapacity * 2
     }
 
-    assert(self.entries + elementsToAdd < newCapacity);
+    assert(self.entries + elementsToAdd < newCapacity)
 
-    self.rehash(newCapacity);
+    self.rehash(newCapacity)
   }
 
   fun shrink(): Unit {
     if self.entries > (self.cap / 4) {
-      return;
+      return
     }
 
-    let newCapacity = self.cap / 2;
+    let newCapacity = self.cap / 2
 
     if newCapacity < 4 {
-      return;
+      return
     }
 
-    assert(self.entries < newCapacity);
+    assert(self.entries < newCapacity)
 
-    self.rehash(newCapacity);
+    self.rehash(newCapacity)
   }
 
   fun rehash(newCapacity: Int64): Unit {
-    let oldCapacity = self.cap;
+    let oldCapacity = self.cap
 
-    let newSet = HashSet[K]::new();
-    newSet.insertedAndDeleted = BitSet::new(2 * newCapacity);
-    newSet.keys = Array[K]::unsafeNew(newCapacity);
-    newSet.entries = 0;
-    newSet.cap = newCapacity;
+    let newSet = HashSet[K]::new()
+    newSet.insertedAndDeleted = BitSet::new(2 * newCapacity)
+    newSet.keys = Array[K]::unsafeNew(newCapacity)
+    newSet.entries = 0
+    newSet.cap = newCapacity
 
-    var idx = 0;
+    var idx = 0
 
     while idx < oldCapacity {
       if self.isLive(idx) {
-        let key = self.keys.get(idx);
+        let key = self.keys.get(idx)
 
-        newSet.insert(key);
+        newSet.insert(key)
       }
 
-      idx = idx + 1;
+      idx = idx + 1
     }
 
-    self.insertedAndDeleted = newSet.insertedAndDeleted;
-    self.keys = newSet.keys;
-    self.entries = newSet.entries;
-    self.cap = newCapacity;
+    self.insertedAndDeleted = newSet.insertedAndDeleted
+    self.keys = newSet.keys
+    self.entries = newSet.entries
+    self.cap = newCapacity
   }
 
   fun isLive(idx: Int64): Bool =
     self.insertedAndDeleted.contains(2 * idx)
-        && self.insertedAndDeleted.contains(2 * idx + 1).not();
+        && self.insertedAndDeleted.contains(2 * idx + 1).not()
 
   fun isDeleted(idx: Int64): Bool =
-    self.insertedAndDeleted.contains(2 * idx + 1);
+    self.insertedAndDeleted.contains(2 * idx + 1)
 }
 
 @pub class List[T] {
@@ -1120,111 +1108,103 @@ impl[T] List[T] {
   }
 
   @pub @static fun ofCapacity(capacity: Int64): List[T] =
-    List[T](Array[T]::unsafeNew(capacity), 0);
+    List[T](Array[T]::unsafeNew(capacity), 0)
 
-  @pub fun size(): Int64 {
-    return self.len;
-  }
+  @pub fun size(): Int64 = self.len
 
-  @pub fun isEmpty(): Bool {
-    self.len == 0
-  }
+  @pub fun isEmpty(): Bool = self.len == 0
 
-  @pub fun capacity(): Int64 {
-    self.array.size()
-  }
+  @pub fun capacity(): Int64 = self.array.size()
 
   @pub fun get(idx: Int64): T {
     if idx < 0i64 || idx >= self.len {
-      fatalError("index out of bounds for list");
+      fatalError("index out of bounds for list")
     }
 
-    return self.array(idx);
+    self.array(idx)
   }
 
   @pub fun set(idx: Int64, val: T): Unit {
     if idx < 0i64 || idx >= self.len {
-      fatalError("index out of bounds for list");
+      fatalError("index out of bounds for list")
     }
 
-    self.array.set(idx, val);
+    self.array.set(idx, val)
   }
 
-  @pub fun first(): Option[T] {
+  @pub fun first(): Option[T] =
     if self.len == 0 {
       Option[T]::None
     } else {
       Option[T]::Some(self.array(0))
     }
-  }
 
-  @pub fun last(): Option[T] {
+  @pub fun last(): Option[T] =
     if self.len == 0 {
       Option[T]::None
     } else {
       Option[T]::Some(self.array(self.len - 1i64))
     }
-  }
 
   @pub fun clear(): Unit {
-    self.len = 0;
-    self.array = Array[T]::new();
+    self.len = 0
+    self.array = Array[T]::new()
   }
 
   @pub fun reserve(newcap: Int64): Unit {
-    assert(newcap >= 0i64);
+    assert(newcap >= 0i64)
 
     if self.capacity() >= newcap {
-      return;
+      return
     }
 
-    let newarray = Array[T]::unsafeNew(newcap);
-    Array[T]::copy(self.array, 0i64, newarray, 0i64, self.len);
-    self.array = newarray;
+    let newarray = Array[T]::unsafeNew(newcap)
+    Array[T]::copy(self.array, 0i64, newarray, 0i64, self.len)
+    self.array = newarray
   }
 
   @pub fun push(val: T): Unit {
-    let currentCapacity = self.capacity();
+    let currentCapacity = self.capacity()
 
     if self.len == currentCapacity {
-      let newCapacity = self.newCapacity(currentCapacity);
+      let newCapacity = self.newCapacity(currentCapacity)
 
-      let newArray = Array[T]::unsafeNew(newCapacity);
-      Array[T]::copy(self.array, 0i64, newArray, 0i64, self.len);
-      self.array = newArray;
+      let newArray = Array[T]::unsafeNew(newCapacity)
+      Array[T]::copy(self.array, 0i64, newArray, 0i64, self.len)
+      self.array = newArray
     }
 
-    self.array.set(self.len, val);
-    self.len = self.len + 1i64;
+    self.array.set(self.len, val)
+    self.len = self.len + 1i64
   }
 
   @pub fun insertAt(idx: Int64, val: T): Unit {
-    assert(idx <= self.len);
+    assert(idx <= self.len)
     if idx == self.len {
-      self.push(val);
-      return;
+      self.push(val)
+      return
     }
-    let currentCapacity = self.capacity();
+    let currentCapacity = self.capacity()
     let targetArray = if self.len == currentCapacity {
       Array[T]::unsafeNew(self.newCapacity(currentCapacity))
     } else {
       self.array
-    };
+    }
 
     if idx != 0i64 && self.array !== targetArray {
-      Array[T]::copy(self.array, 0i64, targetArray, 0i64, idx);
+      Array[T]::copy(self.array, 0i64, targetArray, 0i64, idx)
     }
 
     // not Array::copy as source and target could be aliased
-    var i = self.len - 1i64;
+    var i = self.len - 1i64
     while idx <= i {
-      targetArray.set(i + 1i64, self.array.get(i));
-      i = i - 1i64;
+      targetArray.set(i + 1i64, self.array.get(i))
+      i = i - 1i64
     }
 
-    targetArray.set(idx, val);
-    self.array = targetArray;
-    self.len = self.len + 1i64;
+    targetArray.set(idx, val)
+    self.array = targetArray
+    self.len = self.len + 1i64
   }
 
   fun newCapacity(currentCapacity: Int64): Int64 {
@@ -1236,8 +1216,8 @@ impl[T] List[T] {
   }
 
   @pub fun toArray(): Array[T] {
-    let newarray = Array[T]::unsafeNew(self.len);
-    Array[T]::copy(self.array, 0i64, newarray, 0i64, self.len);
+    let newarray = Array[T]::unsafeNew(self.len)
+    Array[T]::copy(self.array, 0i64, newarray, 0i64, self.len)
     newarray
   }
 
@@ -1245,14 +1225,14 @@ impl[T] List[T] {
     if self.len == 0i64 {
       None[T]
     } else {
-      let newlength = self.len - 1i64;
-      let temp = self.array(newlength);
+      let newlength = self.len - 1i64
+      let temp = self.array(newlength)
 
       // set popped element to nil so that GC can collect object
       // not necessary for primitive types
-      unsafeKillRefs[T](self.array, newlength);
+      unsafeKillRefs[T](self.array, newlength)
 
-      self.len = newlength;
+      self.len = newlength
       Some[T](temp)
     }
   }
@@ -1260,252 +1240,252 @@ impl[T] List[T] {
   @pub fun trimToLen(): Unit {
     if self.len != self.capacity() {
       if self.len == 0i64 {
-        self.array = Array[T]::new();
+        self.array = Array[T]::new()
       } else {
-        let newarray = Array[T]::unsafeNew(self.len);
-        Array[T]::copy(self.array, 0i64, newarray, 0i64, self.len);
-        self.array = newarray;
+        let newarray = Array[T]::unsafeNew(self.len)
+        Array[T]::copy(self.array, 0i64, newarray, 0i64, self.len)
+        self.array = newarray
       }
     }
   }
 
   @pub fun remove(value: T): Unit {
-    let len = self.len;
-    var destIdx = 0i64;
-    var srcIdx = 0i64;
+    let len = self.len
+    var destIdx = 0i64
+    var srcIdx = 0i64
 
     while srcIdx < len {
-      let current = self.array(srcIdx);
+      let current = self.array(srcIdx)
 
       if current !== value {
-        self.array(destIdx) = current;
-        destIdx = destIdx + 1i64;
+        self.array(destIdx) = current
+        destIdx = destIdx + 1i64
       }
 
-      srcIdx = srcIdx + 1i64;
+      srcIdx = srcIdx + 1i64
     }
 
-    self.len = destIdx;
+    self.len = destIdx
 
     while destIdx < srcIdx {
-      unsafeKillRefs[T](self.array, destIdx);
-      destIdx = destIdx + 1i64;
+      unsafeKillRefs[T](self.array, destIdx)
+      destIdx = destIdx + 1i64
     }
   }
 
   @pub fun removeAt(ind: Int64): T {
-    var ind = ind;
-    assert(ind < self.len);
-    let temp = self.get(ind);
-    let len = self.len;
+    var ind = ind
+    assert(ind < self.len)
+    let temp = self.get(ind)
+    let len = self.len
 
     while ind < len - 1i64 {
-      self.set(ind, self.get(ind+1i64));
-      ind = ind + 1i64;
+      self.set(ind, self.get(ind+1i64))
+      ind = ind + 1i64
     }
 
-    unsafeKillRefs[T](self.array, ind);
-    self.len = ind;
+    unsafeKillRefs[T](self.array, ind)
+    self.len = ind
 
     temp
   }
 
   @pub fun removeIf(fct: (T): Bool): Unit {
-    let len = self.len;
-    var destIdx = 0i64;
-    var srcIdx = 0i64;
+    let len = self.len
+    var destIdx = 0i64
+    var srcIdx = 0i64
 
     while srcIdx < len {
-      let current = self.array(srcIdx);
+      let current = self.array(srcIdx)
 
       if fct(current).not() {
-        self.array(destIdx) = current;
-        destIdx = destIdx + 1i64;
+        self.array(destIdx) = current
+        destIdx = destIdx + 1i64
       }
 
-      srcIdx = srcIdx + 1i64;
+      srcIdx = srcIdx + 1i64
     }
 
-    self.len = destIdx;
+    self.len = destIdx
 
     while destIdx < srcIdx {
-      unsafeKillRefs[T](self.array, destIdx);
-      destIdx = destIdx + 1i64;
+      unsafeKillRefs[T](self.array, destIdx)
+      destIdx = destIdx + 1i64
     }
   }
 
   @pub fun all(fct: (T): Bool): Bool {
-    var idx = 0;
+    var idx = 0
     while idx < self.len {
       if fct(self.array(idx)).not() {
-        return false;
+        return false
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return true;
+    true
   }
 
   @pub fun any(fct: (T): Bool): Bool {
-    var idx = 0;
+    var idx = 0
     while idx < self.len {
       if fct(self.array(idx)) {
-        return true;
+        return true
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return false;
+    false
   }
 
   @pub fun each(fct: (T): Unit): Unit {
-    var idx = 0;
+    var idx = 0
     while idx < self.len {
-      fct(self.array(idx));
-      idx = idx + 1;
+      fct(self.array(idx))
+      idx = idx + 1
     }
   }
 
   @pub fun map[U](fct: (T): U): List[U] {
-    let result = Array[U]::unsafeNew(self.size());
-    var idx = 0;
+    let result = Array[U]::unsafeNew(self.size())
+    var idx = 0
     while idx < self.len {
-      result.set(idx, fct(self.array(idx)));
-      idx = idx + 1;
+      result.set(idx, fct(self.array(idx)))
+      idx = idx + 1
     }
-    return List[U](result, result.size());
+    List[U](result, result.size())
   }
 
   @pub fun mapMany[U](fct: (T): List[U]): List[U] {
-    let result = List[U]::ofCapacity(self.size());
-    var idx = 0;
+    let result = List[U]::ofCapacity(self.size())
+    var idx = 0
     while idx < self.len {
-      let list = fct(self.array(idx));
-      let listSize = list.size();
-      var idy = 0;
+      let list = fct(self.array(idx))
+      let listSize = list.size()
+      var idy = 0
       while idy < listSize {
-        result.push(list(idy));
-        idy = idy + 1;
+        result.push(list(idy))
+        idy = idy + 1
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun mapSome[U](fct: (T): Option[U]): List[U] {
-    let result = List[U]::ofCapacity(self.size());
-    var idx = 0;
+    let result = List[U]::ofCapacity(self.size())
+    var idx = 0
     while idx < self.len {
-      let option = fct(self.array(idx));
+      let option = fct(self.array(idx))
       if option.isSome() {
-        result.push(option.getOrPanic());
+        result.push(option.getOrPanic())
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun retainFirst(val: Int64): List[T] {
-    let newSize = Int64::min(self.len, val);
-    let result = List[T]::ofCapacity(newSize);
-    var idx = 0;
+    let newSize = Int64::min(self.len, val)
+    let result = List[T]::ofCapacity(newSize)
+    var idx = 0
     while idx < newSize {
-      let val = self.array(idx);
-      result.push(val);
-      idx = idx + 1;
+      let val = self.array(idx)
+      result.push(val)
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun retainLast(val: Int64): List[T] {
-    let newSize = Int64::min(self.len, val);
-    let result = List[T]::ofCapacity(newSize);
-    var idx = self.len - newSize;
+    let newSize = Int64::min(self.len, val)
+    let result = List[T]::ofCapacity(newSize)
+    var idx = self.len - newSize
     while idx < self.len {
-      let val = self.array(idx);
-      result.push(val);
-      idx = idx + 1;
+      let val = self.array(idx)
+      result.push(val)
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun retain(fct: (T): Bool): List[T] {
-    let result = List[T]::new();
-    var idx = 0;
+    let result = List[T]::new()
+    var idx = 0
     while idx < self.len {
-      let val = self.array(idx);
+      let val = self.array(idx)
       if fct(val) {
-        result.push(val);
+        result.push(val)
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun retainIndex(fct: (Int64): Bool): List[T] {
-    let result = List[T]::new();
-    var idx = 0;
+    let result = List[T]::new()
+    var idx = 0
     while idx < self.len {
       if fct(idx) {
-        result.push(self.array(idx));
+        result.push(self.array(idx))
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun rejectFirst(val: Int64): List[T] {
-    let newSize = Int64::min(self.len, val);
-    let result = List[T]::ofCapacity(self.len - newSize);
-    var idx = newSize;
+    let newSize = Int64::min(self.len, val)
+    let result = List[T]::ofCapacity(self.len - newSize)
+    var idx = newSize
     while idx < self.len {
-      let val = self.array(idx);
-      result.push(val);
-      idx = idx + 1;
+      let val = self.array(idx)
+      result.push(val)
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun rejectLast(val: Int64): List[T] {
-    let newSize = self.len - Int64::min(self.len, val);
-    let result = List[T]::ofCapacity(newSize);
-    var idx = 0;
+    let newSize = self.len - Int64::min(self.len, val)
+    let result = List[T]::ofCapacity(newSize)
+    var idx = 0
     while idx < newSize {
-      let val = self.array(idx);
-      result.push(val);
-      idx = idx + 1;
+      let val = self.array(idx)
+      result.push(val)
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun reject(fct: (T): Bool): List[T] {
-    let result = List[T]::new();
-    var idx = 0;
+    let result = List[T]::new()
+    var idx = 0
     while idx < self.len {
-      let val = self.array(idx);
+      let val = self.array(idx)
       if fct(val).not() {
-        result.push(val);
+        result.push(val)
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun rejectIndex(fct: (Int64): Bool): List[T] {
-    let result = List[T]::new();
-    var idx = 0;
+    let result = List[T]::new()
+    var idx = 0
     while idx < self.len {
       if fct(idx).not() {
-        result.push(self.array(idx));
+        result.push(self.array(idx))
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
-  @pub fun iterator(): ListIterator[T] = ListIterator[T]::new(self);
+  @pub fun iterator(): ListIterator[T] = ListIterator[T]::new(self)
 
-  @pub fun iteratorReverse(): ListIteratorReverse[T] = ListIteratorReverse[T]::new(self);
+  @pub fun iteratorReverse(): ListIteratorReverse[T] = ListIteratorReverse[T]::new(self)
 
-  @pub fun enumerate(): ListEnumerator[T] = ListEnumerator[T]::new(self);
+  @pub fun enumerate(): ListEnumerator[T] = ListEnumerator[T]::new(self)
 }
 
 @pub class ListEnumerator[T] {
@@ -1520,8 +1500,8 @@ impl[T] ListEnumerator[T] {
 
   @pub fun next(): Option[(Int64, T)] {
     if self.idx < self.data.size() {
-      let current_idx = self.idx;
-      self.idx = self.idx + 1i64;
+      let current_idx = self.idx
+      self.idx = self.idx + 1i64
       Some[(Int64, T)]((current_idx, self.data(current_idx)))
     } else {
       None[(Int64, T)]
@@ -1535,12 +1515,12 @@ impl[T] ListEnumerator[T] {
 }
 
 impl[T] ListIterator[T] {
-  @static fun new(data: List[T]): ListIterator[T] = ListIterator[T](data, 0);
+  @static fun new(data: List[T]): ListIterator[T] = ListIterator[T](data, 0)
 
   @pub fun next(): Option[T] {
     if self.idx < self.data.size() {
-      let result = self.data(self.idx);
-      self.idx = self.idx + 1i64;
+      let result = self.data(self.idx)
+      self.idx = self.idx + 1i64
       Some[T](result)
     } else {
       None[T]
@@ -1560,8 +1540,8 @@ impl[T] ListIteratorReverse[T] {
 
   @pub fun next(): Option[T] {
     if self.idx != -1 {
-      let result = self.data(self.idx);
-      self.idx = self.idx - 1i64;
+      let result = self.data(self.idx)
+      self.idx = self.idx - 1i64
       Some[T](result)
     } else {
       None[T]
@@ -1572,40 +1552,41 @@ impl[T] ListIteratorReverse[T] {
 impl[T: Equals] List[T] {
   @pub fun equals(other: List[T]): Bool {
     if self.size() != other.size() {
-      return false;
+      return false
     }
-    var i = 0i64;
+    var i = 0i64
     while i < self.size() {
       if self(i).equals(other(i)).not() {
-        return false;
+        return false
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
-    return true;
+    true
   }
 
   @pub fun contains(value: T): Bool {
-    var i = 0i64;
+    var i = 0i64
 
     while i < self.size() {
-      let x = self.get(i);
+      let x = self.get(i)
       if x.equals(value) {
-        return true;
+        return true
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
 
-    return false;
+    false
   }
 
   @pub fun removeEquals(elem: T): Unit {
-    var i = 0i64;
+    var i = 0i64
 
     while i < self.size() {
       if self(i).equals(elem) {
         self.removeAt(i);
+        ()
       } else {
-        i = i + 1i64;
+        i = i + 1i64
       }
     }
   }
@@ -1613,104 +1594,104 @@ impl[T: Equals] List[T] {
 
 impl[T: Identity] List[T] {
   @pub fun includes(val: T): Bool {
-    var i = 0i64;
+    var i = 0i64
 
     while i < self.size() {
       if self.get(i).identicalTo(val) {
-        return true;
+        return true
       }
-      i = i + 1i64;
+      i = i + 1i64
     }
 
-    return false;
+    false
   }
 }
 
 impl[T: Stringable] List[T] {
   @pub fun toString(): String {
-    let sb = StringBuffer::new();
-    sb.append("List(");
-    let size = self.len;
+    let sb = StringBuffer::new()
+    sb.append("List(")
+    let size = self.len
     if size != 0i64 {
-      var i = 0i64;
+      var i = 0i64
       while i < size - 1i64 {
-        sb.append(self.array(i).toString());
-        sb.append(", ");
-        i = i + 1i64;
+        sb.append(self.array(i).toString())
+        sb.append(", ")
+        i = i + 1i64
       }
-      sb.append(self.array(i).toString());
+      sb.append(self.array(i).toString())
     }
-    sb.append(")");
-    return sb.toString();
+    sb.append(")")
+    sb.toString()
   }
 }
 
 impl[T] List[Option[T]] {
   @pub fun flatten(): List[T] {
-    let len = self.size();
-    let result = List[T]::ofCapacity(len);
-    var idx = 0;
+    let len = self.size()
+    let result = List[T]::ofCapacity(len)
+    var idx = 0
     while idx < len {
-      let option = self(idx);
+      let option = self(idx)
       if (option.isSome()) {
-        result.push(option.getOrPanic());
+        result.push(option.getOrPanic())
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result;
+    result
   }
 }
 
 impl[T] List[List[T]] {
   @pub fun flatten(): List[T] {
-    let len = self.size();
-    let result = List[T]::ofCapacity(len);
-    var idx = 0;
+    let len = self.size()
+    let result = List[T]::ofCapacity(len)
+    var idx = 0
     while idx < len {
-      let list = self(idx);
-      let listSize = list.size();
-      var idy = 0;
+      let list = self(idx)
+      let listSize = list.size()
+      var idy = 0
       while idy < listSize {
-        result.push(list(idy));
-        idy = idy + 1;
+        result.push(list(idy))
+        idy = idy + 1
       }
-      idx = idx + 1;
+      idx = idx + 1
     }
-    return result;
+    result
   }
 }
 
 impl List[Float64] {
   @pub fun sum(): Float64 {
-    var result = 0.0;
-    let len = self.size();
-    var idx = 0;
+    var result = 0.0
+    let len = self.size()
+    var idx = 0
     while idx < len {
-      result = result + self(idx);
-      idx = idx + 1;
+      result = result + self(idx)
+      idx = idx + 1
     }
-    return result;
+    result
   }
 
   @pub fun average(): Float64 {
-    var result = 0.0;
-    let len = self.size();
-    var idx = 0;
+    var result = 0.0
+    let len = self.size()
+    var idx = 0
     while idx < len {
-      result = result + self(idx);
-      idx = idx + 1;
+      result = result + self(idx)
+      idx = idx + 1
     }
-    return result / len.toFloat64();
+    result / len.toFloat64()
   }
 
   @pub fun product(): Float64 {
-    var result = 1.0;
-    let len = self.size();
-    var idx = 0;
+    var result = 1.0
+    let len = self.size()
+    var idx = 0
     while idx < len {
-      result = result * self(idx);
-      idx = idx + 1;
+      result = result * self(idx)
+      idx = idx + 1
     }
-    return result;
+    result
   }
 }
