@@ -1,9 +1,7 @@
 fun main(): Unit {
-  foo();
+  foo(); ()
 }
 
-fun foo(): Foo {
-  return Foo();
-}
+fun foo(): Foo = Foo()
 
 class Foo

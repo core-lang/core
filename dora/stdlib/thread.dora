@@ -4,42 +4,42 @@
 }
 
 impl Thread {
-    @pub fun id(): Int64 = self.id;
+    @pub fun id(): Int64 = self.id
 
-    @pub @static @internal fun current(): Thread;
+    @pub @static @internal fun current(): Thread
 
-    @pub @internal fun join(): Unit;
+    @pub @internal fun join(): Unit
 }
 
-@internal @pub fun spawn(action: (): ()): Thread;
+@internal @pub fun spawn(action: (): ()): Thread
 
 @pub class AtomicInt32(value: Int32)
 
 impl AtomicInt32 {
-    @pub @static fun new(value: Int32): AtomicInt32 = AtomicInt32(value);
+    @pub @static fun new(value: Int32): AtomicInt32 = AtomicInt32(value)
 
-    @pub @internal fun get(): Int32;
-    @pub @internal fun set(value: Int32): Unit;
-    @pub @internal fun exchange(value: Int32): Int32;
-    @pub @internal fun compareExchange(expected: Int32, value: Int32): Int32;
-    @pub @internal fun fetchAdd(value: Int32): Int32;
+    @pub @internal fun get(): Int32
+    @pub @internal fun set(value: Int32): Unit
+    @pub @internal fun exchange(value: Int32): Int32
+    @pub @internal fun compareExchange(expected: Int32, value: Int32): Int32
+    @pub @internal fun fetchAdd(value: Int32): Int32
 }
 
 @pub class AtomicInt64(value: Int64)
 
 impl AtomicInt64 {
-    @pub @static fun new(value: Int64): AtomicInt64 = AtomicInt64(value);
+    @pub @static fun new(value: Int64): AtomicInt64 = AtomicInt64(value)
 
-    @pub @internal fun get(): Int64;
-    @pub @internal fun set(value: Int64): Unit;
-    @pub @internal fun exchange(value: Int64): Int64;
-    @pub @internal fun compareExchange(expected: Int64, value: Int64): Int64;
-    @pub @internal fun fetchAdd(value: Int64): Int64;
+    @pub @internal fun get(): Int64
+    @pub @internal fun set(value: Int64): Unit
+    @pub @internal fun exchange(value: Int64): Int64
+    @pub @internal fun compareExchange(expected: Int64, value: Int64): Int64
+    @pub @internal fun fetchAdd(value: Int64): Int64
 }
 
-const UNLOCKED: Int32 = 0i32;
-const LOCKED: Int32 = 1i32;
-const LOCKED_CONTENDED: Int32 = 2i32;
+const UNLOCKED: Int32 = 0i32
+const LOCKED: Int32 = 1i32
+const LOCKED_CONTENDED: Int32 = 2i32
 
 @pub class Mutex {
     data: AtomicInt32,
@@ -47,39 +47,39 @@ const LOCKED_CONTENDED: Int32 = 2i32;
 }
 
 impl Mutex {
-    @pub @static fun new(): Mutex = Mutex(AtomicInt32::new(UNLOCKED), 0);
+    @pub @static fun new(): Mutex = Mutex(AtomicInt32::new(UNLOCKED), 0)
 
     @pub fun lock[T](fct: (): T): T {
-        self.lockOp();
-        let result = fct();
-        self.unlockOp();
+        self.lockOp()
+        let result = fct()
+        self.unlockOp()
         result
     }
 
     fun lockOp(): Unit {
-        let previous = self.data.compareExchange(UNLOCKED, LOCKED);
+        let previous = self.data.compareExchange(UNLOCKED, LOCKED)
 
         if previous != UNLOCKED {
-            assert(previous == LOCKED || previous == LOCKED_CONTENDED);
-            self.lockSlow();
+            assert(previous == LOCKED || previous == LOCKED_CONTENDED)
+            self.lockSlow()
         }
 
-        assert(self.owner_thread_id == 0);
-        self.owner_thread_id = Thread::current().id();
+        assert(self.owner_thread_id == 0)
+        self.owner_thread_id = Thread::current().id()
     }
 
     fun lockSlow(): Unit {
-        var locked = false;
+        var locked = false
 
         while locked.not() {
             if self.transitionToLockedContended() {
-                self.wait(LOCKED_CONTENDED);
+                self.wait(LOCKED_CONTENDED)
             }
 
             // Queue might still be non-empty, so transition to LOCKED_CONTENDED
             // instead of LOCKED.
-            let previous = self.data.compareExchange(UNLOCKED, LOCKED_CONTENDED);
-            locked = previous == UNLOCKED;
+            let previous = self.data.compareExchange(UNLOCKED, LOCKED_CONTENDED)
+            locked = previous == UNLOCKED
         }
     }
 
@@ -88,23 +88,23 @@ impl Mutex {
     }
 
     fun unlockOp(): Unit {
-        assert(self.owner_thread_id == Thread::current().id());
-        self.owner_thread_id = 0;
+        assert(self.owner_thread_id == Thread::current().id())
+        self.owner_thread_id = 0
 
-        let previous = self.data.exchange(UNLOCKED);
+        let previous = self.data.exchange(UNLOCKED)
 
         if previous != LOCKED {
-            self.unlockSlow(previous);
+            self.unlockSlow(previous)
         }
     }
 
     fun unlockSlow(previous: Int32): Unit {
-        assert(previous == LOCKED_CONTENDED);
-        self.notify();
+        assert(previous == LOCKED_CONTENDED)
+        self.notify()
     }
 
-    @internal fun wait(status: Int32): Unit;
-    @internal fun notify(): Unit;
+    @internal fun wait(status: Int32): Unit
+    @internal fun notify(): Unit
 }
 
 @pub class Condition {
@@ -112,35 +112,35 @@ impl Mutex {
 }
 
 impl Condition {
-    @pub @static fun new(): Condition = Condition(AtomicInt32::new(0i32));
+    @pub @static fun new(): Condition = Condition(AtomicInt32::new(0i32))
 
     @pub fun wait(mtx: Mutex): Unit {
-        self.enqueue();
-        mtx.unlockOp();
-        self.block();
-        mtx.lockOp();
+        self.enqueue()
+        mtx.unlockOp()
+        self.block()
+        mtx.lockOp()
     }
 
     @pub fun notifyOne(): Unit {
         if self.waiters.get() == 0i32 {
-            return;
+            return
         }
 
-        self.wakeupOne();
+        self.wakeupOne()
     }
 
     @pub fun notifyAll(): Unit {
         if self.waiters.get() == 0i32 {
-            return;
+            return
         }
 
-        self.waiters.set(0i32);
-        self.wakeupAll();
+        self.waiters.set(0i32)
+        self.wakeupAll()
     }
 
-    @internal fun enqueue(): Unit;
-    @internal fun block(): Unit;
+    @internal fun enqueue(): Unit
+    @internal fun block(): Unit
 
-    @internal fun wakeupOne(): Unit;
-    @internal fun wakeupAll(): Unit;
+    @internal fun wakeupOne(): Unit
+    @internal fun wakeupAll(): Unit
 }

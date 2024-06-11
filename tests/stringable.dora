@@ -6,6 +6,7 @@ fun main(): Unit {
   str[Int64](1i64);
   str[Float32](1f32);
   str[Float64](1f64);
+  ()
 }
 
 fun str[T : std::Stringable](val: T): String = val.toString();

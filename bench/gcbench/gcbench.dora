@@ -34,7 +34,7 @@ fun numIters(i: Int32): Int32 {
 fun populate(depth: Int32, thisNode: Node): Unit {
     var depth = depth;
     if depth <= 0i32 {
-        return;
+        return
     } else {
         depth = depth - 1i32;
         thisNode.left = Option[Node]::Some(Node::leaf());

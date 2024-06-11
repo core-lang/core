@@ -230,7 +230,7 @@ pub enum FloatSuffix {
     Float64,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Token {
     pub kind: TokenKind,
     pub position: Position,

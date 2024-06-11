@@ -181,7 +181,7 @@ impl<'a> Parser<'a> {
     fn parse_use(&mut self) -> Result<Use, ParseErrorAndPos> {
         self.expect_token(TokenKind::Use)?;
         let use_declaration = self.parse_use_inner()?;
-        self.expect_semicolon()?;
+        self.skip_semicolon()?;
 
         Ok(use_declaration)
     }
@@ -325,7 +325,7 @@ impl<'a> Parser<'a> {
             self.expect_token(TokenKind::RBrace)?;
             Some(elements)
         } else {
-            self.expect_token(TokenKind::Semicolon)?;
+            self.skip_semicolon()?;
             None
         };
 
@@ -372,7 +372,7 @@ impl<'a> Parser<'a> {
         let ty = self.parse_type()?;
         self.expect_token(TokenKind::Eq)?;
         let expr = self.parse_expression()?;
-        self.expect_semicolon()?;
+        self.skip_semicolon()?;
         let span = self.span_from(start);
 
         Ok(Const {
@@ -447,7 +447,7 @@ impl<'a> Parser<'a> {
             None
         };
 
-        self.expect_semicolon()?;
+        self.skip_semicolon()?;
         let span = self.span_from(start);
 
         let mut global = Global {
@@ -976,15 +976,11 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_function_block(&mut self) -> Result<Option<Box<ExprBlockType>>, ParseErrorAndPos> {
-        if self.token.is(TokenKind::Semicolon) {
-            self.advance_token()?;
-
-            Ok(None)
-        } else if self.token.is(TokenKind::Eq) {
+        if self.token.is(TokenKind::Eq) {
             let expr = self.parse_function_block_expression()?;
 
             Ok(Some(expr))
-        } else {
+        } else if self.token.is(TokenKind::LBrace) {
             let block = self.parse_block()?;
 
             if let Expr::Block(block_type) = *block {
@@ -992,6 +988,10 @@ impl<'a> Parser<'a> {
             } else {
                 unreachable!()
             }
+        } else {
+            self.skip_semicolon()?;
+
+            Ok(None)
         }
     }
 
@@ -1012,7 +1012,7 @@ impl<'a> Parser<'a> {
 
             _ => {
                 let expr = self.parse_expression()?;
-                self.expect_token(TokenKind::Semicolon)?;
+                self.skip_semicolon()?;
                 Ok(Box::new(ExprBlockType {
                     id: self.generate_id(),
                     pos: expr.pos(),
@@ -1124,18 +1124,12 @@ impl<'a> Parser<'a> {
 
         match stmt_or_expr {
             StmtOrExpr::Stmt(stmt) => Ok(stmt),
-            StmtOrExpr::Expr(expr) => {
-                if expr.needs_semicolon() {
-                    Err(self.expect_semicolon().unwrap_err())
-                } else {
-                    Ok(Box::new(Stmt::create_expr(
-                        self.generate_id(),
-                        expr.pos(),
-                        expr.span(),
-                        expr,
-                    )))
-                }
-            }
+            StmtOrExpr::Expr(expr) => Ok(Box::new(Stmt::create_expr(
+                self.generate_id(),
+                expr.pos(),
+                expr.span(),
+                expr,
+            ))),
         }
     }
 
@@ -1154,7 +1148,7 @@ impl<'a> Parser<'a> {
         let data_type = self.parse_var_type()?;
         let expr = self.parse_var_assignment()?;
 
-        self.expect_semicolon()?;
+        self.skip_semicolon()?;
         let span = self.span_from(start);
 
         Ok(Box::new(Stmt::create_let(
@@ -1254,10 +1248,7 @@ impl<'a> Parser<'a> {
             match stmt_or_expr {
                 StmtOrExpr::Stmt(stmt) => stmts.push(stmt),
                 StmtOrExpr::Expr(curr_expr) => {
-                    if curr_expr.needs_semicolon() {
-                        expr = Some(curr_expr);
-                        break;
-                    } else if !self.token.is(TokenKind::RBrace) {
+                    if !self.token.is(TokenKind::RBrace) {
                         stmts.push(Box::new(Stmt::create_expr(
                             self.generate_id(),
                             curr_expr.pos(),
@@ -1295,20 +1286,8 @@ impl<'a> Parser<'a> {
             TokenKind::For => Ok(StmtOrExpr::Stmt(self.parse_for()?)),
             _ => {
                 let expr = self.parse_expression()?;
-
-                if self.token.is(TokenKind::Semicolon) {
-                    self.expect_token(TokenKind::Semicolon)?;
-                    let span = self.span_from(expr.span().start());
-
-                    Ok(StmtOrExpr::Stmt(Box::new(Stmt::create_expr(
-                        self.generate_id(),
-                        expr.pos(),
-                        span,
-                        expr,
-                    ))))
-                } else {
-                    Ok(StmtOrExpr::Expr(expr))
-                }
+                self.skip_semicolon()?;
+                Ok(StmtOrExpr::Expr(expr))
             }
         }
     }
@@ -1522,14 +1501,12 @@ impl<'a> Parser<'a> {
     fn parse_return(&mut self) -> StmtResult {
         let start = self.token.span.start();
         let pos = self.expect_token(TokenKind::Return)?.position;
-        let expr = if self.token.is(TokenKind::Semicolon) {
-            None
-        } else {
-            let expr = self.parse_expression()?;
-            Some(expr)
+        let expr = match self.token.kind {
+            TokenKind::Semicolon | TokenKind::RBrace => None,
+            _ => Some(self.parse_expression()?),
         };
 
-        self.expect_semicolon()?;
+        self.skip_semicolon()?;
         let span = self.span_from(start);
 
         Ok(Box::new(Stmt::create_return(
@@ -2105,6 +2082,18 @@ impl<'a> Parser<'a> {
 
     fn expect_semicolon(&mut self) -> Result<Token, ParseErrorAndPos> {
         self.expect_token(TokenKind::Semicolon)
+    }
+
+    fn skip_semicolon(&mut self) -> Result<Token, ParseErrorAndPos> {
+        if self.token.is(TokenKind::Semicolon)
+        /* || self.token.is(TokenKind::NewLine)*/
+        {
+            //println!("FOUND semi or nl: {:?}, advancing", self.token);
+            self.advance_token()
+        } else {
+            //println!("NOT found semi or nl: {:?}", self.token);
+            Ok(self.token.clone())
+        }
     }
 
     fn expect_token(&mut self, kind: TokenKind) -> Result<Token, ParseErrorAndPos> {
@@ -2853,12 +2842,10 @@ mod tests {
 
     #[test]
     fn parse_expr_stmt_without_semicolon() {
-        err_stmt(
-            "1",
-            ParseError::ExpectedToken(";".into(), "<<EOF>>".into()),
-            1,
-            2,
-        );
+        let stmt = parse_stmt("1");
+        let expr = stmt.to_expr().unwrap();
+
+        assert!(expr.expr.is_lit_int());
     }
 
     #[test]
@@ -2914,15 +2901,12 @@ mod tests {
         let (expr, _) = parse_expr("{ 1; 2; }");
         let block = expr.to_block().unwrap();
 
-        assert_eq!(2, block.stmts.len());
+        assert_eq!(1, block.stmts.len());
 
         let expr = &block.stmts[0].to_expr().unwrap().expr;
         assert_eq!(1, expr.to_lit_int().unwrap().value);
 
-        let expr = &block.stmts[1].to_expr().unwrap().expr;
-        assert_eq!(2, expr.to_lit_int().unwrap().value);
-
-        assert!(block.expr.is_none());
+        assert!(block.expr.as_ref().unwrap().is_lit_int());
     }
 
     #[test]
@@ -3685,7 +3669,7 @@ mod tests {
     fn parse_use_declaration() {
         parse_err(
             "use foo.bar{a, b, c}",
-            ParseError::ExpectedToken(";".into(), "{".into()),
+            ParseError::ExpectedTopLevelElement("{".into()),
             1,
             12,
         );

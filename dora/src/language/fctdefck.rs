@@ -267,17 +267,17 @@ mod tests {
 
     #[test]
     fn lambdas() {
-        ok("fun f(): Unit { ||: Unit {}; }");
-        ok("fun f(): Unit { |a: Int32|: Unit {}; }");
-        ok("fun f(): Unit { ||: Int32 { return 2; }; }");
+        ok("fun f(): Unit { ||: Unit {}; () }");
+        ok("fun f(): Unit { |a: Int32|: Unit {}; () }");
+        ok("fun f(): Unit { ||: Int32 { return 2; }; () }");
 
         err(
-            "fun f(): Unit { ||: Foo { }; }",
+            "fun f(): Unit { ||: Foo { }; () }",
             pos(1, 21),
             ErrorMessage::UnknownIdentifier("Foo".into()),
         );
         err(
-            "fun f(): Unit { |a: Foo|: Unit { }; }",
+            "fun f(): Unit { |a: Foo|: Unit { }; () }",
             pos(1, 21),
             ErrorMessage::UnknownIdentifier("Foo".into()),
         );
