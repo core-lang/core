@@ -131,13 +131,6 @@ impl Benchmark {
     fun generateKey(): Int32 {
         return rnd.nextInt32();
     }
-
-    fun rms(): Unit {
-        let pauses = self.splaySumOfSquaredPauses;
-        let samples = self.splaySamples;
-
-        (pauses.toFloat64() / samples.toFloat64());
-    }
 }
 
 fun generatePayloadTree(depth: Int32, tag: String): PayloadNode =
@@ -176,7 +169,7 @@ impl SplayTree {
     fun insert(key: Int32, value: PayloadNode): Unit {
         if self.isEmpty() {
             self.root = Some(SplayNode::new(key, Some[PayloadNode](value)));
-            return;
+            return
         }
 
         self.splay(key);
@@ -184,7 +177,7 @@ impl SplayTree {
         let root = self.root.getOrPanic();
 
         if root.key == key {
-            return;
+            return
         }
 
         let node = SplayNode::new(key, Some[PayloadNode](value));
@@ -287,7 +280,7 @@ impl SplayTree {
 
     fun splay(key: Int32): Unit {
         if self.isEmpty() {
-            return;
+            return
         }
 
         var dummy = SplayNode::new(0i32, Option[PayloadNode]::None);

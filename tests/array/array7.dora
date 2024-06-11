@@ -4,4 +4,5 @@
 fun main(): Unit {
   let array = Array[Int32]::new();
   array(0i64);
+  ()
 }

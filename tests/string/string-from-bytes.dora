@@ -24,6 +24,7 @@ fun test_1byte(): Unit {
     bytes(0i64) = 0x24u8;
 
     String::fromBytes(bytes).getOrPanic();
+    ()
 }
 
 fun test_2bytes(): Unit {
@@ -32,6 +33,7 @@ fun test_2bytes(): Unit {
     bytes(1i64) = 0xA2u8;
 
     String::fromBytes(bytes).getOrPanic();
+    ()
 }
 
 fun test_3bytes(): Unit {
@@ -41,6 +43,7 @@ fun test_3bytes(): Unit {
     bytes(2i64) = 0xACu8;
 
     String::fromBytes(bytes).getOrPanic();
+    ()
 }
 
 fun test_4bytes(): Unit {
@@ -51,6 +54,7 @@ fun test_4bytes(): Unit {
     bytes(3i64) = 0x88u8;
 
     String::fromBytes(bytes).getOrPanic();
+    ()
 }
 
 fun test_invalid(): Unit {

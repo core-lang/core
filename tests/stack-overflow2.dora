@@ -4,12 +4,9 @@ fun main(): Unit {
     std::thread::spawn(||: Unit {
         g();
     });
+    ()
 }
 
-fun g(): Unit {
-    f();
-}
+fun g(): Unit = f()
 
-fun f(): Unit {
-    f();
-}
+fun f(): Unit = f()

@@ -1764,14 +1764,6 @@ impl Expr {
         }
     }
 
-    pub fn needs_semicolon(&self) -> bool {
-        match self {
-            &Expr::Block(_) => false,
-            &Expr::If(_) => false,
-            _ => true,
-        }
-    }
-
     pub fn pos(&self) -> Position {
         match *self {
             Expr::Un(ref val) => val.pos,

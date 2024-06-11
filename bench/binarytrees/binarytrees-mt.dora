@@ -60,7 +60,7 @@ impl TreeThread {
     fun run(): Unit {
         while true {
             let depth = self.nextDepth.fetchAdd(2i32);
-            if depth > self.maxDepth { return; }
+            if depth > self.maxDepth { return }
             let result = loops(self.maxDepth, depth);
             self.results((depth - MIN_DEPTH).toInt64() / 2i64) = result;
         }

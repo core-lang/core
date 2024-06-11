@@ -142,10 +142,14 @@ fn gen_position_load_field_uint8() {
 #[test]
 fn gen_store_field_uint8() {
     gen_fct(
-        "class Foo(bar: UInt8) fun f(a: Foo, b: UInt8): Unit { a.bar = b; }",
+        "class Foo(bar: UInt8) fun f(a: Foo, b: UInt8): Unit { a.bar = b }",
         |sa, code, fct| {
             let (cls, field) = sa.field_by_name("Foo", "bar");
-            let expected = vec![StoreField(r(1), r(0), ConstPoolIdx(0)), Ret(r(2))];
+            let expected = vec![
+                StoreField(r(1), r(0), ConstPoolIdx(0)),
+                Ret(r(2)),
+                Ret(r(2)),
+            ];
             assert_eq!(expected, code);
             assert_eq!(
                 fct.const_pool(ConstPoolIdx(0)),
@@ -978,7 +982,12 @@ fn gen_expr_ident() {
 #[test]
 fn gen_expr_assign() {
     let result = code("fun f(): Unit { var x = 1i32; x = 2i32; }");
-    let expected = vec![ConstInt32(r(0), 1), ConstInt32(r(0), 2), Ret(r(1))];
+    let expected = vec![
+        ConstInt32(r(0), 1),
+        ConstInt32(r(0), 2),
+        Ret(r(1)),
+        Ret(r(1)),
+    ];
     assert_eq!(expected, result);
 }
 
@@ -1028,7 +1037,7 @@ fn gen_store_global() {
         "var a: Bool = false; fun f(x: Bool): Unit { a = x; }",
         |sa, code| {
             let gid = sa.global_by_name("a");
-            let expected = vec![StoreGlobal(r(0), gid), Ret(r(1))];
+            let expected = vec![StoreGlobal(r(0), gid), Ret(r(1)), Ret(r(1))];
             assert_eq!(expected, code);
         },
     );
@@ -1036,8 +1045,8 @@ fn gen_store_global() {
 
 #[test]
 fn gen_side_effect() {
-    let result = code("fun f(a: Int32): Unit { 1; 2; 3i32 * a; \"foo\"; 1.0f32; 1.0f64; a; }");
-    let expected = vec![Ret(r(1))];
+    let result = code("fun f(a: Int32): Unit { 1; 2; 3i32 * a; \"foo\"; 1.0f32; 1.0f64; a; () }");
+    let expected = vec![Ret(r(1)), Ret(r(1))];
     assert_eq!(expected, result);
 }
 
@@ -1045,12 +1054,12 @@ fn gen_side_effect() {
 fn gen_fct_call_void_with_0_args() {
     gen_fct(
         "
-            fun f(): Unit { g(); }
+            fun f(): Unit { g() }
             fun g(): Unit { }
             ",
         |sa, code, fct| {
             let fct_id = sa.fct_by_name("g").expect("g not found");
-            let expected = vec![InvokeStatic(r(0), ConstPoolIdx(0)), Ret(r(0))];
+            let expected = vec![InvokeStatic(r(0), ConstPoolIdx(0)), Ret(r(0)), Ret(r(0))];
             assert_eq!(expected, code);
             assert_eq!(
                 fct.const_pool(ConstPoolIdx(0)),
@@ -1083,12 +1092,12 @@ fn gen_fct_call_int_with_0_args() {
 fn gen_fct_call_int_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(): Unit { g(); }
-            fun g(): Int32 { return 1i32; }
+            fun f(): Unit { g(); () }
+            fun g(): Int32 = 1i32
             ",
         |sa, code, fct| {
             let fct_id = sa.fct_by_name("g").expect("g not found");
-            let expected = vec![InvokeStatic(r(0), ConstPoolIdx(0)), Ret(r(1))];
+            let expected = vec![InvokeStatic(r(0), ConstPoolIdx(0)), Ret(r(1)), Ret(r(1))];
             assert_eq!(expected, code);
             assert_eq!(
                 fct.const_pool(ConstPoolIdx(0)),
@@ -1102,7 +1111,7 @@ fn gen_fct_call_int_with_0_args_and_unused_result() {
 fn gen_fct_call_void_with_1_arg() {
     gen_fct(
         "
-            fun f(): Unit { g(1i32); }
+            fun f(): Unit = g(1i32)
             fun g(a: Int32): Unit { }
             ",
         |sa, code, fct| {
@@ -1111,6 +1120,7 @@ fn gen_fct_call_void_with_1_arg() {
                 ConstInt32(r(0), 1),
                 PushRegister(r(0)),
                 InvokeStatic(r(1), ConstPoolIdx(0)),
+                Ret(r(1)),
                 Ret(r(1)),
             ];
             assert_eq!(expected, code);
@@ -1126,7 +1136,7 @@ fn gen_fct_call_void_with_1_arg() {
 fn gen_fct_call_void_with_3_args() {
     gen_fct(
         "
-            fun f(): Unit { g(1i32, 2i32, 3i32); }
+            fun f(): Unit = g(1i32, 2i32, 3i32)
             fun g(a: Int32, b: Int32, c: Int32): Unit { }
             ",
         |sa, code, fct| {
@@ -1139,6 +1149,7 @@ fn gen_fct_call_void_with_3_args() {
                 PushRegister(r(1)),
                 PushRegister(r(2)),
                 InvokeStatic(r(3), ConstPoolIdx(0)),
+                Ret(r(3)),
                 Ret(r(3)),
             ];
             assert_eq!(expected, code);
@@ -1154,8 +1165,8 @@ fn gen_fct_call_void_with_3_args() {
 fn gen_fct_call_int_with_1_arg() {
     gen_fct(
         "
-            fun f(): Int32 { return g(1i32); }
-            fun g(a: Int32): Int32 { return a; }
+            fun f(): Int32 = g(1i32)
+            fun g(a: Int32): Int32 = a
             ",
         |sa, code, fct| {
             let fct_id = sa.fct_by_name("g").expect("g not found");
@@ -1178,8 +1189,8 @@ fn gen_fct_call_int_with_1_arg() {
 fn gen_fct_call_int_with_3_args() {
     gen_fct(
         "
-            fun f(): Int32 { return g(1i32, 2i32, 3i32); }
-            fun g(a: Int32, b: Int32, c: Int32): Int32 { return 1i32; }
+            fun f(): Int32 = g(1i32, 2i32, 3i32)
+            fun g(a: Int32, b: Int32, c: Int32): Int32 = 1i32
             ",
         |sa, code, fct| {
             let fct_id = sa.fct_by_name("g").expect("g not found");
@@ -1206,7 +1217,7 @@ fn gen_fct_call_int_with_3_args() {
 fn gen_method_call_void_check_correct_self() {
     gen_fct(
         "
-            fun f(i: Int32, foo: Foo): Unit { foo.g(); }
+            fun f(i: Int32, foo: Foo): Unit = foo.g()
             class Foo
             impl Foo {
                 fun g(): Unit { }
@@ -1219,6 +1230,7 @@ fn gen_method_call_void_check_correct_self() {
             let expected = vec![
                 PushRegister(r(1)),
                 InvokeDirect(r(2), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -1234,7 +1246,7 @@ fn gen_method_call_void_check_correct_self() {
 fn gen_method_call_void_with_0_args() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g() }
             class Foo
             impl Foo {
                 fun g(): Unit { }
@@ -1247,6 +1259,7 @@ fn gen_method_call_void_with_0_args() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(1)),
                 Ret(r(1)),
             ];
             assert_eq!(expected, code);
@@ -1262,7 +1275,7 @@ fn gen_method_call_void_with_0_args() {
 fn gen_method_call_void_with_1_arg() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(1i32); }
+            fun f(foo: Foo): Unit { foo.g(1i32) }
             class Foo
             impl Foo {
                 fun g(a: Int32): Unit { }
@@ -1277,6 +1290,7 @@ fn gen_method_call_void_with_1_arg() {
                 PushRegister(r(0)),
                 PushRegister(r(1)),
                 InvokeDirect(r(2), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -1311,6 +1325,7 @@ fn gen_method_call_void_with_3_args() {
                 PushRegister(r(2)),
                 PushRegister(r(3)),
                 InvokeDirect(r(4), ConstPoolIdx(0)),
+                Ret(r(4)),
                 Ret(r(4)),
             ];
             assert_eq!(expected, code);
@@ -1354,10 +1369,10 @@ fn gen_method_call_bool_with_0_args() {
 fn gen_method_call_bool_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g(); () }
             class Foo
             impl Foo {
-                fun g(): Bool { return true; }
+                fun g(): Bool = true
             }
             ",
         |sa, code, fct| {
@@ -1367,6 +1382,7 @@ fn gen_method_call_bool_with_0_args_and_unused_result() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -1474,10 +1490,10 @@ fn gen_method_call_byte_with_0_args() {
 fn gen_method_call_byte_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g(); () }
             class Foo
             impl Foo {
-                fun g(): UInt8 { return 1u8; }
+                fun g(): UInt8 = 1u8
             }
             ",
         |sa, code, fct| {
@@ -1487,6 +1503,7 @@ fn gen_method_call_byte_with_0_args_and_unused_result() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -1594,10 +1611,10 @@ fn gen_method_call_char_with_0_args() {
 fn gen_method_call_char_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g(); () }
             class Foo
             impl Foo {
-                fun g(): Char { return '1'; }
+                fun g(): Char = '1'
             }
             ",
         |sa, code, fct| {
@@ -1607,6 +1624,7 @@ fn gen_method_call_char_with_0_args_and_unused_result() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -1714,10 +1732,10 @@ fn gen_method_call_int_with_0_args() {
 fn gen_method_call_int_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g(); () }
             class Foo
             impl Foo {
-                fun g(): Int32 { return 1; }
+                fun g(): Int32 = 1
             }
             ",
         |sa, code, fct| {
@@ -1727,6 +1745,7 @@ fn gen_method_call_int_with_0_args_and_unused_result() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -1834,10 +1853,10 @@ fn gen_method_call_int64_with_0_args() {
 fn gen_method_call_int64_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g(); () }
             class Foo
             impl Foo {
-                fun g(): Int64 { return 1i64; }
+                fun g(): Int64 = 1i64
             }
             ",
         |sa, code, fct| {
@@ -1847,6 +1866,7 @@ fn gen_method_call_int64_with_0_args_and_unused_result() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -1954,10 +1974,10 @@ fn gen_method_call_float32_with_0_args() {
 fn gen_method_call_float32_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g(); () }
             class Foo
             impl Foo {
-                fun g(): Float32 { return 1f32; }
+                fun g(): Float32 = 1f32
             }
             ",
         |sa, code, fct| {
@@ -1967,6 +1987,7 @@ fn gen_method_call_float32_with_0_args_and_unused_result() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -2074,10 +2095,10 @@ fn gen_method_call_float64_with_0_args() {
 fn gen_method_call_float64_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g(); () }
             class Foo
             impl Foo {
-                fun g(): Float64 { return 1f64; }
+                fun g(): Float64 = 1f64
             }
             ",
         |sa, code, fct| {
@@ -2087,6 +2108,7 @@ fn gen_method_call_float64_with_0_args_and_unused_result() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -2194,10 +2216,10 @@ fn gen_method_call_ptr_with_0_args() {
 fn gen_method_call_ptr_with_0_args_and_unused_result() {
     gen_fct(
         "
-            fun f(foo: Foo): Unit { foo.g(); }
+            fun f(foo: Foo): Unit { foo.g(); () }
             class Foo
             impl Foo {
-                fun g(): String { return \"1\"; }
+                fun g(): String = \"1\"
             }
             ",
         |sa, code, fct| {
@@ -2207,6 +2229,7 @@ fn gen_method_call_ptr_with_0_args_and_unused_result() {
             let expected = vec![
                 PushRegister(r(0)),
                 InvokeDirect(r(1), ConstPoolIdx(0)),
+                Ret(r(2)),
                 Ret(r(2)),
             ];
             assert_eq!(expected, code);
@@ -2352,7 +2375,7 @@ fn gen_value_field() {
     gen_fct(
         "
         value Foo { f1: Int32, f2: Bool }
-        fun f(x: Foo): Int32 { x.f1 }
+        fun f(x: Foo): Int32 = x.f1
     ",
         |sa, code, fct| {
             let value_id = sa.value_by_name("Foo");
@@ -2407,7 +2430,7 @@ fn gen_value_array() {
         fun f(x: Array[Foo], idx: Int64, value: Foo): Unit { x(idx) = value; }
     ",
     );
-    let expected = vec![StoreArray(r(2), r(0), r(1)), Ret(r(3))];
+    let expected = vec![StoreArray(r(2), r(0), r(1)), Ret(r(3)), Ret(r(3))];
     assert_eq!(expected, result);
 }
 
@@ -2613,14 +2636,14 @@ fn gen_position_array_length() {
 
 #[test]
 fn gen_array_length_effect() {
-    let result = code("fun f(a: Array[Int32]): Unit { a.size(); }");
-    let expected = vec![ArrayLength(r(1), r(0)), Ret(r(2))];
+    let result = code("fun f(a: Array[Int32]): Unit { a.size(); () }");
+    let expected = vec![ArrayLength(r(1), r(0)), Ret(r(2)), Ret(r(2))];
     assert_eq!(expected, result);
 }
 
 #[test]
 fn gen_position_array_length_effect() {
-    let result = position("fun f(a: Array[Int32]): Unit { a.size(); }");
+    let result = position("fun f(a: Array[Int32]): Unit { a.size(); () }");
     let expected = vec![(0, p(1, 38))];
     assert_eq!(expected, result);
 }
@@ -2738,6 +2761,7 @@ fn gen_store_array_uint8() {
         ConstInt64(Register(2), 0),
         StoreArray(r(1), r(0), r(2)),
         Ret(r(3)),
+        Ret(r(3)),
     ];
     assert_eq!(expected, result);
 }
@@ -2748,6 +2772,7 @@ fn gen_store_array_bool() {
     let expected = vec![
         ConstInt64(Register(2), 0),
         StoreArray(r(1), r(0), r(2)),
+        Ret(r(3)),
         Ret(r(3)),
     ];
     assert_eq!(expected, result);
@@ -2760,6 +2785,7 @@ fn gen_store_array_char() {
         ConstInt64(Register(2), 0),
         StoreArray(r(1), r(0), r(2)),
         Ret(r(3)),
+        Ret(r(3)),
     ];
     assert_eq!(expected, result);
 }
@@ -2770,6 +2796,7 @@ fn gen_store_array_int32() {
     let expected = vec![
         ConstInt64(Register(2), 0),
         StoreArray(r(1), r(0), r(2)),
+        Ret(r(3)),
         Ret(r(3)),
     ];
     assert_eq!(expected, result);
@@ -2782,6 +2809,7 @@ fn gen_store_array_int64() {
         ConstInt64(Register(2), 0),
         StoreArray(r(1), r(0), r(2)),
         Ret(r(3)),
+        Ret(r(3)),
     ];
     assert_eq!(expected, result);
 }
@@ -2792,6 +2820,7 @@ fn gen_store_array_float32() {
     let expected = vec![
         ConstInt64(Register(2), 0),
         StoreArray(r(1), r(0), r(2)),
+        Ret(r(3)),
         Ret(r(3)),
     ];
     assert_eq!(expected, result);
@@ -2804,6 +2833,7 @@ fn gen_store_array_float64() {
         ConstInt64(Register(2), 0),
         StoreArray(r(1), r(0), r(2)),
         Ret(r(3)),
+        Ret(r(3)),
     ];
     assert_eq!(expected, result);
 }
@@ -2814,6 +2844,7 @@ fn gen_store_array_ptr() {
     let expected = vec![
         ConstInt64(Register(2), 0),
         StoreArray(r(1), r(0), r(2)),
+        Ret(r(3)),
         Ret(r(3)),
     ];
     assert_eq!(expected, result);
@@ -3427,9 +3458,7 @@ fn gen_unreachable() {
 fn gen_enum_array() {
     let result = code(
         "enum MyEnum { A(Int32), B }
-        fun f(arr: Array[MyEnum], idx: Int64): MyEnum {
-            arr(idx)
-        }",
+        fun f(arr: Array[MyEnum], idx: Int64): MyEnum = arr(idx)",
     );
 
     let expected = vec![LoadArray(r(2), r(0), r(1)), Ret(r(2))];
@@ -3438,10 +3467,10 @@ fn gen_enum_array() {
     let result = code(
         "enum MyEnum { A(Int32), B }
         fun f(arr: Array[MyEnum], idx: Int64, value: MyEnum): Unit {
-            arr(idx) = value;
+            arr(idx) = value; ()
         }",
     );
-    let expected = vec![StoreArray(r(2), r(0), r(1)), Ret(r(3))];
+    let expected = vec![StoreArray(r(2), r(0), r(1)), Ret(r(3)), Ret(r(3))];
     assert_eq!(expected, result);
 }
 
@@ -3477,7 +3506,7 @@ fn gen_array_get_method() {
 fn gen_array_set_method() {
     let result =
         code("fun f(x: Array[Float32], idx: Int64, value: Float32): Unit { x.set(idx, value); }");
-    let expected = vec![StoreArray(r(2), r(0), r(1)), Ret(r(3))];
+    let expected = vec![StoreArray(r(2), r(0), r(1)), Ret(r(3)), Ret(r(3))];
     assert_eq!(expected, result);
 }
 
@@ -3792,6 +3821,7 @@ fn gen_vec_store() {
                 PushRegister(r(1)),
                 PushRegister(r(2)),
                 InvokeDirect(r(3), ConstPoolIdx(0)),
+                Ret(r(3)),
                 Ret(r(3)),
             ];
             assert_eq!(expected, code);
