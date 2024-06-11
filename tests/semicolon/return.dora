@@ -1,0 +1,28 @@
+fun main(): Unit {
+  curly_return(); ()
+}
+
+fun curly_return_semi(): Int64 {
+  return 1;
+}
+
+fun curly_return(): Int64 {
+  return 2
+}
+
+fun curly_semi(): Int64 {
+  3;
+}
+
+
+fun curly(): Int64 {
+  4
+}
+
+fun equals_return_semi(): Int64 = return 1;
+
+fun equals_return(): Int64 = return 2
+
+fun equals_semi(): Int64 = 3;
+
+fun equals(): Int64 = 4

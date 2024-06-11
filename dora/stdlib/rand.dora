@@ -1,47 +1,47 @@
-const RANDOM_MULTIPLIER: Int64 = 25214903917i64;
-const RANDOM_INCREMENT: Int64 = 11i64;
-const RANDOM_MASK: Int64 = 0xFF'FF'FF'FF'FF'FFi64;
+const RANDOM_MULTIPLIER: Int64 = 25214903917i64
+const RANDOM_INCREMENT: Int64 = 11i64
+const RANDOM_MASK: Int64 = 0xFF'FF'FF'FF'FF'FFi64
 
 @pub class Random {
   seed: Int64
 }
 
 impl Random {
-  @pub @static fun new(seed: Int64): Random = Random((seed ^ RANDOM_MULTIPLIER) & RANDOM_MASK);
+  @pub @static fun new(seed: Int64): Random = Random((seed ^ RANDOM_MULTIPLIER) & RANDOM_MASK)
 
   @pub fun nextInt32WithBound(bound: Int32): Int32 {
-    assert(bound > 0i32);
-    let bound_minus_1 = bound - 1i32;
+    assert(bound > 0i32)
+    let bound_minus_1 = bound - 1i32
 
     if (bound & bound_minus_1) == 0i32 {
-      let num = self.nextInt31().toInt64();
-      return (bound.toInt64().wrappingMul(num)).shiftRight(31i32).toInt32();
+      let num = self.nextInt31().toInt64()
+      return bound.toInt64().wrappingMul(num).shiftRight(31i32).toInt32()
     }
 
-    var modulo = 0i32;
+    var modulo = 0i32
 
     while true {
-      let num = self.nextInt31();
-      modulo = num.remainder(bound);
+      let num = self.nextInt31()
+      modulo = num.remainder(bound)
 
       if num - modulo + bound_minus_1 >= 0i32 {
-        return modulo;
+        return modulo
       }
     }
 
-    return modulo;
+    modulo
   }
 
   @pub fun nextInt32(): Int32 {
-    self.seed = self.seed.wrappingMul(RANDOM_MULTIPLIER).wrappingAdd(RANDOM_INCREMENT) & RANDOM_MASK;
+    self.seed = self.seed.wrappingMul(RANDOM_MULTIPLIER).wrappingAdd(RANDOM_INCREMENT) & RANDOM_MASK
     self.seed.shiftRight(16i32).toInt32()
   }
 
-  @pub fun nextInt31(): Int32 = self.nextInt32() & 0x7F'FF'FF'FFi32;
+  @pub fun nextInt31(): Int32 = self.nextInt32() & 0x7F'FF'FF'FFi32
 
   @pub fun nextInt64(): Int64 {
-    let w1 = self.nextInt32();
-    let w2 = self.nextInt32();
+    let w1 = self.nextInt32()
+    let w2 = self.nextInt32()
     w1.toInt64().shiftLeft(32i32) | w2.toInt64()
   }
 }

@@ -3,4 +3,5 @@
 fun main(): Unit {
     let foo = List[Int32]::new();
     foo.array.size();
+    ()
 }

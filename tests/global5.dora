@@ -10,6 +10,7 @@ fun main(): Unit {
     println("x = ${x}");
     println("after");
     x;
+    ()
 }
 
 fun foo(): Int32 {
