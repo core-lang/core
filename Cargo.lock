@@ -56,6 +56,44 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "core"
+version = "0.0.2"
+dependencies = [
+ "byteorder",
+ "capstone",
+ "core-asm",
+ "core-parser",
+ "crossbeam-deque",
+ "fixedbitset",
+ "lazy_static",
+ "libc",
+ "memoffset",
+ "num_cpus",
+ "option-ext",
+ "parking_lot",
+ "rand",
+ "scoped_threadpool",
+ "seahash",
+ "threadpool",
+ "walkdir",
+ "windows-sys",
+]
+
+[[package]]
+name = "core-asm"
+version = "0.0.1"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
+name = "core-parser"
+version = "0.0.2"
+dependencies = [
+ "parking_lot",
+]
+
+[[package]]
 name = "crossbeam-deque"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -79,44 +117,6 @@ name = "crossbeam-utils"
 version = "0.8.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
-
-[[package]]
-name = "dora"
-version = "0.0.2"
-dependencies = [
- "byteorder",
- "capstone",
- "crossbeam-deque",
- "dora-asm",
- "dora-parser",
- "fixedbitset",
- "lazy_static",
- "libc",
- "memoffset",
- "num_cpus",
- "option-ext",
- "parking_lot",
- "rand",
- "scoped_threadpool",
- "seahash",
- "threadpool",
- "walkdir",
- "windows-sys",
-]
-
-[[package]]
-name = "dora-asm"
-version = "0.0.1"
-dependencies = [
- "byteorder",
-]
-
-[[package]]
-name = "dora-parser"
-version = "0.0.2"
-dependencies = [
- "parking_lot",
-]
 
 [[package]]
 name = "fixedbitset"

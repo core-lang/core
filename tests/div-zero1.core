@@ -1,0 +1,9 @@
+//= error div0
+//= stderr "division by 0\n    divide (tests/div-zero1.core:9)\n    main (tests/div-zero1.core:5)\n"
+
+fun main(): Unit {
+  divide(0i32);
+  ()
+}
+
+fun divide(x: Int32): Int32 = 4711i32 / x

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-cd dora && cargo check --target=aarch64-unknown-linux-gnu --no-default-features
+cd core && cargo check --target=aarch64-unknown-linux-gnu --no-default-features

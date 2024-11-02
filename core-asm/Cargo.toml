@@ -1,0 +1,13 @@
+[package]
+name = "core-asm"
+version = "0.0.1"
+authors = ["Simon Ochsenreither <simon@ochsenreither.de>", "Dominik Inführ <dominik.infuehr@gmail.com>"]
+description = "The Core programming language -- Assembler"
+homepage = "https://github.com/core-lang/core"
+repository = "https://github.com/core-lang/core"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+byteorder = "1.5.0"

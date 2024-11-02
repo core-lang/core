@@ -1,0 +1,4 @@
+//= file bench/binarytrees/binarytrees.core
+//= args 6
+//= vm-args --gc-stress
+//= stdout file
