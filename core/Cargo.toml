@@ -1,0 +1,47 @@
+[package]
+name = "core"
+version = "0.0.2"
+authors = ["Simon Ochsenreither <simon@ochsenreither.de>", "Dominik Inführ <dominik.infuehr@gmail.com>"]
+description = "The Core programming language"
+homepage = "https://github.com/core-lang/core"
+repository = "https://github.com/core-lang/core"
+build = "build.rs"
+license = "MPL-2"
+edition = "2021"
+
+[features]
+default = ["capstone"]
+aot = []
+
+[build-dependencies]
+walkdir = "2"
+
+[dependencies]
+byteorder = "*"
+lazy_static = "*"
+libc = "*"
+capstone = { version = "*", optional = true }
+core-asm = { path = "../core-asm", version = "0.0.1" }
+core-parser = { path = "../core-parser", version = "0.0.2" }
+threadpool = "*"
+crossbeam-deque = "*"
+rand = "*"
+scoped_threadpool = "*"
+parking_lot = "*"
+fixedbitset = "*"
+num_cpus = "*"
+memoffset = "*"
+seahash = "4.1.0"
+option-ext = "0.2.0"
+
+[target.'cfg(windows)'.dependencies]
+windows = { package = "windows-sys",  version = "0.59.0", features = ["Win32_Foundation", "Win32_System_Memory", "Win32_System_SystemInformation", "Win32_System_Diagnostics_Debug"] }
+
+[lib]
+name = "core"
+crate-type = ["lib", "staticlib"]
+path = "src/lib.rs"
+
+[[bin]]
+name = "core"
+path = "src/main.rs"

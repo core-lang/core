@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-  "dora",
-  "dora-asm",
-  "dora-parser",
+  "core",
+  "core-asm",
+  "core-parser",
 ]
 
 [profile.release]

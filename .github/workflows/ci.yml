@@ -43,13 +43,13 @@ jobs:
   #       run: RUSTFLAGS="-Z sanitizer=address" cargo +nightly build --target x86_64-unknown-linux-gnu
 
   #     - name: ASAN Tests Debug
-  #       run: ruby tools/tester.rb --binary=target/x86_64-unknown-linux-gnu/debug/dora --env ASAN_OPTIONS=detect_leaks=1
+  #       run: ruby tools/tester.rb --binary=target/x86_64-unknown-linux-gnu/debug/core --env ASAN_OPTIONS=detect_leaks=1
 
   #     - name: ASAN Build Release
   #       run: RUSTFLAGS="-Z sanitizer=address" cargo +nightly build --release --target x86_64-unknown-linux-gnu
 
   #     - name: ASAN Tests Release
-  #       run: ruby tools/tester.rb --binary=target/x86_64-unknown-linux-gnu/release/dora --env ASAN_OPTIONS=detect_leaks=1
+  #       run: ruby tools/tester.rb --binary=target/x86_64-unknown-linux-gnu/release/core --env ASAN_OPTIONS=detect_leaks=1
 
   compile-arm64:
     name: compile arm64
@@ -70,7 +70,7 @@ jobs:
         run: rustup target add aarch64-unknown-linux-gnu
 
       - name: Build ARM64
-        run: cd dora && cargo check --target=aarch64-unknown-linux-gnu --no-default-features
+        run: cd core && cargo check --target=aarch64-unknown-linux-gnu --no-default-features
 
   test:
     name: test ${{ matrix.os }}

@@ -1,0 +1,3 @@
+//= file bench/fannkuchredux/fannkuchredux.core
+//= args 8
+//= stdout "1616\nPfannkuchen (8) = 22\n"

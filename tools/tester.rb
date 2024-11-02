@@ -122,7 +122,7 @@ def binary_path
   return $binary if $binary
   dir = $release ? "release" : "debug"
   extension = Gem.win_platform? ? ".exe" : ""
-  "target/#{dir}/dora#{extension}"
+  "target/#{dir}/core#{extension}"
 end
 
 class TestUtility
@@ -255,7 +255,7 @@ def load_test_files
 
     for arg in $files
       if File.directory?(arg)
-        files.concat(Dir["#{arg}/**/*.dora"])
+        files.concat(Dir["#{arg}/**/*.core"])
       elsif File.file?(arg)
         files.push(arg)
       else
@@ -267,7 +267,7 @@ def load_test_files
     files
 
   else
-    Dir["tests/**/*.dora"]
+    Dir["tests/**/*.core"]
   end
 end
 
@@ -656,7 +656,7 @@ def parse_test_file(file)
 
       when "stdout"
         case arguments[1]
-        when "file" then test_case.expectation.stdout = IO.read(file.sub(".dora", ".stdout"))
+        when "file" then test_case.expectation.stdout = IO.read(file.sub(".core", ".stdout"))
         else
           test_case.expectation.stdout = arguments[1]
         end

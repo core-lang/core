@@ -1,4 +1,0 @@
-//= file bench/binarytrees/binarytrees-mt.dora
-//= args 14 4
-//= vm-args "--max-heap-size=128M"
-//= stdout file

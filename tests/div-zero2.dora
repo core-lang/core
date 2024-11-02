@@ -1,8 +1,0 @@
-//= error div0
-//= stderr "division by 0\n    divide (tests/div-zero2.dora:8)\n    main (tests/div-zero2.dora:5)\n"
-
-fun main(): Unit {
-    divide(0i64); ()
-}
-
-fun divide(x: Int64): Int64 = 4711i64 / x;
