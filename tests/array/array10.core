@@ -1,0 +1,8 @@
+//= error array
+//= stderr "array index out of bounds\n    main (tests/array/array10.core:6)\n"
+
+fun main(): Unit {
+  let array = Array[Int32]::new();
+  array(-1i64);
+  ()
+}

@@ -1,0 +1,421 @@
+// Core implementation of Richards benchmark.
+// Originally implemented in BCPL (http://www.cl.cam.ac.uk/~mr10/Bench.html)
+// Used in Octane 2.0 (https://developers.google.com/octane/benchmark)
+
+fun main(): Unit {
+    var iterations = 8200i32;
+
+    if std::argc() > 0i32 {
+        iterations = std::argv(0i32).toInt32().getOrPanic();
+    }  
+
+    let bench = Benchmark();
+
+    var i = 0i32;
+    while i < iterations {
+        bench.runRichards();
+        i = i + 1i32;
+    }
+}
+
+const COUNT: Int32 = 1000i32;
+const EXPECTED_QUEUE_COUNT: Int32 = 2322i32;
+const EXPECTED_HOLD_COUNT: Int32 = 928i32;
+
+class Benchmark
+
+impl Benchmark {
+    fun runRichards(): Unit {
+        let scheduler = Scheduler::new();
+        scheduler.addIdleTask(ID_IDLE, 0i32, Option[Packet]::None, COUNT);
+
+        var queue = Packet::new(Option[Packet]::None, ID_WORKER, KIND_WORK);
+        queue = Packet::new(Option[Packet]::Some(queue), ID_WORKER, KIND_WORK);
+        scheduler.addWorkerTask(ID_WORKER, 1000i32, Option[Packet]::Some(queue));
+
+        queue = Packet::new(Option[Packet]::None, ID_DEVICE_A, KIND_DEVICE);
+        queue = Packet::new(Option[Packet]::Some(queue), ID_DEVICE_A, KIND_DEVICE);
+        queue = Packet::new(Option[Packet]::Some(queue), ID_DEVICE_A, KIND_DEVICE);
+        scheduler.addHandlerTask(ID_HANDLER_A, 2000i32, Option[Packet]::Some(queue));
+
+        queue = Packet::new(Option[Packet]::None, ID_DEVICE_B, KIND_DEVICE);
+        queue = Packet::new(Option[Packet]::Some(queue), ID_DEVICE_B, KIND_DEVICE);
+        queue = Packet::new(Option[Packet]::Some(queue), ID_DEVICE_B, KIND_DEVICE);
+        scheduler.addHandlerTask(ID_HANDLER_B, 3000i32, Option[Packet]::Some(queue));
+
+        scheduler.addDeviceTask(ID_DEVICE_A, 4000i32, Option[Packet]::None);
+
+        scheduler.addDeviceTask(ID_DEVICE_B, 5000i32, Option[Packet]::None);
+
+        scheduler.schedule();
+
+        if scheduler.queueCount != EXPECTED_QUEUE_COUNT || scheduler.holdCount != EXPECTED_HOLD_COUNT {
+            println("Error during execution: queueCount = ${scheduler.queueCount}, holdCount = ${scheduler.holdCount}.");
+            std::exit(1i32);
+        }
+    }
+}
+
+const ID_IDLE: Int32 = 0i32;
+const ID_WORKER: Int32 = 1i32;
+const ID_HANDLER_A: Int32 = 2i32;
+const ID_HANDLER_B: Int32 = 3i32;
+const ID_DEVICE_A: Int32 = 4i32;
+const ID_DEVICE_B: Int32 = 5i32;
+const NUMBER_OF_IDS: Int32 = 6i32;
+
+const KIND_DEVICE: Int32 = 0i32;
+const KIND_WORK: Int32 = 1i32;
+
+class Scheduler {
+    queueCount: Int32,
+    holdCount: Int32,
+    blocks: Array[Option[TaskControlBlock]],
+    currentTcb: Option[TaskControlBlock],
+    list: Option[TaskControlBlock],
+    currentId: Option[Int32],
+}
+
+impl Scheduler {
+    @static fun new(): Scheduler {
+        Scheduler(
+            0i32,
+            0i32,
+            Array[Option[TaskControlBlock]]::fill(NUMBER_OF_IDS.toInt64(), Option[TaskControlBlock]::None),
+            None[TaskControlBlock],
+            None[TaskControlBlock],
+            None[Int32],
+        )
+    }
+    fun addIdleTask(id: Int32, priority: Int32, queue: Option[Packet], count: Int32): Unit {
+        self.addRunningTask(id, priority, queue, IdleTask::new(self, 1i32, count) as Task);
+    }
+
+    fun addWorkerTask(id: Int32, priority: Int32, queue: Option[Packet]): Unit {
+        self.addTask(id, priority, queue, WorkerTask::new(self, ID_HANDLER_A, 0i32) as Task);
+    }
+
+    fun addHandlerTask(id: Int32, priority: Int32, queue: Option[Packet]): Unit {
+        self.addTask(id, priority, queue, HandlerTask::new(self) as Task);
+    }
+
+    fun addDeviceTask(id: Int32, priority: Int32, queue: Option[Packet]): Unit {
+        self.addTask(id, priority, queue, DeviceTask::new(self) as Task);
+    }
+
+    fun addRunningTask(id: Int32, priority: Int32, queue: Option[Packet], task: Task): Unit {
+        self.addTask(id, priority, queue, task);
+        self.currentTcb.getOrPanic().setRunning();
+    }
+
+    fun addTask(id: Int32, priority: Int32, queue: Option[Packet], task: Task): Unit {
+        self.currentTcb = Some(TaskControlBlock::new(self.list, id, priority, queue, task));
+        self.list = self.currentTcb;
+        self.blocks.set(id.toInt64(), self.currentTcb);
+    }
+
+    fun schedule(): Unit {
+        self.currentTcb = self.list;
+        while(self.currentTcb.isSome()) {
+            let tcb = self.currentTcb.getOrPanic();
+            if tcb.isHeldOrSuspended() {
+                self.currentTcb = tcb.link;
+            } else {
+                self.currentId = Option[Int32]::Some(tcb.id);
+                self.currentTcb = tcb.run();
+            }
+        }
+    }
+
+    fun release(id: Int32): Option[TaskControlBlock] {
+        let blockTcb = self.blocks.get(id.toInt64());
+        if blockTcb.isNone() {   
+            return Option[TaskControlBlock]::None;
+        }
+        let tcb = blockTcb.getOrPanic();
+        tcb.markAsNotHeld();
+        if tcb.priority > self.currentTcb.getOrPanic().priority {
+            blockTcb
+        } else {
+            self.currentTcb
+        }
+    }
+
+    fun holdCurrent(): Option[TaskControlBlock] {
+        let tcb = self.currentTcb.getOrPanic();
+        self.holdCount = self.holdCount + 1i32;
+        tcb.markAsHeld();
+        return tcb.link;
+    }
+
+    fun suspendCurrent(): Option[TaskControlBlock] {
+        let tcb = self.currentTcb.getOrPanic();
+        tcb.markAsSuspended();
+        return Option[TaskControlBlock]::Some(tcb);
+    }
+
+    fun queue(packet: Packet): Option[TaskControlBlock] {
+        let t = self.blocks.get(packet.id.toInt64());
+        if t.isNone() {
+            return None;
+        }
+        self.queueCount = self.queueCount + 1i32;
+        packet.link = None;
+        packet.id = self.currentId.getOrPanic();
+        return Some(t.getOrPanic().checkPriorityAdd(self.currentTcb.getOrPanic(), packet));
+    }
+}
+
+const STATE_RUNNING: Int32 = 0i32;
+const STATE_RUNNABLE: Int32 = 1i32;
+const STATE_SUSPENDED: Int32 = 2i32;
+const STATE_HELD: Int32 = 4i32;
+
+var STATE_SUSPENDED_RUNNABLE: Int32 = STATE_SUSPENDED | STATE_RUNNABLE;
+var STATE_NOT_HELD: Int32 = STATE_HELD.not();
+
+class TaskControlBlock {
+    link: Option[TaskControlBlock],
+    id: Int32,
+    priority: Int32,
+    queue: Option[Packet],
+    task: Task,
+    state: Int32
+}
+
+impl TaskControlBlock {
+    fun setRunning(): Unit { self.state = STATE_RUNNING; }
+    fun markAsNotHeld(): Unit { self.state = self.state & STATE_NOT_HELD; }
+    fun markAsHeld(): Unit { self.state = self.state | STATE_HELD; }
+    fun isHeldOrSuspended(): Bool { return (self.state & STATE_HELD) != 0i32 || (self.state == STATE_SUSPENDED); }
+    fun markAsSuspended(): Unit { self.state = self.state | STATE_SUSPENDED; }
+    fun markAsRunnable(): Unit { self.state = self.state | STATE_RUNNABLE; }
+
+    fun run(): Option[TaskControlBlock] {
+        var packet: Option[Packet] = Option[Packet]::None;
+        if self.state == STATE_SUSPENDED_RUNNABLE {
+            packet = self.queue;
+            self.queue = packet.getOrPanic().link;
+            if self.queue.isNone() {
+                self.state = STATE_RUNNING;
+            } else {
+                self.state = STATE_RUNNABLE;
+            }
+        }
+        return self.task.run(packet);
+    }
+
+    fun checkPriorityAdd(task: TaskControlBlock, packet: Packet): TaskControlBlock {
+        if self.queue.isNone() {
+            self.queue = Option[Packet]::Some(packet);
+            self.markAsRunnable();
+            if self.priority > task.priority {
+                return self;
+            }
+        } else {
+            self.queue = Option[Packet]::Some(packet.addTo(self.queue));
+        }
+        return task;
+    }
+
+    @static fun new(link: Option[TaskControlBlock], id: Int32, priority: Int32, queue: Option[Packet], task: Task): TaskControlBlock =
+        if queue.isNone() {
+            TaskControlBlock(link, id, priority, queue, task, STATE_SUSPENDED)
+        } else {
+            TaskControlBlock(link, id, priority, queue, task, STATE_SUSPENDED_RUNNABLE)
+        };
+}
+
+impl std::Stringable for TaskControlBlock {
+    fun toString(): String {
+        return "tcb { ${self.task.toString()}@${self.state} }";
+    }
+}
+
+trait Task {
+    fun run(packet: Option[Packet]): Option[TaskControlBlock];
+    fun toString(): String;
+}
+
+class IdleTask {
+    scheduler: Scheduler,
+    seed: Int32,
+    count: Int32
+}
+
+impl IdleTask {
+    @static fun new(scheduler: Scheduler, seed: Int32, count: Int32): IdleTask {
+        IdleTask(scheduler, seed, count)
+    }
+}
+
+impl Task for IdleTask {
+    fun run(packet: Option[Packet]): Option[TaskControlBlock] {
+        self.count = self.count - 1i32;
+        if self.count == 0i32 {
+            return self.scheduler.holdCurrent();
+        }
+        if self.seed & 1i32 == 0i32 {
+            self.seed = self.seed.shiftRightSigned(1i32);
+            self.scheduler.release(ID_DEVICE_A)
+        } else {
+            self.seed = self.seed.shiftRightSigned(1i32) ^ 0xD008i32;
+            self.scheduler.release(ID_DEVICE_B)
+        }
+    }
+
+    fun toString(): String {
+        return "IdleTask";
+    }
+}
+
+class DeviceTask {
+    scheduler: Scheduler,
+    seed: Option[Packet],
+}
+
+impl DeviceTask {
+    @static fun new(scheduler: Scheduler): DeviceTask {
+        DeviceTask(scheduler, None[Packet])
+    }
+}
+
+impl Task for DeviceTask {
+    fun run(packet: Option[Packet]): Option[TaskControlBlock] {
+        if packet.isNone() {
+            if self.seed.isNone() {
+                return self.scheduler.suspendCurrent();
+            }
+            let v = self.seed.getOrPanic();
+            self.seed = Option[Packet]::None;
+            self.scheduler.queue(v)
+        } else {
+            self.seed = packet;
+            self.scheduler.holdCurrent()
+        }
+    }
+
+    fun toString(): String = "DeviceTask";
+}
+
+class WorkerTask {
+    scheduler: Scheduler,
+    v1: Int32,
+    v2: Int32,
+}
+
+impl WorkerTask {
+    @static fun new(scheduler: Scheduler, v1: Int32, v2: Int32): WorkerTask {
+        WorkerTask(scheduler, v1, v2)
+    }
+}
+
+impl Task for WorkerTask {
+    fun run(packet: Option[Packet]): Option[TaskControlBlock] =
+        if packet.isNone() {
+            self.scheduler.suspendCurrent()
+        } else {
+            let p = packet.getOrPanic();
+            if self.v1 == ID_HANDLER_A {
+                self.v1 = ID_HANDLER_B;
+            } else {
+                self.v1 = ID_HANDLER_A;
+            }
+            p.id = self.v1;
+            p.a1 = 0i32;
+            var i = 0i32;
+            while i < DATA_SIZE {
+                self.v2 = self.v2 + 1i32;
+                if self.v2 > 26i32 {
+                    self.v2 = 1i32;
+                }
+                i = i + 1i32;
+            }
+            self.scheduler.queue(p)
+        };
+
+    fun toString(): String = "WorkerTask";
+}
+
+class HandlerTask {
+    scheduler: Scheduler,
+    v1: Option[Packet],
+    v2: Option[Packet],
+}
+
+impl HandlerTask {
+    @static fun new(scheduler: Scheduler): HandlerTask {
+        HandlerTask(scheduler, None[Packet], None[Packet])
+    }
+}
+
+impl Task for HandlerTask {
+    fun run(packet: Option[Packet]): Option[TaskControlBlock] {
+        if packet.isSome() {
+            let p = packet.getOrPanic();
+            if p.kind == KIND_WORK {
+                self.v1 = Option[Packet]::Some(p.addTo(self.v1));
+            } else {
+                self.v2 = Option[Packet]::Some(p.addTo(self.v2));
+            }             
+        }
+
+        if self.v1.isSome() {
+            let v1_p = self.v1.getOrPanic();
+            let count = v1_p.a1;
+            if count < DATA_SIZE {
+                if self.v2.isSome() {                    
+                    let v = self.v2.getOrPanic();
+                    self.v2 = v.link;
+                    v.a1 = v1_p.a2.get(count.toInt64());
+                    v1_p.a1 = count + 1i32;
+                    return self.scheduler.queue(v);
+                }
+            } else {
+                self.v1 = v1_p.link;
+                return self.scheduler.queue(v1_p);
+            }
+        }
+
+        self.scheduler.suspendCurrent()
+    }
+
+    fun toString(): String {
+        return "HandlerTask";
+    }
+}
+
+var DATA_SIZE: Int32 = 4i32;
+
+class Packet {
+    link: Option[Packet],
+    id: Int32,
+    kind: Int32,
+    a1: Int32,
+    a2: Array[Int32],
+}
+
+impl Packet {
+    fun addTo(queue: Option[Packet]): Packet {
+        self.link = Option[Packet]::None;
+        if queue.isNone() {
+            return self;
+        }
+
+        var next: Packet = queue.getOrPanic();
+        var peek: Option[Packet] = next.link;
+
+        while peek.isSome() {
+            next = peek.getOrPanic();
+            peek = next.link;
+        }
+
+        next.link = Option[Packet]::Some(self);
+        return queue.getOrPanic();
+    }
+
+    @static fun new(link: Option[Packet], id: Int32, kind: Int32): Packet {
+        let array: Array[Int32] = Array[Int32]::newDefault(DATA_SIZE.toInt64());
+        return Packet(link, id, kind, 0i32, array);
+    }
+}

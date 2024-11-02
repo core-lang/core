@@ -7,10 +7,10 @@ javac fannkuchredux.java
 for i in $(seq 1 $RUNS); do time java fannkuchredux $ARG; done
 
 echo
-echo "dora" 1>&2
+echo "core" 1>&2
 pushd ../..
 cargo build --release
-for i in $(seq 1 $RUNS); do time target/release/dora bench/fannkuchredux/fannkuchredux.dora $ARG; done
+for i in $(seq 1 $RUNS); do time target/release/core bench/fannkuchredux/fannkuchredux.core $ARG; done
 popd
 
 echo "cacao" 1>&2
