@@ -188,6 +188,11 @@ pub fn implements_trait(
             check_impls(sa, check_ty, check_type_param_defs, trait_ty, &value.impls).is_some()
         }
 
+        SourceType::Union(union_id, _) => {
+            let union_ = sa.unions[union_id].read();
+            check_impls(sa, check_ty, check_type_param_defs, trait_ty, &union_.impls).is_some()
+        }
+
         SourceType::Class(_, _) => {
             let cls_id = check_ty.cls_id().expect("class expected");
             let cls = sa.classes.idx(cls_id);
@@ -245,6 +250,11 @@ pub fn find_impl(
             let value = value.read();
 
             check_impls(sa, check_ty, check_type_param_defs, trait_ty, &value.impls)
+        }
+
+        SourceType::Union(union_id, _) => {
+            let union_ = sa.unions[union_id].read();
+            check_impls(sa, check_ty, check_type_param_defs, trait_ty, &union_.impls)
         }
 
         SourceType::Class(_, _) => {

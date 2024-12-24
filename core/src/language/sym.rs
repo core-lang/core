@@ -8,7 +8,7 @@ use self::Sym::*;
 use crate::language::sem_analysis::{
     AnnotationDefinitionId, ClassDefinitionId, ConstDefinitionId, EnumDefinitionId,
     FctDefinitionId, FieldId, GlobalDefinitionId, ModuleDefinitionId, NestedVarId, SemAnalysis,
-    TraitDefinitionId, TypeParamId, ValueDefinitionId,
+    TraitDefinitionId, TypeParamId, UnionDefinitionId, ValueDefinitionId,
 };
 use core_parser::interner::Name;
 
@@ -168,6 +168,7 @@ impl SymTable {
 pub enum Sym {
     Class(ClassDefinitionId),
     Value(ValueDefinitionId),
+    Union(UnionDefinitionId),
     Trait(TraitDefinitionId),
     TypeParam(TypeParamId),
     Enum(EnumDefinitionId),

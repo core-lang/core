@@ -52,8 +52,8 @@ impl EnumInstance {
 
 #[derive(Copy, Clone, Debug)]
 pub enum EnumLayout {
-    Int,
-    Ptr,
+    Int, // no variant has a payload
+    Ptr, // exactly 2 variants, one without payload
     Tagged,
 }
 

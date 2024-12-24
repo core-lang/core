@@ -1,0 +1,10 @@
+// a union type with two value-typed variants
+// a union value needs a discriminator, a type tag in front of the payload
+union Foo of Int64, Float64;
+
+fun main(): Unit {
+  foo(123);
+  ()
+}
+
+fun foo(foo: Foo): String = "def"

@@ -1,0 +1,11 @@
+// a union type with one reference-typed variant
+// a union value needs no discriminator, as every value of String is a Foo
+union Foo of String;
+
+fun main(): Unit {
+  let x = m("abc");
+  println(x);
+}
+
+fun m(foo: Foo): String = if foo
+... is String { return foo; }

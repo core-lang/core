@@ -1,0 +1,7 @@
+// a union without variants
+// has no valid values
+union Nothing;
+
+fun main(): Unit {
+  ()
+}

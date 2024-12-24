@@ -1,0 +1,10 @@
+// a union type with one value-typed variant
+// a union value needs no discriminator, as every value of Int64 is a Foo
+union Foo of Int64;
+
+fun main(): Unit {
+  m(123);
+  ()
+}
+
+fun m(foo: Foo): String = "def"

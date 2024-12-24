@@ -35,6 +35,7 @@ mod traitdefck;
 pub(crate) mod ty;
 mod type_params;
 mod typeparamck;
+mod uniondefck;
 mod useck;
 mod valuedefck;
 
@@ -76,6 +77,7 @@ pub fn check(sa: &mut SemAnalysis) -> bool {
     // checks class/struct/trait/enum definitions
     clsdefck::check(sa);
     valuedefck::check(sa);
+    uniondefck::check(sa);
     traitdefck::check(sa);
     enumck::check(sa);
     return_on_error!(sa);

@@ -244,16 +244,8 @@ impl<'a> AstDumper<'a> {
             "{} {} {}",
             variant.pos,
             variant.id,
-            self.str(variant.name)
+            variant.type_.to_string(self.interner)
         );
-
-        if let Some(ref types) = variant.types {
-            self.indent(|d| {
-                for ty in types {
-                    d.dump_type(ty);
-                }
-            });
-        }
     }
 
     fn dump_trait(&mut self, t: &Trait) {

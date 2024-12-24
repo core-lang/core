@@ -1,0 +1,10 @@
+// a union type with two reference-typed variants
+// a union value needs no discriminator, as the references' class pointer is used to distinguish
+union Foo of String, Random;
+
+fun main(): Unit {
+  foo("abc");
+  ()
+}
+
+fun foo(foo: Foo): String = "def"

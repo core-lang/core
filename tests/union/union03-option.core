@@ -1,0 +1,13 @@
+// a union type with a reference-typed variant and a singleton value
+// a union value needs no discriminator, as we use reference-or-null to distinguish
+// todo: how to handle (or reject) instantiating T to None? (maybe treat modules as non-types?)
+union Opt[T] of T, None;
+
+module None
+
+fun main(): Unit {
+  m("abc");
+  ()
+}
+
+fun m(foo: Foo): String = "def"

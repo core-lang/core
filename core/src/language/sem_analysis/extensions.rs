@@ -312,6 +312,27 @@ mod matching {
                 )
             }
 
+            SourceType::Union(check_union_id, _) => {
+                let ext_union_id = if let Some(union_id) = ext_ty.union_id() {
+                    union_id
+                } else {
+                    return false;
+                };
+
+                if check_union_id != ext_union_id {
+                    return false;
+                }
+
+                compare_type_params(
+                    sa,
+                    check_ty,
+                    check_type_param_defs,
+                    ext_ty,
+                    ext_type_param_defs,
+                    bindings,
+                )
+            }
+
             SourceType::Enum(check_enum_id, _) => {
                 let ext_enum_id = if let Some(enum_id) = ext_ty.enum_id() {
                     enum_id

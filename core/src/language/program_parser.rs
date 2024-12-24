@@ -10,8 +10,8 @@ use crate::language::sem_analysis::{
     AnnotationDefinition, ClassDefinition, ConstDefinition, EnumDefinition, ExtensionDefinition,
     ExtensionDefinitionId, FctDefinition, FctParent, GlobalDefinition, GlobalDefinitionId,
     ImplDefinition, ImplDefinitionId, ModuleDefinition, ModuleDefinitionId, PackageDefinitionId,
-    PackageName, SemAnalysis, SourceFileId, TraitDefinition, TraitDefinitionId, UseDefinition,
-    ValueDefinition,
+    PackageName, SemAnalysis, SourceFileId, TraitDefinition, TraitDefinitionId, UnionDefinition,
+    UseDefinition, ValueDefinition,
 };
 use crate::language::sym::Sym;
 use core_parser::ast::visit::Visitor;
@@ -475,6 +475,16 @@ impl<'x> visit::Visitor for GlobalDef<'x> {
         let id = self.sa.values.push(value);
 
         let sym = Sym::Value(id);
+        if let Some(sym) = self.insert(node.name, sym) {
+            report_sym_shadow(self.sa, node.name, self.file_id, node.pos, sym);
+        }
+    }
+
+    fn visit_union(&mut self, node: &Arc<ast::Union>) {
+        let enum_ = UnionDefinition::new(self.package_id, self.module_id, self.file_id, node);
+        let id = self.sa.unions.push(enum_);
+
+        let sym = Sym::Union(id);
         if let Some(sym) = self.insert(node.name, sym) {
             report_sym_shadow(self.sa, node.name, self.file_id, node.pos, sym);
         }

@@ -3,8 +3,8 @@ use std::sync::Arc;
 
 use crate::language::sem_analysis::{
     ClassDefinition, ClassDefinitionId, EnumDefinition, EnumDefinitionId, FctDefinition,
-    SemAnalysis, TraitDefinitionId, TypeParamDefinition, TypeParamId, ValueDefinition,
-    ValueDefinitionId,
+    SemAnalysis, TraitDefinitionId, TypeParamDefinition, TypeParamId, UnionDefinitionId,
+    ValueDefinition, ValueDefinitionId,
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -38,6 +38,9 @@ pub enum SourceType {
 
     // some struct
     Value(ValueDefinitionId, SourceTypeArray),
+
+    // some union
+    Union(UnionDefinitionId, SourceTypeArray),
 
     // some tuple
     Tuple(SourceTypeArray),
@@ -158,6 +161,13 @@ impl SourceType {
         }
     }
 
+    pub fn is_union(&self) -> bool {
+        match self {
+            &SourceType::Union(_, _) => true,
+            _ => false,
+        }
+    }
+
     pub fn is_primitive(&self) -> bool {
         match self {
             &SourceType::Bool
@@ -221,6 +231,13 @@ impl SourceType {
     pub fn value_id(&self) -> Option<ValueDefinitionId> {
         match self {
             SourceType::Value(value_id, _) => Some(*value_id),
+            _ => None,
+        }
+    }
+
+    pub fn union_id(&self) -> Option<UnionDefinitionId> {
+        match self {
+            SourceType::Union(union_id, _) => Some(*union_id),
             _ => None,
         }
     }
@@ -361,6 +378,7 @@ impl SourceType {
             | SourceType::Char
             | SourceType::Value(_, _)
             | SourceType::Enum(_, _)
+            | SourceType::Union(_, _)
             | SourceType::Trait(_, _) => *self == other,
             SourceType::Int32 | SourceType::Int64 | SourceType::Float32 | SourceType::Float64 => {
                 *self == other
@@ -431,7 +449,8 @@ impl SourceType {
             | SourceType::TypeParam(_) => true,
             SourceType::Enum(_, params)
             | SourceType::Class(_, params)
-            | SourceType::Value(_, params) => {
+            | SourceType::Value(_, params)
+            | SourceType::Union(_, params) => {
                 for param in params.iter() {
                     if !param.is_defined_type(sa) {
                         return false;
@@ -467,6 +486,7 @@ impl SourceType {
             SourceType::Class(_, params)
             | SourceType::Enum(_, params)
             | SourceType::Value(_, params)
+            | SourceType::Union(_, params)
             | SourceType::Trait(_, params) => {
                 for param in params.iter() {
                     if !param.is_concrete_type(sa) {
@@ -694,6 +714,22 @@ impl<'a> SourceTypePrinter<'a> {
                 let value = value.read();
                 let name = value.name;
                 let name = self.sa.interner.str(name).to_string();
+
+                if type_params.len() == 0 {
+                    name
+                } else {
+                    let params = type_params
+                        .iter()
+                        .map(|ty| self.name(ty))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+
+                    format!("{}[{}]", name, params)
+                }
+            }
+            SourceType::Union(id, type_params) => {
+                let union_ = self.sa.unions[id].read();
+                let name = self.sa.interner.str(union_.name).to_string();
 
                 if type_params.len() == 0 {
                     name

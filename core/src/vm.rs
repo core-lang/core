@@ -14,7 +14,7 @@ use crate::language::sem_analysis::{
     ConstDefinition, EnumDefinition, EnumDefinitionId, ExtensionDefinition, FctDefinition,
     FctDefinitionId, GlobalDefinition, ImplDefinition, ModuleDefinition, ModuleDefinitionId,
     PackageDefinition, PackageDefinitionId, SourceFile, TraitDefinition, TraitDefinitionId,
-    UseDefinition, ValueDefinition, ValueDefinitionId,
+    UnionDefinition, UseDefinition, ValueDefinition, ValueDefinitionId,
 };
 use crate::language::ty::SourceTypeArray;
 use crate::stack::CoreToNativeInfo;
@@ -107,6 +107,7 @@ pub struct FullSemAnalysis {
     pub known: KnownElements,
     pub consts: MutableVec<ConstDefinition>, // stores all const definitions
     pub values: MutableVec<ValueDefinition>, // stores all value type source definitions
+    pub unions: MutableVec<UnionDefinition>, // stores all union type source definitions
     pub classes: MutableVec<ClassDefinition>, // stores all class type source definitions
     pub extensions: MutableVec<ExtensionDefinition>, // stores all extension definitions
     pub annotations: MutableVec<AnnotationDefinition>, // stores all annotation source definitions
@@ -135,6 +136,7 @@ impl FullSemAnalysis {
             source_files: Vec::new(),
             consts: MutableVec::new(),
             values: MutableVec::new(),
+            unions: MutableVec::new(),
             classes: MutableVec::new(),
             extensions: MutableVec::new(),
             annotations: MutableVec::new(),
@@ -190,6 +192,7 @@ pub struct VM {
     pub value_specializations:
         RwLock<HashMap<(ValueDefinitionId, SourceTypeArray), ValueInstanceId>>,
     pub value_instances: GrowableVecNonIter<ValueInstance>, // stores all value definitions
+    pub unions: MutableVec<UnionDefinition>,                // store all enum source definitions
     pub classes: MutableVec<ClassDefinition>,               // stores all class source definitions
     pub class_specializations:
         RwLock<HashMap<(ClassDefinitionId, SourceTypeArray), ClassInstanceId>>,
@@ -236,6 +239,7 @@ impl VM {
             values: MutableVec::new(),
             value_specializations: RwLock::new(HashMap::new()),
             value_instances: GrowableVecNonIter::new(),
+            unions: MutableVec::new(),
             classes: MutableVec::new(),
             class_specializations: RwLock::new(HashMap::new()),
             class_instances: GrowableVecNonIter::new(),
@@ -290,6 +294,7 @@ impl VM {
             values: sa.values,
             value_specializations: RwLock::new(HashMap::new()),
             value_instances: GrowableVecNonIter::new(),
+            unions: sa.unions,
             classes: sa.classes,
             class_specializations: RwLock::new(HashMap::new()),
             class_instances: GrowableVecNonIter::new(),

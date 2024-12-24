@@ -669,7 +669,7 @@ impl<'a> TypeCheck<'a> {
                 }
                 ast::IfCaseData::Patterns(patterns) => {
                     debug_assert_eq!(patterns.len(), 1);
-                    if !expr_type.is_enum() {
+                    if !expr_type.is_enum() && !expr_type.is_union() {
                         self.sa.diag.lock().report(
                             self.file_id,
                             node.pos,
@@ -761,6 +761,14 @@ impl<'a> TypeCheck<'a> {
                                 let msg = ErrorMessage::EnumVariantExpected;
                                 self.sa.diag.lock().report(self.file_id, node.pos, msg);
                             }
+                        }
+
+                        Ok(Sym::Class(class_id)) => {
+                            unimplemented!()
+                        }
+
+                        Ok(Sym::Value(value_id)) => {
+                            unimplemented!()
                         }
 
                         Ok(_) => {
@@ -3608,6 +3616,11 @@ fn arg_allows(
         | SourceType::Float64
         | SourceType::Enum(_, _)
         | SourceType::Trait(_, _) => def == arg,
+        SourceType::Union(uid, _) => {
+            let union_ = sa.unions[uid].read();
+            //union_.variants.contains(arg)
+            true
+        }
         SourceType::Ptr => panic!("ptr should not occur in fct definition."),
         SourceType::This => {
             let real = self_ty.clone().expect("no Self type expected.");

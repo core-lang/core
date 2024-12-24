@@ -368,8 +368,7 @@ pub struct UnionVariant {
     pub id: NodeId,
     pub pos: Position,
     pub span: Span,
-    pub name: Name,
-    pub types: Option<Vec<Type>>,
+    pub type_: Type,
 }
 
 #[derive(Clone, Debug)]

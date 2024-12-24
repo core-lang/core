@@ -590,14 +590,7 @@ impl<'a> Parser<'a> {
     fn parse_union_variant(&mut self) -> Result<UnionVariant, ParseErrorAndPos> {
         let start = self.token.span.start();
         let pos = self.token.position;
-        let name = self.expect_identifier()?;
-
-        let types = if self.token.is(TokenKind::LParen) {
-            self.advance_token()?;
-            Some(self.parse_list(TokenKind::Comma, TokenKind::RParen, |p| p.parse_type())?)
-        } else {
-            None
-        };
+        let name = self.parse_type()?;
 
         let span = self.span_from(start);
 
@@ -605,8 +598,7 @@ impl<'a> Parser<'a> {
             id: self.generate_id(),
             pos,
             span,
-            name,
-            types,
+            type_: name,
         })
     }
 

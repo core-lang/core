@@ -33,6 +33,9 @@ impl SourceType {
                 let value_instance = value_instance(vm, *value_id, type_params.clone());
                 value_instance.size
             }
+            SourceType::Union(uid, params) => {
+                unimplemented!()
+            }
             SourceType::Trait(_, _) => mem::ptr_width(),
             SourceType::TypeParam(_) => panic!("no size for type variable."),
             SourceType::Tuple(_) => get_concrete_tuple_ty(vm, self).size(),
@@ -68,6 +71,9 @@ impl SourceType {
                 let value_instance = value_instance(vm, *value_id, type_params.clone());
                 value_instance.align
             }
+            SourceType::Union(uid, params) => {
+                unimplemented!()
+            }
             SourceType::Trait(_, _) => mem::ptr_width(),
             SourceType::TypeParam(_) => panic!("no alignment for type variable."),
             SourceType::Tuple(_) => get_concrete_tuple_ty(vm, self).align(),
@@ -92,6 +98,7 @@ impl SourceType {
                 MachineMode::Ptr
             }
             SourceType::Value(_, _) => panic!("no machine mode for value type."),
+            SourceType::Union(_, _) => MachineMode::Int32,
             SourceType::Trait(_, _) => MachineMode::Ptr,
             SourceType::TypeParam(_) => panic!("no machine mode for type variable."),
             SourceType::Tuple(_) => unimplemented!(),

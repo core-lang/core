@@ -2,13 +2,14 @@ use parking_lot::RwLock;
 use std::sync::Arc;
 
 use crate::language::access::{
-    class_accessible_from, enum_accessible_from, trait_accessible_from, value_accessible_from,
+    class_accessible_from, enum_accessible_from, trait_accessible_from, union_accessible_from,
+    value_accessible_from,
 };
 use crate::language::error::msg::ErrorMessage;
 use crate::language::sem_analysis::{
     implements_trait, ClassDefinitionId, EnumDefinitionId, ExtensionDefinitionId, FctDefinition,
     ImplDefinition, ModuleDefinitionId, SemAnalysis, SourceFileId, TraitDefinitionId,
-    TypeParamDefinition, ValueDefinitionId,
+    TypeParamDefinition, UnionDefinitionId, ValueDefinitionId,
 };
 use crate::language::specialize::specialize_type;
 use crate::language::sym::{ModuleSymTable, Sym, SymTable};
@@ -22,6 +23,7 @@ pub enum TypeParamContext<'a> {
     Class(ClassDefinitionId),
     Enum(EnumDefinitionId),
     Value(ValueDefinitionId),
+    Union(UnionDefinitionId),
     Fct(&'a FctDefinition),
     Trait(TraitDefinitionId),
     Impl(&'a ImplDefinition),
@@ -93,6 +95,7 @@ fn read_type_basic_unchecked(
                 SourceType::Value(value_id, type_params)
             }
         }
+        Some(Sym::Union(union_id)) => SourceType::Union(union_id, type_params),
         Some(Sym::Enum(enum_id)) => SourceType::Enum(enum_id, type_params),
         Some(Sym::TypeParam(type_param_id)) => {
             if node.params.len() > 0 {
@@ -381,6 +384,42 @@ fn verify_type_basic(
             }
         }
 
+        SourceType::Union(union_id, type_params) => {
+            let union_ = sa.unions.idx(union_id);
+            let union_ = union_.read();
+
+            if !union_accessible_from(sa, union_id, module_id) {
+                let msg = ErrorMessage::NotAccessible(union_.name(sa));
+                sa.diag.lock().report(file_id, node.pos, msg);
+                return false;
+            }
+
+            for (type_param, ast_type_param) in type_params.iter().zip(node.params.iter()) {
+                if !verify_type(
+                    sa,
+                    module_id,
+                    file_id,
+                    ast_type_param,
+                    type_param,
+                    ctxt,
+                    allow_self,
+                ) {
+                    return false;
+                }
+            }
+
+            if !check_type_params(
+                sa,
+                union_.type_params(),
+                type_params.types(),
+                file_id,
+                node.pos,
+                ctxt,
+            ) {
+                return false;
+            }
+        }
+
         SourceType::Trait(trait_id, type_params) => {
             let trait_ = sa.traits.idx(trait_id);
             let trait_ = trait_.read();
@@ -559,6 +598,13 @@ where
             let value = value.read();
 
             callback(value.type_params())
+        }
+
+        TypeParamContext::Union(union_id) => {
+            let union_ = &sa.unions[union_id];
+            let union_ = union_.read();
+
+            callback(union_.type_params())
         }
 
         TypeParamContext::Impl(impl_) => callback(impl_.type_params()),

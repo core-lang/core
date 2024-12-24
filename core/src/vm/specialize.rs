@@ -430,6 +430,10 @@ fn create_specialized_class_array(
                 InstanceSize::ValueArray(value_instance.size)
             }
 
+            SourceType::Union(union_id, type_params) => {
+                unimplemented!()
+            }
+
             SourceType::Enum(enum_id, type_params) => {
                 let edef_id = specialize_enum_id_params(vm, enum_id, type_params);
                 let edef = vm.enum_instances.idx(edef_id);
@@ -644,6 +648,17 @@ pub fn replace_type_param(
             );
 
             SourceType::Value(value_id, new_type_params)
+        }
+
+        SourceType::Union(union_id, old_type_params) => {
+            let new_type_params = SourceTypeArray::with(
+                old_type_params
+                    .iter()
+                    .map(|p| replace_type_param(vm, p, type_params, self_ty.clone()))
+                    .collect::<Vec<_>>(),
+            );
+
+            SourceType::Union(union_id, new_type_params)
         }
 
         SourceType::Enum(enum_id, old_type_params) => {

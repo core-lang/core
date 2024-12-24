@@ -69,6 +69,10 @@ fn iterate_roots_from_globals<F: FnMut(Slot)>(vm: &VM, callback: &mut F) {
                 }
             }
 
+            SourceType::Union(union_id, ref type_params) => {
+                unimplemented!()
+            }
+
             SourceType::Enum(enum_id, ref type_params) => {
                 let edef_id = specialize_enum_id_params(vm, enum_id, type_params.clone());
                 let edef = vm.enum_instances.idx(edef_id);

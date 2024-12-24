@@ -35,6 +35,7 @@ pub use self::src::{
 };
 pub use self::traits::{TraitDefinition, TraitDefinitionId};
 pub use self::tuples::create_tuple;
+pub use self::unions::{UnionDefinition, UnionDefinitionId, UnionVariant};
 pub use self::uses::UseDefinition;
 pub use self::values::{
     find_methods_in_value, ValueDefinition, ValueDefinitionField, ValueDefinitionFieldId,
@@ -55,6 +56,7 @@ mod source_files;
 mod src;
 mod traits;
 mod tuples;
+mod unions;
 mod uses;
 mod values;
 

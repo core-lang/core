@@ -18,7 +18,7 @@ use crate::gc::Address;
 use crate::language::generator::register_bty_from_ty;
 use crate::language::sem_analysis::{
     find_trait_impl, EnumDefinitionId, FctDefinitionId, GlobalDefinitionId, Intrinsic,
-    ValueDefinitionId,
+    UnionDefinitionId, ValueDefinitionId,
 };
 use crate::language::ty::{SourceType, SourceTypeArray};
 use crate::masm::{CodeDescriptor, CondCode, Label, Mem};
@@ -236,6 +236,12 @@ impl<'a> CannonCodeGen<'a> {
                     }
                 }
 
+                BytecodeType::Union(_, _) => {
+                    // assume untagged?!
+                    let offset = self.register_offset(Register(idx));
+                    self.references.push(offset);
+                }
+
                 BytecodeType::Enum(enum_id, type_params) => {
                     let enum_instance_id = specialize_enum_id_params(self.vm, enum_id, type_params);
                     let enum_instance = self.vm.enum_instances.idx(enum_instance_id);
@@ -333,6 +339,17 @@ impl<'a> CannonCodeGen<'a> {
                         &mut sp_offset,
                         dest,
                         value_id,
+                        type_params,
+                    );
+                }
+
+                SourceType::Union(union_id, type_params) => {
+                    self.store_params_on_stack_union(
+                        &mut reg_idx,
+                        &mut freg_idx,
+                        &mut sp_offset,
+                        dest,
+                        union_id,
                         type_params,
                     );
                 }
@@ -452,6 +469,36 @@ impl<'a> CannonCodeGen<'a> {
                 dest_offset,
                 RegOrOffset::Reg(REG_TMP1),
             );
+            *sp_offset += 8;
+        }
+    }
+
+    fn store_params_on_stack_union(
+        &mut self,
+        reg_idx: &mut usize,
+        _freg_idx: &mut usize,
+        sp_offset: &mut i32,
+        dest: Register,
+        union_id: UnionDefinitionId,
+        type_params: SourceTypeArray,
+    ) {
+        //let enum_instance_id = specialize_enum_id_params(self.vm, union_id, type_params);
+        //let enum_instance = self.vm.enum_instances.idx(enum_instance_id);
+
+        /*let mode = match enum_instance.layout {
+            EnumLayout::Int => MachineMode::Int32,
+            EnumLayout::Tagged | EnumLayout::Ptr => MachineMode::Ptr,
+        };*/
+        let mode = MachineMode::Ptr;
+
+        if *reg_idx < REG_PARAMS.len() {
+            let reg = REG_PARAMS[*reg_idx].into();
+            *reg_idx += 1;
+            self.emit_store_register(reg, dest);
+        } else {
+            self.asm
+                .load_mem(mode, REG_RESULT.into(), Mem::Local(*sp_offset));
+            self.emit_store_register(REG_RESULT.into(), dest);
             *sp_offset += 8;
         }
     }
@@ -1305,6 +1352,10 @@ impl<'a> CannonCodeGen<'a> {
                 self.copy_value(value_id, type_params, dest, src);
             }
 
+            SourceType::Union(union_id, type_params) => {
+                unimplemented!()
+            }
+
             SourceType::Enum(enum_id, type_params) => {
                 let enum_instance_id = specialize_enum_id_params(self.vm, enum_id, type_params);
                 let enum_instance = self.vm.enum_instances.idx(enum_instance_id);
@@ -1370,6 +1421,10 @@ impl<'a> CannonCodeGen<'a> {
                 self.copy_value(value_id, type_params, dest, src);
             }
 
+            BytecodeType::Union(_, _) => {
+                unimplemented!()
+            }
+
             BytecodeType::TypeParam(_) => unreachable!(),
 
             BytecodeType::Ptr | BytecodeType::Trait(_, _) => {
@@ -1415,6 +1470,10 @@ impl<'a> CannonCodeGen<'a> {
 
             SourceType::Unit => {
                 // do nothing
+            }
+
+            SourceType::Union(_, _) => {
+                unimplemented!()
             }
 
             SourceType::Enum(enum_id, type_params) => {
@@ -1468,6 +1527,10 @@ impl<'a> CannonCodeGen<'a> {
 
             SourceType::Unit => {
                 // do nothing
+            }
+
+            SourceType::Union(_, _) => {
+                unimplemented!()
             }
 
             SourceType::Enum(enum_id, type_params) => {
@@ -1631,6 +1694,10 @@ impl<'a> CannonCodeGen<'a> {
 
                 let value_instance = value_instance(self.vm, *value_id, type_params.clone());
                 needs_write_barrier = value_instance.contains_references();
+            }
+
+            BytecodeType::Union(_, _) => {
+                unimplemented!()
             }
 
             BytecodeType::Enum(enum_id, type_params) => {
@@ -1861,6 +1928,9 @@ impl<'a> CannonCodeGen<'a> {
             | BytecodeType::Lambda(_, _) => {
                 unreachable!()
             }
+            BytecodeType::Union(_, _) => {
+                unimplemented!()
+            }
             BytecodeType::Float32 | BytecodeType::Float64 => {
                 let mode = match bytecode_type {
                     BytecodeType::Float32 => MachineMode::Int32,
@@ -1984,6 +2054,10 @@ impl<'a> CannonCodeGen<'a> {
                     RegOrOffset::Reg(REG_TMP1),
                     RegOrOffset::Offset(src_offset),
                 );
+            }
+
+            BytecodeType::Union(_, _) => {
+                unimplemented!()
             }
 
             BytecodeType::Enum(enum_id, type_params) => {
@@ -2701,6 +2775,10 @@ impl<'a> CannonCodeGen<'a> {
                 }
             }
 
+            BytecodeType::Union(_, _) => {
+                unimplemented!()
+            }
+
             BytecodeType::Enum(enum_id, type_params) => {
                 let enum_instance_id = specialize_enum_id_params(self.vm, enum_id, type_params);
                 let enum_instance = self.vm.enum_instances.idx(enum_instance_id);
@@ -2834,6 +2912,10 @@ impl<'a> CannonCodeGen<'a> {
                     RegOrOffset::Offset(dest_offset),
                     RegOrOffset::Reg(REG_TMP1),
                 );
+            }
+
+            BytecodeType::Union(_, _) => {
+                unimplemented!()
             }
 
             BytecodeType::Enum(enum_id, type_params) => {
@@ -4377,6 +4459,10 @@ impl<'a> CannonCodeGen<'a> {
 
             BytecodeType::Value(_, _) => unimplemented!(),
 
+            BytecodeType::Union(_, _) => {
+                unimplemented!()
+            }
+
             BytecodeType::Enum(_, _) => unimplemented!(),
 
             BytecodeType::TypeParam(_)
@@ -4493,6 +4579,9 @@ impl<'a> CannonCodeGen<'a> {
 
                         sp_offset += 8;
                     }
+                }
+                BytecodeType::Union(_, _) => {
+                    unimplemented!()
                 }
                 BytecodeType::Float32 | BytecodeType::Float64 => {
                     let mode = mode(self.vm, bytecode_type);
@@ -5500,6 +5589,7 @@ pub fn mode(vm: &VM, ty: BytecodeType) -> MachineMode {
         | BytecodeType::Lambda(_, _) => {
             panic!("unexpected type {:?}", ty)
         }
+        BytecodeType::Union(_, _) => MachineMode::Ptr,
     }
 }
 
@@ -5528,6 +5618,7 @@ pub fn size(vm: &VM, ty: BytecodeType) -> i32 {
         BytecodeType::Value(value_id, type_params) => {
             value_instance(vm, value_id, type_params).size
         }
+        BytecodeType::Union(_, _) => mem::ptr_width(),
         BytecodeType::Class(_, _) | BytecodeType::Lambda(_, _) => {
             unreachable!()
         }

@@ -1,7 +1,7 @@
 use crate::language::sem_analysis::{
     ClassDefinitionId, ConstDefinitionId, EnumDefinitionId, FctDefinitionId, FctParent, FieldId,
-    GlobalDefinitionId, ModuleDefinitionId, SemAnalysis, TraitDefinitionId, ValueDefinitionFieldId,
-    ValueDefinitionId, Visibility,
+    GlobalDefinitionId, ModuleDefinitionId, SemAnalysis, TraitDefinitionId, UnionDefinitionId,
+    ValueDefinitionFieldId, ValueDefinitionId, Visibility,
 };
 use crate::language::sym::Sym;
 
@@ -17,6 +17,7 @@ pub fn sym_accessible_from(sa: &SemAnalysis, sym: Sym, module_id: ModuleDefiniti
         Sym::Global(global_id) => global_accessible_from(sa, global_id, module_id),
         Sym::Module(sym_module_id) => module_accessible_from(sa, sym_module_id, module_id),
         Sym::Value(value_id) => value_accessible_from(sa, value_id, module_id),
+        Sym::Union(union_id) => union_accessible_from(sa, union_id, module_id),
         Sym::Trait(trait_id) => trait_accessible_from(sa, trait_id, module_id),
         Sym::TypeParam(_) => unreachable!(),
         Sym::Var(_) => unreachable!(),
@@ -108,6 +109,16 @@ pub fn enum_accessible_from(
     let enum_ = sa.enums[enum_id].read();
 
     accessible_from(sa, enum_.module_id, enum_.visibility, module_id)
+}
+
+pub fn union_accessible_from(
+    sa: &SemAnalysis,
+    union_id: UnionDefinitionId,
+    module_id: ModuleDefinitionId,
+) -> bool {
+    let union_ = sa.unions[union_id].read();
+
+    accessible_from(sa, union_.module_id, union_.visibility, module_id)
 }
 
 pub fn value_accessible_from(
