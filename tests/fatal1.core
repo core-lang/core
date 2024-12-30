@@ -1,5 +1,5 @@
 //= error code 1
-//= stderr "fatal error: bla\n    std::fatalError (stdlib/stdlib.core:17)\n    main (tests/fatal1.core:5)\n"
+//= stderr "fatal error: bla\n    std::fatalError (stdlib/stdlib.core:18)\n    main (tests/fatal1.core:5)\n"
 
 fun main(): Unit {
     std::fatalError("bla");

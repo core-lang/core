@@ -1,0 +1,44 @@
+// BaseUid-functionality is not intended to stay in stdlib root.
+// It's only here because we lack the infrastructure for it to be somewhere else.
+
+use std.Array
+use std.Random
+
+let RANDOM: Random = Random::new(0)
+
+@pub
+fun createBaseUid(): String = createBaseUidFrom(std::timestamp())
+
+@pub
+fun createBaseUidFrom(milliseconds: Int64): String {
+  let time0 = toNanos(milliseconds)
+  //PREVIOUS_TIME.compareAndExchange(time0, time0 + 0b1000000000000000)
+  //time0 = Math.max(time0, PREVIOUS_TIME.get())
+  //PREVIOUS_TIME.set(time0)
+
+  let rand1 = RANDOM.nextInt32()
+  let rand2 = RANDOM.nextInt32()
+  let rand3 = RANDOM.nextInt32()
+
+  let buffer = Array[UInt8]::zero(15)
+  buffer( 0) = time0.shiftRight(55i32).toUInt8()
+  buffer( 1) = time0.shiftRight(47i32).toUInt8()
+  buffer( 2) = time0.shiftRight(39i32).toUInt8()
+  buffer( 3) = time0.shiftRight(31i32).toUInt8()
+  buffer( 4) = time0.shiftRight(23i32).toUInt8()
+  buffer( 5) = time0.shiftRight(15i32).toUInt8()
+  buffer( 6) = rand1                  .toUInt8()
+  buffer( 7) = rand2.shiftRight(24i32).toUInt8()
+  buffer( 8) = rand2.shiftRight(16i32).toUInt8()
+  buffer( 9) = rand2.shiftRight( 8i32).toUInt8()
+  buffer(10) = rand2                  .toUInt8()
+  buffer(11) = rand3.shiftRight(24i32).toUInt8()
+  buffer(12) = rand3.shiftRight(16i32).toUInt8()
+  buffer(13) = rand3.shiftRight( 8i32).toUInt8()
+  buffer(14) = rand3                  .toUInt8()
+
+  std::base64::encodeOrdered(buffer)
+}
+
+@pub // pretend we have more precision than we actually have
+fun toNanos(milliseconds: Int64): Int64 = milliseconds * 1'000'000
