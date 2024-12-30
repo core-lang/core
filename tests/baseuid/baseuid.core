@@ -1,0 +1,57 @@
+fun main(): Unit {
+  testNoClash()
+  testHasLetterIn2023()
+  testHasLetterIn2024()
+  testHasLetterIn2038()
+  // printRange48()
+}
+
+fun testNoClash(): Unit {
+  let buid1 = std::baseuid::createBaseUid()
+  let buid2 = std::baseuid::createBaseUid()
+  assert(buid1 != buid2)
+}
+
+fun testHasLetterIn2023(): Unit {
+  let base2023 = std::baseuid::createBaseUidFrom(1'672'531'200'000)
+  assert(base2023.startsWith("Aak"))
+}
+
+fun testHasLetterIn2024(): Unit {
+  let base2024 = std::baseuid::createBaseUidFrom(1'704'067'200'000)
+  assert(base2024.startsWith("Aok"))
+}
+
+fun testHasLetterIn2038(): Unit {
+  let base2038 = std::baseuid::createBaseUidFrom(2'145'916'800'000)
+  assert(base2038.startsWith("Dsy"))
+}
+
+fun printRange48(): Unit {
+  let base2020 = std::baseuid::createBaseUidFrom(1'577'836'800'000)
+  let base2023 = std::baseuid::createBaseUidFrom(1'672'531'200'000)
+  let base2024 = std::baseuid::createBaseUidFrom(1'704'067'200'000)
+  let base2038 = std::baseuid::createBaseUidFrom(2'145'916'800'000)
+  let base2040 = std::baseuid::createBaseUidFrom(2'208'988'800'000)
+  let base2050 = std::baseuid::createBaseUidFrom(2'524'608'000'000)
+  let base2060 = std::baseuid::createBaseUidFrom(2'840'140'800'000)
+  let base2070 = std::baseuid::createBaseUidFrom(3'155'760'000'000)
+  let base2080 = std::baseuid::createBaseUidFrom(3'471'292'800'000)
+  let base2090 = std::baseuid::createBaseUidFrom(3'786'912'000'000)
+  let base2100 = std::baseuid::createBaseUidFrom(4'102'444'800'000)
+  let base2150 = std::baseuid::createBaseUidFrom(5'680'281'600'000)
+  let base2200 = std::baseuid::createBaseUidFrom(7'258'118'400'000)
+  println("2020 " + base2020)
+  println("2023 " + base2023)
+  println("2024 " + base2024)
+  println("2038 " + base2038)
+  println("2040 " + base2040)
+  println("2050 " + base2050)
+  println("2060 " + base2060)
+  println("2070 " + base2070)
+  println("2080 " + base2080)
+  println("2090 " + base2090)
+  println("2100 " + base2100)
+  println("2150 " + base2150)
+  println("2200 " + base2200)
+}
