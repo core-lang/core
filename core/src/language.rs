@@ -6,7 +6,7 @@ use core_parser::ast;
 use core_parser::interner::Name;
 use core_parser::lexer::position::Position;
 
-pub use readty::{read_type, read_type_unchecked, AllowSelf, TypeParamContext};
+pub use readty::{read_type, AllowSelf, TypeParamContext};
 
 pub(crate) mod access;
 mod clsdefck;
