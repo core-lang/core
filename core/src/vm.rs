@@ -40,19 +40,16 @@ pub use self::code_map::CodeMap;
 pub use self::compilation::CompilationDatabase;
 pub use self::enums::{EnumInstance, EnumInstanceId, EnumLayout};
 use self::globals::GlobalVariableMemory;
-pub use self::known::{
-    KnownAnnotations, KnownClasses, KnownElements, KnownEnums, KnownFunctions, KnownTraits,
-    KnownValue,
-};
+pub use self::known::KnownElements;
 pub use self::specialize::{
-    add_ref_fields, replace_type_param, specialize_class_id, specialize_class_id_params,
-    specialize_enum_class, specialize_enum_id_params, specialize_lambda, specialize_trait_object,
-    specialize_tuple_array, specialize_tuple_bty, specialize_tuple_ty, specialize_type,
-    specialize_type_list, specialize_value_id_params, value_instance,
+    add_ref_fields, specialize_class_id, specialize_class_id_params, specialize_enum_class,
+    specialize_enum_id_params, specialize_lambda, specialize_trait_object, specialize_tuple_array,
+    specialize_tuple_bty, specialize_tuple_ty, specialize_type, specialize_type_list,
+    value_instance,
 };
 pub use self::stubs::{setup_stubs, Stubs};
 pub use self::tuples::{
-    get_concrete_tuple_array, get_concrete_tuple_bytecode_ty, get_concrete_tuple_ty, ConcreteTuple,
+    get_concrete_tuple_array, get_concrete_tuple_bytecode_ty, get_concrete_tuple_ty,
 };
 pub use self::values::{ValueInstance, ValueInstanceField, ValueInstanceId};
 pub use self::waitlists::{ManagedCondition, ManagedMutex, WaitLists};

@@ -30,8 +30,8 @@ pub use self::modules::{module_package, module_path, ModuleDefinition, ModuleDef
 pub use self::packages::{PackageDefinition, PackageDefinitionId, PackageName};
 pub use self::source_files::{SourceFile, SourceFileId};
 pub use self::src::{
-    AnalysisData, CallType, ContextIdx, ForTypeInfo, IdentType, NestedVarId, NodeMap, Var,
-    VarAccess, VarId, VarLocation,
+    AnalysisData, CallType, ContextIdx, ForTypeInfo, IdentType, NestedVarId, Var, VarAccess, VarId,
+    VarLocation,
 };
 pub use self::traits::{TraitDefinition, TraitDefinitionId};
 pub use self::tuples::create_tuple;
