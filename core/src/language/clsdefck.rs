@@ -152,6 +152,21 @@ mod tests {
         );
     }
 
+    #[ignore]
+    #[test]
+    fn field_and_method_with_same_name() {
+        err(
+            "
+            class Foo(a: String)
+            impl Foo {
+              fun a: String = \"\"
+            }
+            ",
+            pos(1, 21),
+            ErrorMessage::ShadowField("a".into()),
+        );
+    }
+
     #[test]
     fn test_generic_class() {
         ok("class A[T]");

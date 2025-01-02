@@ -1,25 +1,25 @@
 fun main(): Unit {
-  let x = Int64::minValue().toStringHex();
+  let x = Int64::minValue.toStringHex;
   assert(x == "8000000000000000");
 
-  let x = Int64::maxValue().toStringHex();
+  let x = Int64::maxValue.toStringHex;
   assert(x == "7FFFFFFFFFFFFFFF");
 
-  let x = 0.toStringHex();
+  let x = 0.toStringHex;
   assert(x == "0000000000000000");
 
-  let x = 12.toStringHex();
+  let x = 12.toStringHex;
   assert(x == "000000000000000C");
 
-  let x = 67.toStringHex();
+  let x = 67.toStringHex;
   assert(x == "0000000000000043");
 
-  let x = 129.toStringHex();
+  let x = 129.toStringHex;
   assert(x == "0000000000000081");
 
-  let x = (-1).toStringHex();
+  let x = (-1).toStringHex;
   assert(x == "FFFFFFFFFFFFFFFF");
 
-  let x = (-129).toStringHex();
+  let x = (-129).toStringHex;
   assert(x == "FFFFFFFFFFFFFF7F");
 }

@@ -4,8 +4,8 @@ fun main(): Unit {
   let some2 = Option[String]::Some("some");
   let none2 = Option[String]::None;
 
-  assert(some1.getOrDefault() == 23i32);
-  assert(none1.getOrDefault() == 0i32);
-  assert(some2.getOrDefault() == "some");
-  assert(none2.getOrDefault() == "");
+  assert(some1.getOrDefault == 23i32);
+  assert(none1.getOrDefault == 0i32);
+  assert(some2.getOrDefault == "some");
+  assert(none2.getOrDefault == "");
 }

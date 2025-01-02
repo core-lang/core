@@ -1,0 +1,9 @@
+fun main(): Unit {
+  assert(Foo(22).b == 23)
+}
+
+class Foo { a: Int64 }
+
+impl Foo {
+  fun b: Int64 = self.a + 1
+}

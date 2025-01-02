@@ -134,6 +134,7 @@ impl TraitDefinition {
         name: Name,
         replace: Option<SourceType>,
         args: &[SourceType],
+        is_nullary: bool,
     ) -> Option<FctDefinitionId> {
         for &method in &self.methods {
             let method = sa.fcts.idx(method);
@@ -141,6 +142,7 @@ impl TraitDefinition {
 
             if method.name == name
                 && method.is_static == is_static
+                && method.is_nullary == is_nullary
                 && params_match(replace.clone(), method.params_without_self(), args)
             {
                 return Some(method.id());

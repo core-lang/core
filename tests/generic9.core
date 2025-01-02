@@ -19,5 +19,5 @@ fun consume(x: Array[Int32]): Unit {
 }
 
 fun consume2(x: Array[String]): Unit {
-    assert(x.size() == 10);
+    assert(x.size == 10);
 }

@@ -4,13 +4,13 @@ const DEFAULT_THREADS: Int32 = 4i32;
 
 fun main(): Unit {
     let maxDepth = if std::argc() > 0i32 {
-        std::argv(0i32).toInt32().getOrPanic()
+        std::argv(0i32).toInt32.getOrPanic()
     } else {
         DEFAULT_DEPTH
     };
 
     let number_threads = if std::argc() > 1i32 {
-        std::argv(1i32).toInt32().getOrPanic()
+        std::argv(1i32).toInt32.getOrPanic()
     } else {
         DEFAULT_THREADS
     };
@@ -24,7 +24,7 @@ fun main(): Unit {
     var i = 0i32;
     let threads = List[std::Thread]::new();
     let nextDepth = std::AtomicInt32::new(MIN_DEPTH);
-    let results = Array[String]::fill((maxDepth - MIN_DEPTH).toInt64() / 2i64 + 1i64, "");
+    let results = Array[String]::fill((maxDepth - MIN_DEPTH).toInt64 / 2i64 + 1i64, "");
 
     while i < number_threads {
         let thread = std::thread::spawn(||: Unit {
@@ -62,7 +62,7 @@ impl TreeThread {
             let depth = self.nextDepth.fetchAdd(2i32);
             if depth > self.maxDepth { return }
             let result = loops(self.maxDepth, depth);
-            self.results((depth - MIN_DEPTH).toInt64() / 2i64) = result;
+            self.results((depth - MIN_DEPTH).toInt64 / 2i64) = result;
         }
     }
 }
@@ -95,7 +95,7 @@ fun createTree(depth: Int32): TreeNode {
 }
 
 fun checkTree(node: TreeNode): Int32 {
-  if node.left.isNone() {
+  if node.left.isNone {
     return 1i32;
   }
 

@@ -7,31 +7,31 @@ use std.{fatalError, unsafeKillRefs}
 impl[T] Array[T] {
   @pub @static @internal fun new(values: T...): Array[T]
 
-  @pub @internal fun size(): Int64
+  @pub @internal fun size: Int64
   @pub @internal fun get(idx: Int64): T
   @pub @internal fun set(idx: Int64, val: T): Unit
 
-  @pub fun isEmpty(): Bool = self.size() == 0i64
+  @pub fun isEmpty: Bool = self.size == 0i64
 
-  @pub fun first(): Option[T] =
-    if self.size() == 0 {
+  @pub fun first: Option[T] =
+    if self.size == 0 {
       Option[T]::None
     } else {
       Option[T]::Some(self(0))
     }
 
-  @pub fun last(): Option[T] =
-    if self.size() == 0 {
+  @pub fun last: Option[T] =
+    if self.size == 0 {
       Option[T]::None
     } else {
-      Option[T]::Some(self(self.size() - 1i64))
+      Option[T]::Some(self(self.size - 1i64))
     }
 
   @pub fun all(fct: (T): Bool): Bool {
-    let len = self.size()
+    let len = self.size
     var idx = 0
     while idx < len {
-      if fct(self(idx)).not() {
+      if fct(self(idx)).not {
         return false
       }
       idx = idx + 1
@@ -40,7 +40,7 @@ impl[T] Array[T] {
   }
 
   @pub fun any(fct: (T): Bool): Bool {
-    let len = self.size()
+    let len = self.size
     var idx = 0
     while idx < len {
       if fct(self(idx)) {
@@ -52,7 +52,7 @@ impl[T] Array[T] {
   }
 
   @pub fun each(fct: (T): Unit): Unit {
-    let len = self.size()
+    let len = self.size
     var idx = 0
     while idx < len {
       fct(self(idx))
@@ -61,7 +61,7 @@ impl[T] Array[T] {
   }
 
   @pub fun map[U](fct: (T): U): Array[U] {
-    let len = self.size()
+    let len = self.size
     let result = Array[U]::unsafeNew(len)
     var idx = 0
     while idx < len {
@@ -73,7 +73,7 @@ impl[T] Array[T] {
 
   @pub fun retain(fct: (T): Bool): Array[T] {
     let result = List[T]::new()
-    let len = self.size()
+    let len = self.size
     var idx = 0
     while idx < len {
       let val = self(idx)
@@ -87,11 +87,11 @@ impl[T] Array[T] {
 
   @pub fun reject(fct: (T): Bool): Array[T] {
     let result = List[T]::new()
-    let len = self.size()
+    let len = self.size
     var idx = 0
     while idx < len {
       let val = self(idx)
-      if fct(val).not() {
+      if fct(val).not {
         result.push(val)
       }
       idx = idx + 1
@@ -133,7 +133,7 @@ impl[T: Default] Array[T] {
   @pub @static fun newDefault(len: Int64): Array[T] {
     let array = Array[T]::unsafeNew(len)
     var i = 0i64
-    let value = T::default()
+    let value = T::default
 
     while i < len {
       array.set(i, value)
@@ -157,7 +157,7 @@ impl[T] ArrayIterator[T] {
   @static fun new(data: Array[T]): ArrayIterator[T] = ArrayIterator[T](data, 0)
 
   @pub fun next(): Option[T] {
-    if self.idx < self.array.size() {
+    if self.idx < self.array.size {
       let current = self.array(self.idx)
       self.idx = self.idx + 1
       Some[T](current)
@@ -173,7 +173,7 @@ impl[T] ArrayIterator[T] {
 }
 
 impl[T] ArrayIteratorReverse[T] {
-  @static fun new(data: Array[T]): ArrayIteratorReverse[T] = ArrayIteratorReverse[T](data, data.size() - 1)
+  @static fun new(data: Array[T]): ArrayIteratorReverse[T] = ArrayIteratorReverse[T](data, data.size - 1)
 
   @pub fun next(): Option[T] {
     if self.idx != -1 {
@@ -195,7 +195,7 @@ impl[T] ArrayEnumerator[T] {
   @static fun new(data: Array[T]): ArrayEnumerator[T] = ArrayEnumerator[T](data, 0)
 
   @pub fun next(): Option[(Int64, T)] {
-    if self.idx < self.array.size() {
+    if self.idx < self.array.size {
       let current_idx = self.idx
       self.idx = self.idx + 1i64
       Some[(Int64, T)]((current_idx, self.array(current_idx)))
@@ -210,7 +210,7 @@ impl[T: Sortable] Array[T] {
   @pub @static
   fun sortStable(array: Array[T]): Unit {
     var i = 1i64
-    while i < array.size() {
+    while i < array.size {
       var temp: T = array.get(i)
       var j = i
       while j > 0i64 && array(j - 1i64).sortsAfter(temp) {
@@ -225,12 +225,12 @@ impl[T: Sortable] Array[T] {
 
 impl[T: Equals] Array[T] {
   @pub fun equals(other: Array[T]): Bool {
-    if self.size() != other.size() {
+    if self.size != other.size {
       return false
     }
     var i = 0i64
-    while i < self.size() {
-      if self(i).equals(other(i)).not() {
+    while i < self.size {
+      if self(i).equals(other(i)).not {
         return false
       }
       i = i + 1i64
@@ -241,7 +241,7 @@ impl[T: Equals] Array[T] {
   @pub fun contains(value: T): Bool {
     var i = 0i64
 
-    while i < self.size() {
+    while i < self.size {
       let x = self.get(i)
       if x.equals(value) {
         return true
@@ -253,8 +253,8 @@ impl[T: Equals] Array[T] {
   }
 
   @pub @static fun compare(a: Array[T], aPos: Int64, b: Array[T], bPos: Int64, len: Int64): Bool {
-    let aSize = a.size() - aPos
-    let bSize = b.size() - bPos
+    let aSize = a.size - aPos
+    let bSize = b.size - bPos
     if aSize < len || bSize < len {
       fatalError("len ${len} exceeds size of array")
     }
@@ -265,7 +265,7 @@ impl[T: Equals] Array[T] {
     var i = 0i64
 
     while i < len {
-      if a(aPos+i).equals(b(bPos+i)).not() {
+      if a(aPos+i).equals(b(bPos+i)).not {
         return false
       }
       i = i + 1i64
@@ -279,7 +279,7 @@ impl[T: Identity] Array[T] {
   @pub fun includes(val: T): Bool {
     var i = 0i64
 
-    while i < self.size() {
+    while i < self.size {
       if self.get(i).identicalTo(val) {
         return true
       }
@@ -294,18 +294,18 @@ impl[T: Stringable] Array[T] {
   @pub fun toString(): String {
     let sb = StringBuffer::new()
     sb.append("Array(")
-    let size = self.size()
+    let size = self.size
     if size != 0i64 {
       var i = 0i64
       while i < size - 1i64 {
-        sb.append(self.get(i).toString())
+        sb.append(self.get(i).toString)
         sb.append(", ")
         i = i + 1i64
       }
-      sb.append(self.get(i).toString())
+      sb.append(self.get(i).toString)
     }
     sb.append(")")
-    sb.toString()
+    sb.toString
   }
 }
 
@@ -324,7 +324,7 @@ impl BitSet {
     }
   }
 
-  @pub fun size(): Int64 {
+  @pub fun size: Int64 {
     self.capacity
   }
 
@@ -337,7 +337,7 @@ impl BitSet {
     let value = self.data.get(entry_idx)
     let value_idx = idx - entry_idx
 
-    return value & 1i32.shiftLeft(value_idx.toInt32()) != 0i32
+    return value & 1i32.shiftLeft(value_idx.toInt32) != 0i32
   }
 
   @pub fun insert(idx: Int64): Unit {
@@ -349,7 +349,7 @@ impl BitSet {
     var value = self.data.get(entry_idx)
     let value_idx = idx - entry_idx
 
-    value = value | 1i32.shiftLeft(value_idx.toInt32())
+    value = value | 1i32.shiftLeft(value_idx.toInt32)
 
     self.data.set(entry_idx, value)
   }
@@ -363,7 +363,7 @@ impl BitSet {
     var value = self.data.get(entry_idx)
     let value_idx = idx - entry_idx
 
-    value = value & 1i32.shiftLeft(value_idx.toInt32()).not()
+    value = value & 1i32.shiftLeft(value_idx.toInt32).not
 
     self.data.set(entry_idx, value)
   }
@@ -383,7 +383,7 @@ impl BitVec {
       fatalError("index out of bounds")
     }
 
-    if idx >= self.data.size() * 32i64 {
+    if idx >= self.data.size * 32i64 {
       return false
     }
 
@@ -391,7 +391,7 @@ impl BitVec {
     let value = self.data.get(entry_idx)
     let value_idx = idx - entry_idx
 
-    return value & 1i32.shiftLeft(value_idx.toInt32()) != 0i32
+    return value & 1i32.shiftLeft(value_idx.toInt32) != 0i32
   }
 
   @pub fun insert(idx: Int64): Unit {
@@ -405,7 +405,7 @@ impl BitVec {
     var value = self.data.get(entry_idx)
     let value_idx = idx - entry_idx
 
-    value = value | 1i32.shiftLeft(value_idx.toInt32())
+    value = value | 1i32.shiftLeft(value_idx.toInt32)
 
     self.data.set(entry_idx, value)
   }
@@ -415,7 +415,7 @@ impl BitVec {
       fatalError("index out of bounds")
     }
 
-    if idx >= self.data.size() * 32i64 {
+    if idx >= self.data.size * 32i64 {
         return
     }
 
@@ -423,25 +423,25 @@ impl BitVec {
     var value = self.data.get(entry_idx)
     let value_idx = idx - entry_idx
 
-    value = value & 1i32.shiftLeft(value_idx.toInt32()).not()
+    value = value & 1i32.shiftLeft(value_idx.toInt32).not
 
     self.data.set(entry_idx, value)
   }
 
   @pub fun ensureCapacity(newcap: Int64): Unit {
-    if newcap < self.data.size() * 32i64 || newcap == 0i64 {
+    if newcap < self.data.size * 32i64 || newcap == 0i64 {
       return
     }
 
     let newcap = (newcap + 31i64) / 32i64
 
     let newarray = Array[Int32]::zero(newcap)
-    Array[Int32]::copy(self.data, 0i64, newarray, 0i64, self.data.size())
+    Array[Int32]::copy(self.data, 0i64, newarray, 0i64, self.data.size)
     self.data = newarray
   }
 
-  @pub fun capacity(): Int64 {
-    self.data.size() * 32i64
+  @pub fun capacity: Int64 {
+    self.data.size * 32i64
   }
 }
 
@@ -457,10 +457,10 @@ impl[T] Queue[T] {
   }
 
   @pub fun enqueue(value: T): Unit {
-    if self.count == self.elements.size() {
+    if self.count == self.elements.size {
       // copy into larger array
-      let newelements = Array[T]::unsafeNew(self.elements.size() * 2i64)
-      let len = self.elements.size() - self.front
+      let newelements = Array[T]::unsafeNew(self.elements.size * 2i64)
+      let len = self.elements.size - self.front
       Array[T]::copy(self.elements, self.front, newelements, 0i64, len)
 
       if len < self.count {
@@ -492,7 +492,7 @@ impl[T] Queue[T] {
   fun moveFront(): Int64 {
     self.front = self.front + 1i64
 
-    if self.front == self.elements.size() {
+    if self.front == self.elements.size {
       self.front = 0i64
     }
 
@@ -502,16 +502,16 @@ impl[T] Queue[T] {
   fun getEnd(): Int64 {
     let end = self.front + self.count
 
-    if end < self.elements.size() {
+    if end < self.elements.size {
       end
     } else {
-      end - self.elements.size()
+      end - self.elements.size
     }
   }
 
-  @pub fun size(): Int64 = self.count
+  @pub fun size: Int64 = self.count
 
-  @pub fun isEmpty(): Bool = self.count == 0i64
+  @pub fun isEmpty: Bool = self.count == 0i64
 }
 
 @pub class HashMap[K: Hash + Identity + Equals, V] {
@@ -546,8 +546,8 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
         self.ensureCapacity(1i64)
         assert(self.entries < self.cap)
 
-        var hash = key.hash()
-        var idx = hash.toInt64() & (self.cap - 1i64)
+        var hash = key.hash
+        var idx = hash.toInt64 & (self.cap - 1i64)
         var insert_idx = None[Int64]
 
         while true {
@@ -555,7 +555,7 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
             ... .isLive(idx) {
                 let current_key = self.keys.get(idx)
 
-                if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
+                if current_key.hash == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
                     let old_value = self.values.get(idx)
                     self.values.set(idx, value)
                     return Some[V](old_value)
@@ -564,7 +564,7 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
             ... .isDeleted(idx) {
                 // There might be live entries after a deleted one.
 
-                if insert_idx.isNone() {
+                if insert_idx.isNone {
                     insert_idx = Some[Int64](idx)
                 }
             }
@@ -593,15 +593,15 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
             return false
         }
 
-        var hash = key.hash()
-        var idx = hash.toInt64() & (self.cap - 1i64)
+        var hash = key.hash
+        var idx = hash.toInt64 & (self.cap - 1i64)
 
         while true {
             if self
             ... .isLive(idx) {
                 let current_key = self.keys.get(idx)
 
-                if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
+                if current_key.hash == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
                     return true
                 }
                 idx = (idx + 1i64) & (self.cap - 1i64)
@@ -625,15 +625,15 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
         return false
       }
 
-      var hash = key.hash()
-      var idx = hash.toInt64() & (self.cap - 1i64)
+      var hash = key.hash
+      var idx = hash.toInt64 & (self.cap - 1i64)
 
       while true {
         if self
         ... .isLive(idx) {
           let currentKey = self.keys.get(idx)
 
-          if currentKey.hash() == hash && currentKey.identicalTo(key) {
+          if currentKey.hash == hash && currentKey.identicalTo(key) {
             return true
           }
           idx = (idx + 1i64) & (self.cap - 1i64)
@@ -657,15 +657,15 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
             return Option[V]::None
         }
 
-        var hash = key.hash()
-        var idx = hash.toInt64() & (self.cap - 1i64)
+        var hash = key.hash
+        var idx = hash.toInt64 & (self.cap - 1i64)
 
         while true {
             if self
             ... .isLive(idx) {
                 let current_key = self.keys.get(idx)
 
-                if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
+                if current_key.hash == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
                     return Option[V]::Some(self.values.get(idx))
                 }
                 idx = (idx + 1i64) & (self.cap - 1i64)
@@ -685,15 +685,15 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
     @pub fun remove(key: K): Option[V] {
         self.shrink()
 
-        var hash = key.hash()
-        var idx = hash.toInt64() & (self.cap - 1i64)
+        var hash = key.hash
+        var idx = hash.toInt64 & (self.cap - 1i64)
 
         while true {
             if self
             ... .isLive(idx) {
                 let current_key = self.keys.get(idx)
 
-                if current_key.hash() == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
+                if current_key.hash == hash && (current_key.identicalTo(key) || current_key.equals(key)) {
                     let value = self.values.get(idx)
                     self.inserted_and_deleted.insert(2i64 * idx + 1i64)
 
@@ -784,18 +784,18 @@ impl[K: Hash + Identity + Equals, V] HashMap[K, V] {
 
     fun isLive(idx: Int64): Bool {
         return self.inserted_and_deleted.contains(2i64 * idx)
-            && self.inserted_and_deleted.contains(2i64 * idx + 1i64).not()
+            && self.inserted_and_deleted.contains(2i64 * idx + 1i64).not
     }
 
     fun isDeleted(idx: Int64): Bool {
         self.inserted_and_deleted.contains(2i64 * idx + 1i64)
     }
 
-    @pub fun size(): Int64 = self.entries
+    @pub fun size: Int64 = self.entries
 
-    @pub fun isEmpty(): Bool = self.entries == 0i64
+    @pub fun isEmpty: Bool = self.entries == 0i64
 
-    @pub fun capacity(): Int64 = self.cap
+    @pub fun capacity: Int64 = self.cap
 
     @pub fun iterator(): HashMapIterator[K, V] = HashMapIterator[K, V]::new(self)
 }
@@ -809,7 +809,7 @@ impl[K: Hash + Identity + Equals, V] HashMapIterator[K, V] {
     @pub @static fun new(map: HashMap[K, V]): HashMapIterator[K, V] = HashMapIterator[K, V](map, 0)
 
     @pub fun next(): Option[(K, V)] {
-        while self.idx < self.map.capacity() {
+        while self.idx < self.map.capacity {
             if self.map.isLive(self.idx) {
                 let key = self.map.keys.get(self.idx)
                 let value = self.map.values.get(self.idx)
@@ -849,18 +849,18 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
     set
   }
 
-  @pub fun size(): Int64 = self.entries
+  @pub fun size: Int64 = self.entries
 
-  @pub fun isEmpty(): Bool = self.entries == 0
+  @pub fun isEmpty: Bool = self.entries == 0
 
-  @pub fun capacity(): Int64 = self.cap
+  @pub fun capacity: Int64 = self.cap
 
   @pub fun insert(key: K): Option[K] {
     self.ensureCapacity(1)
     assert(self.entries < self.cap)
 
-    var hash = key.hash()
-    var idx = hash.toInt64() & (self.cap - 1)
+    var hash = key.hash
+    var idx = hash.toInt64 & (self.cap - 1)
     var insertIdx = None[Int64]
 
     while true {
@@ -868,7 +868,7 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
       ... .isLive(idx) {
         let currentKey = self.keys.get(idx)
 
-        if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
+        if currentKey.hash == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
           let oldKey = self.keys.get(idx)
           self.keys.set(idx, key)
           return Some[K](oldKey)
@@ -877,7 +877,7 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
       ... .isDeleted(idx) {
         // There might be live entries after a deleted one.
 
-        if insertIdx.isNone() {
+        if insertIdx.isNone {
           insertIdx = Some[Int64](idx)
         }
       }
@@ -905,15 +905,15 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
       return false
     }
 
-    var hash = key.hash()
-    var idx = hash.toInt64() & (self.cap - 1i64)
+    var hash = key.hash
+    var idx = hash.toInt64 & (self.cap - 1i64)
 
     while true {
       if self
       ... .isLive(idx) {
         let currentKey = self.keys.get(idx)
 
-        if currentKey.hash() == hash && currentKey.identicalTo(key) {
+        if currentKey.hash == hash && currentKey.identicalTo(key) {
           return true
         }
         idx = (idx + 1i64) & (self.cap - 1i64)
@@ -937,15 +937,15 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
         return false
     }
 
-    var hash = key.hash()
-    var idx = hash.toInt64() & (self.cap - 1)
+    var hash = key.hash
+    var idx = hash.toInt64 & (self.cap - 1)
 
     while true {
       if self
       ... .isLive(idx) {
         let currentKey = self.keys.get(idx)
 
-        if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
+        if currentKey.hash == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
           return true
         }
         idx = (idx + 1) & (self.cap - 1)
@@ -969,15 +969,15 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
       return Option[K]::None
     }
 
-    var hash = key.hash()
-    var idx = hash.toInt64() & (self.cap - 1)
+    var hash = key.hash
+    var idx = hash.toInt64 & (self.cap - 1)
 
     while true {
       if self
       ... .isLive(idx) {
         let currentKey = self.keys.get(idx)
 
-        if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
+        if currentKey.hash == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
           return Option[K]::Some(currentKey)
         }
         idx = (idx + 1) & (self.cap - 1)
@@ -997,15 +997,15 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
   @pub fun remove(key: K): Option[K] {
     self.shrink()
 
-    var hash = key.hash()
-    var idx = hash.toInt64() & (self.cap - 1)
+    var hash = key.hash
+    var idx = hash.toInt64 & (self.cap - 1)
 
     while true {
       if self
       ... .isLive(idx) {
         let currentKey = self.keys.get(idx)
 
-        if currentKey.hash() == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
+        if currentKey.hash == hash && (currentKey.identicalTo(key) || currentKey.equals(key)) {
           self.insertedAndDeleted.insert(2 * idx + 1)
 
           unsafeKillRefs[K](self.keys, idx)
@@ -1091,7 +1091,7 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
 
   fun isLive(idx: Int64): Bool =
     self.insertedAndDeleted.contains(2 * idx)
-        && self.insertedAndDeleted.contains(2 * idx + 1).not()
+        && self.insertedAndDeleted.contains(2 * idx + 1).not
 
   fun isDeleted(idx: Int64): Bool =
     self.insertedAndDeleted.contains(2 * idx + 1)
@@ -1104,17 +1104,17 @@ impl[K: Hash + Identity + Equals] HashSet[K] {
 
 impl[T] List[T] {
   @pub @static fun new(values: T...): List[T] {
-    List[T](values, values.size())
+    List[T](values, values.size)
   }
 
   @pub @static fun ofCapacity(capacity: Int64): List[T] =
     List[T](Array[T]::unsafeNew(capacity), 0)
 
-  @pub fun size(): Int64 = self.len
+  @pub fun size: Int64 = self.len
 
-  @pub fun isEmpty(): Bool = self.len == 0
+  @pub fun isEmpty: Bool = self.len == 0
 
-  @pub fun capacity(): Int64 = self.array.size()
+  @pub fun capacity: Int64 = self.array.size
 
   @pub fun get(idx: Int64): T {
     if idx < 0i64 || idx >= self.len {
@@ -1132,14 +1132,14 @@ impl[T] List[T] {
     self.array.set(idx, val)
   }
 
-  @pub fun first(): Option[T] =
+  @pub fun first: Option[T] =
     if self.len == 0 {
       Option[T]::None
     } else {
       Option[T]::Some(self.array(0))
     }
 
-  @pub fun last(): Option[T] =
+  @pub fun last: Option[T] =
     if self.len == 0 {
       Option[T]::None
     } else {
@@ -1154,7 +1154,7 @@ impl[T] List[T] {
   @pub fun reserve(newcap: Int64): Unit {
     assert(newcap >= 0i64)
 
-    if self.capacity() >= newcap {
+    if self.capacity >= newcap {
       return
     }
 
@@ -1164,7 +1164,7 @@ impl[T] List[T] {
   }
 
   @pub fun push(val: T): Unit {
-    let currentCapacity = self.capacity()
+    let currentCapacity = self.capacity
 
     if self.len == currentCapacity {
       let newCapacity = self.newCapacity(currentCapacity)
@@ -1184,7 +1184,7 @@ impl[T] List[T] {
       self.push(val)
       return
     }
-    let currentCapacity = self.capacity()
+    let currentCapacity = self.capacity
     let targetArray = if self.len == currentCapacity {
       Array[T]::unsafeNew(self.newCapacity(currentCapacity))
     } else {
@@ -1238,7 +1238,7 @@ impl[T] List[T] {
   }
 
   @pub fun trimToLen(): Unit {
-    if self.len != self.capacity() {
+    if self.len != self.capacity {
       if self.len == 0i64 {
         self.array = Array[T]::new()
       } else {
@@ -1298,7 +1298,7 @@ impl[T] List[T] {
     while srcIdx < len {
       let current = self.array(srcIdx)
 
-      if fct(current).not() {
+      if fct(current).not {
         self.array(destIdx) = current
         destIdx = destIdx + 1i64
       }
@@ -1317,7 +1317,7 @@ impl[T] List[T] {
   @pub fun all(fct: (T): Bool): Bool {
     var idx = 0
     while idx < self.len {
-      if fct(self.array(idx)).not() {
+      if fct(self.array(idx)).not {
         return false
       }
       idx = idx + 1
@@ -1345,21 +1345,21 @@ impl[T] List[T] {
   }
 
   @pub fun map[U](fct: (T): U): List[U] {
-    let result = Array[U]::unsafeNew(self.size())
+    let result = Array[U]::unsafeNew(self.size)
     var idx = 0
     while idx < self.len {
       result.set(idx, fct(self.array(idx)))
       idx = idx + 1
     }
-    List[U](result, result.size())
+    List[U](result, result.size)
   }
 
   @pub fun mapMany[U](fct: (T): List[U]): List[U] {
-    let result = List[U]::ofCapacity(self.size())
+    let result = List[U]::ofCapacity(self.size)
     var idx = 0
     while idx < self.len {
       let list = fct(self.array(idx))
-      let listSize = list.size()
+      let listSize = list.size
       var idy = 0
       while idy < listSize {
         result.push(list(idy))
@@ -1371,11 +1371,11 @@ impl[T] List[T] {
   }
 
   @pub fun mapSome[U](fct: (T): Option[U]): List[U] {
-    let result = List[U]::ofCapacity(self.size())
+    let result = List[U]::ofCapacity(self.size)
     var idx = 0
     while idx < self.len {
       let option = fct(self.array(idx))
-      if option.isSome() {
+      if option.isSome {
         result.push(option.getOrPanic())
       }
       idx = idx + 1
@@ -1461,7 +1461,7 @@ impl[T] List[T] {
     var idx = 0
     while idx < self.len {
       let val = self.array(idx)
-      if fct(val).not() {
+      if fct(val).not {
         result.push(val)
       }
       idx = idx + 1
@@ -1473,7 +1473,7 @@ impl[T] List[T] {
     let result = List[T]::new()
     var idx = 0
     while idx < self.len {
-      if fct(idx).not() {
+      if fct(idx).not {
         result.push(self.array(idx))
       }
       idx = idx + 1
@@ -1499,7 +1499,7 @@ impl[T] ListEnumerator[T] {
   }
 
   @pub fun next(): Option[(Int64, T)] {
-    if self.idx < self.data.size() {
+    if self.idx < self.data.size {
       let current_idx = self.idx
       self.idx = self.idx + 1i64
       Some[(Int64, T)]((current_idx, self.data(current_idx)))
@@ -1518,7 +1518,7 @@ impl[T] ListIterator[T] {
   @static fun new(data: List[T]): ListIterator[T] = ListIterator[T](data, 0)
 
   @pub fun next(): Option[T] {
-    if self.idx < self.data.size() {
+    if self.idx < self.data.size {
       let result = self.data(self.idx)
       self.idx = self.idx + 1i64
       Some[T](result)
@@ -1535,7 +1535,7 @@ impl[T] ListIterator[T] {
 
 impl[T] ListIteratorReverse[T] {
   @static fun new(data: List[T]): ListIteratorReverse[T] {
-    ListIteratorReverse(data, data.size() - 1)
+    ListIteratorReverse(data, data.size - 1)
   }
 
   @pub fun next(): Option[T] {
@@ -1551,12 +1551,12 @@ impl[T] ListIteratorReverse[T] {
 
 impl[T: Equals] List[T] {
   @pub fun equals(other: List[T]): Bool {
-    if self.size() != other.size() {
+    if self.size != other.size {
       return false
     }
     var i = 0i64
-    while i < self.size() {
-      if self(i).equals(other(i)).not() {
+    while i < self.size {
+      if self(i).equals(other(i)).not {
         return false
       }
       i = i + 1i64
@@ -1567,7 +1567,7 @@ impl[T: Equals] List[T] {
   @pub fun contains(value: T): Bool {
     var i = 0i64
 
-    while i < self.size() {
+    while i < self.size {
       let x = self.get(i)
       if x.equals(value) {
         return true
@@ -1581,7 +1581,7 @@ impl[T: Equals] List[T] {
   @pub fun removeEquals(elem: T): Unit {
     var i = 0i64
 
-    while i < self.size() {
+    while i < self.size {
       if self(i).equals(elem) {
         self.removeAt(i);
         ()
@@ -1596,7 +1596,7 @@ impl[T: Identity] List[T] {
   @pub fun includes(val: T): Bool {
     var i = 0i64
 
-    while i < self.size() {
+    while i < self.size {
       if self.get(i).identicalTo(val) {
         return true
       }
@@ -1615,25 +1615,25 @@ impl[T: Stringable] List[T] {
     if size != 0i64 {
       var i = 0i64
       while i < size - 1i64 {
-        sb.append(self.array(i).toString())
+        sb.append(self.array(i).toString)
         sb.append(", ")
         i = i + 1i64
       }
-      sb.append(self.array(i).toString())
+      sb.append(self.array(i).toString)
     }
     sb.append(")")
-    sb.toString()
+    sb.toString
   }
 }
 
 impl[T] List[Option[T]] {
-  @pub fun flatten(): List[T] {
-    let len = self.size()
+  @pub fun flatten: List[T] {
+    let len = self.size
     let result = List[T]::ofCapacity(len)
     var idx = 0
     while idx < len {
       let option = self(idx)
-      if (option.isSome()) {
+      if (option.isSome) {
         result.push(option.getOrPanic())
       }
       idx = idx + 1
@@ -1643,13 +1643,13 @@ impl[T] List[Option[T]] {
 }
 
 impl[T] List[List[T]] {
-  @pub fun flatten(): List[T] {
-    let len = self.size()
+  @pub fun flatten: List[T] {
+    let len = self.size
     let result = List[T]::ofCapacity(len)
     var idx = 0
     while idx < len {
       let list = self(idx)
-      let listSize = list.size()
+      let listSize = list.size
       var idy = 0
       while idy < listSize {
         result.push(list(idy))
@@ -1664,7 +1664,7 @@ impl[T] List[List[T]] {
 impl List[Float64] {
   @pub fun sum(): Float64 {
     var result = 0.0
-    let len = self.size()
+    let len = self.size
     var idx = 0
     while idx < len {
       result = result + self(idx)
@@ -1675,18 +1675,18 @@ impl List[Float64] {
 
   @pub fun average(): Float64 {
     var result = 0.0
-    let len = self.size()
+    let len = self.size
     var idx = 0
     while idx < len {
       result = result + self(idx)
       idx = idx + 1
     }
-    result / len.toFloat64()
+    result / len.toFloat64
   }
 
   @pub fun product(): Float64 {
     var result = 1.0
-    let len = self.size()
+    let len = self.size
     var idx = 0
     while idx < len {
       result = result * self(idx)

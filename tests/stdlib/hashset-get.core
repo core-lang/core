@@ -1,16 +1,16 @@
 fun main(): Unit {
-  let set = std::HashSet[Float64]::new(0.0, Float64::notANumber(), Float64::infinityPositive());
+  let set = std::HashSet[Float64]::new(0.0, Float64::notANumber, Float64::infinityPositive);
 
-  assert(set.size() == 3);
+  assert(set.size == 3);
   assert(set.get(0.0).getOrPanic() === 0.0);
   assert(set.get(-0.0).getOrPanic() === 0.0);
 
   set.insert(-0.0);
 
-  assert(set.size() == 3);
+  assert(set.size == 3);
   assert(set.get(0.0).getOrPanic() === -0.0);
   assert(set.get(-0.0).getOrPanic() === -0.0);
 
-  assert(set.get(Float64::notANumber()).getOrPanic() === Float64::notANumber());
-  assert(set.get(Float64::infinityPositive()).getOrPanic() === Float64::infinityPositive());
+  assert(set.get(Float64::notANumber).getOrPanic() === Float64::notANumber);
+  assert(set.get(Float64::infinityPositive).getOrPanic() === Float64::infinityPositive);
 }

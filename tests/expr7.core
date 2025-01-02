@@ -1,6 +1,6 @@
 fun main(): Unit {
   assert(true);
-  assert(false.not());
+  assert(false.not);
 
   assert(true == true);
   assert(true != false);

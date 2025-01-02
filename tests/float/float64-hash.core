@@ -5,8 +5,8 @@ fun main(): Unit {
   assert(  1.0 .hash() == 2145386496i32);
   assert((-1.0).hash() == 2145386496i32);
 
-  assert(Float64::infinityPositive().hash() == -2097152i32);
-  assert(Float64::infinityNegative().hash() == -2097152i32);
+  assert(Float64::infinityPositive.hash() == -2097152i32);
+  assert(Float64::infinityNegative.hash() == -2097152i32);
 
-  assert(Float64::notANumber().hash() == -1048576i32);
+  assert(Float64::notANumber.hash() == -1048576i32);
 }

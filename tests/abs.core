@@ -6,38 +6,38 @@ fun main(): Unit {
 }
 
 fun float32(): Unit {
-  assert(Float32::notANumber().unaryMinus().abs() === Float32::notANumber());
-  assert(Float32::infinityNegative().abs() == Float32::infinityPositive());
-  assert((-1.0f32).abs() == 1.0f32);
-  assert(0.0f32.abs() == 0.0f32);
-  assert(1.0f32.abs() == 1.0f32);
-  assert(Float32::infinityPositive().abs() == Float32::infinityPositive());
-  assert(Float32::notANumber().abs() === Float32::notANumber());
+  assert(Float32::notANumber.unaryMinus.abs === Float32::notANumber);
+  assert(Float32::infinityNegative.abs == Float32::infinityPositive);
+  assert((-1.0f32).abs == 1.0f32);
+  assert(0.0f32.abs == 0.0f32);
+  assert(1.0f32.abs == 1.0f32);
+  assert(Float32::infinityPositive.abs == Float32::infinityPositive);
+  assert(Float32::notANumber.abs === Float32::notANumber);
 }
 
 fun float64(): Unit {
-  assert(Float64::notANumber().unaryMinus().abs() === Float64::notANumber());
-  assert(Float64::infinityNegative().abs() == Float64::infinityPositive());
-  assert((-1.0).abs() == 1.0);
-  assert(0.0.abs() == 0.0);
-  assert(1.0.abs() == 1.0);
-  assert(Float64::infinityPositive().abs() == Float64::infinityPositive());
-  assert(Float64::notANumber().abs() === Float64::notANumber());
+  assert(Float64::notANumber.unaryMinus.abs === Float64::notANumber);
+  assert(Float64::infinityNegative.abs == Float64::infinityPositive);
+  assert((-1.0).abs == 1.0);
+  assert(0.0.abs == 0.0);
+  assert(1.0.abs == 1.0);
+  assert(Float64::infinityPositive.abs == Float64::infinityPositive);
+  assert(Float64::notANumber.abs === Float64::notANumber);
 }
 
 
 fun int32(): Unit {
-  assert(Int32::minValue().abs() == Int32::minValue());
-  assert((-1i32).abs() == 1i32);
-  assert(0i32.abs() == 0i32);
-  assert(1i32.abs() == 1i32);
-  assert(Int32::maxValue().abs() == Int32::maxValue());
+  assert(Int32::minValue.abs == Int32::minValue);
+  assert((-1i32).abs == 1i32);
+  assert(0i32.abs == 0i32);
+  assert(1i32.abs == 1i32);
+  assert(Int32::maxValue.abs == Int32::maxValue);
 }
 
 fun int64(): Unit {
-  assert(Int64::minValue().abs() == Int64::minValue());
-  assert((-1i64).abs() == 1i64);
-  assert(0i64.abs() == 0i64);
-  assert(1i64.abs() == 1i64);
-  assert(Int64::maxValue().abs() == Int64::maxValue());
+  assert(Int64::minValue.abs == Int64::minValue);
+  assert((-1i64).abs == 1i64);
+  assert(0i64.abs == 0i64);
+  assert(1i64.abs == 1i64);
+  assert(Int64::maxValue.abs == Int64::maxValue);
 }

@@ -1,6 +1,6 @@
 fun main(): Unit {
-    assert(0i64 == newArray[Int32]().size());
-    assert(0i64 == newArray[()]().size());
+    assert(0i64 == newArray[Int32]().size);
+    assert(0i64 == newArray[()]().size);
 }
 
 fun newArray[T](): Array[T] {

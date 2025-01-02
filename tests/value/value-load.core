@@ -12,5 +12,5 @@ fun g(): Bool {
 
 fun main(): Unit {
     assert(f() == 10i32);
-    assert(g().not());
+    assert(g().not);
 }

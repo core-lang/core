@@ -7,9 +7,9 @@ fun main(): Unit {
         std::exit(1i32);
     }
 
-    rnd = std::Random::new(std::argv(0i32).toInt64().getOrPanic());
-    splayTreeSize = std::argv(1i32).toInt32().getOrPanic();
-    let iterations = std::argv(2i32).toInt32().getOrPanic();
+    rnd = std::Random::new(std::argv(0i32).toInt64.getOrPanic());
+    splayTreeSize = std::argv(1i32).toInt32.getOrPanic();
+    let iterations = std::argv(2i32).toInt32.getOrPanic();
 
     let bench = Benchmark::new();
     bench.setup();
@@ -74,9 +74,9 @@ impl Benchmark {
         self.splaySamples = 0i32;
         self.splaySumOfSquaredPauses = 0i64;
 
-        var length = keys.size();
+        var length = keys.size;
 
-        if length != splayTreeSize.toInt64() {
+        if length != splayTreeSize.toInt64 {
             fatalError("Splay tree has wrong sie");
         }
 
@@ -98,7 +98,7 @@ impl Benchmark {
             let key = self.insertNewNode();
             let greatest = self.splayTree.findGreatestLessThan(key);
 
-            if greatest.isNone() {
+            if greatest.isNone {
                 self.splayTree.remove(key);
             } else {
                 self.splayTree.remove(greatest.getOrPanic().key);
@@ -117,7 +117,7 @@ impl Benchmark {
         while continue {
             key = self.generateKey();
 
-            if self.splayTree.find(key).isNone() {
+            if self.splayTree.find(key).isNone {
                 continue = false;
             }
         }
@@ -139,7 +139,7 @@ fun generatePayloadTree(depth: Int32, tag: String): PayloadNode =
         var i = 0i32;
 
         while i < 10i32 {
-            arr(i.toInt64()) = i;
+            arr(i.toInt64) = i;
             i = i + 1i32;
         }
 
@@ -162,12 +162,12 @@ impl SplayTree {
         SplayTree(None[SplayNode])
     }
 
-    fun isEmpty(): Bool {
-        return self.root.isNone();
+    fun isEmpty: Bool {
+        return self.root.isNone;
     }
 
     fun insert(key: Int32, value: PayloadNode): Unit {
-        if self.isEmpty() {
+        if self.isEmpty {
             self.root = Some(SplayNode::new(key, Some[PayloadNode](value)));
             return
         }
@@ -197,7 +197,7 @@ impl SplayTree {
     }
 
     fun remove(key: Int32): Option[SplayNode] {
-        if self.isEmpty() {
+        if self.isEmpty {
             return Option[SplayNode]::None;
         }
 
@@ -210,7 +210,7 @@ impl SplayTree {
 
         let removed = self.root;
 
-        if root.left.isNone() {
+        if root.left.isNone {
             self.root = root.right;
         } else {
             let right = root.right;
@@ -223,7 +223,7 @@ impl SplayTree {
     }
 
     fun find(key: Int32): Option[SplayNode] {
-        if self.isEmpty() {
+        if self.isEmpty {
             return None;
         }
 
@@ -238,17 +238,17 @@ impl SplayTree {
     }
 
     fun findMax(startNode: Option[SplayNode]): Option[SplayNode] {
-        if self.isEmpty() {
+        if self.isEmpty {
             return None;
         }
 
-        var current = if startNode.isNone() {
+        var current = if startNode.isNone {
             self.root.getOrPanic()
         } else {
             startNode.getOrPanic()
         };
 
-        while current.right.isSome() {
+        while current.right.isSome {
             current = current.right.getOrPanic();
         }
 
@@ -256,7 +256,7 @@ impl SplayTree {
     }
 
     fun findGreatestLessThan(key: Int32): Option[SplayNode] {
-        if self.isEmpty() {
+        if self.isEmpty {
             return None;
         }
 
@@ -265,7 +265,7 @@ impl SplayTree {
 
         if root.key < key {
             self.root
-        } else if root.left.isSome() {
+        } else if root.left.isSome {
             self.findMax(root.left)
         } else {
             None[SplayNode]
@@ -279,7 +279,7 @@ impl SplayTree {
     }
 
     fun splay(key: Int32): Unit {
-        if self.isEmpty() {
+        if self.isEmpty {
             return
         }
 
@@ -294,7 +294,7 @@ impl SplayTree {
             if key
             ... < current.key {
                 if current.left
-                ... .isNone() {
+                ... .isNone {
                     continue = false;
                 }
                 ... .getOrPanic().key > key {
@@ -304,7 +304,7 @@ impl SplayTree {
                     tmp.right = Some[SplayNode](current);
                     current = tmp;
 
-                    if current.left.isNone() {
+                    if current.left.isNone {
                         continue = false;
                     }
                 }
@@ -317,7 +317,7 @@ impl SplayTree {
                 }
             }
             ... > current.key {
-                if current.right.isNone() {
+                if current.right.isNone {
                     continue = false;
                 }
                 if continue {
@@ -328,7 +328,7 @@ impl SplayTree {
                         tmp.left = Some(current);
                         current = tmp;
 
-                        if current.right.isNone() {
+                        if current.right.isNone {
                             continue = false;
                         }
                     }
@@ -356,10 +356,10 @@ impl SplayTree {
 fun exportKeysTraverse(list: List[Int32], node: Option[SplayNode]): Unit {
     var current = node;
 
-    while current.isSome() {
+    while current.isSome {
         let c = current.getOrPanic();
         var left = c.left;
-        if left.isSome() {
+        if left.isSome {
             exportKeysTraverse(list, left);
         }
         list.push(c.key);

@@ -1,6 +1,6 @@
 fun main(): Unit {
   assert(eq("a"));
-  assert(eq("aa").not());
+  assert(eq("aa").not);
 }
 
 fun eq(a: String): Bool {

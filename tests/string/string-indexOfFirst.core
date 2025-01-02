@@ -17,11 +17,11 @@ fun testNeedleEmpty(): Unit {
 }
 
 fun testHaystackEmpty(): Unit {
-  assert("".indexOfFirst("abc").isNone());
+  assert("".indexOfFirst("abc").isNone);
 }
 
 fun testNeedleLarger(): Unit {
-  assert("abc".indexOfFirst("abcdef").isNone());
+  assert("abc".indexOfFirst("abcdef").isNone);
 }
 
 fun testSuccess(): Unit {
@@ -36,5 +36,5 @@ fun testMultipleMatch(): Unit {
 }
 
 fun testFailure(): Unit {
-  assert("def".indexOfFirst("abc").isNone());
+  assert("def".indexOfFirst("abc").isNone);
 }

@@ -11,7 +11,7 @@ fun main(): Unit {
   assert(x.getOrPanic().next.getOrPanic().next.getOrPanic().a == 2i32);
   assert(x.getOrPanic().next.getOrPanic().next.getOrPanic().next.getOrPanic().a == 3i32);
   assert(x.getOrPanic().next.getOrPanic().next.getOrPanic().next.getOrPanic().next.getOrPanic().a == 4i32);
-  assert(x.getOrPanic().next.getOrPanic().next.getOrPanic().next.getOrPanic().next.getOrPanic().next.isNone());
+  assert(x.getOrPanic().next.getOrPanic().next.getOrPanic().next.getOrPanic().next.getOrPanic().next.isNone);
 }
 
 class Foo(a: Int32, next: Option[Foo])

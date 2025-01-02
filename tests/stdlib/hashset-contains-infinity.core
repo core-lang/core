@@ -4,17 +4,17 @@ fun main(): Unit {
 }
 
 fun float64(): Unit {
-  let set = std::HashSet[Float64]::new(Float64::infinityPositive(), Float64::infinityNegative());
+  let set = std::HashSet[Float64]::new(Float64::infinityPositive, Float64::infinityNegative);
 
-  assert(set.size() == 2);
-  assert(set.contains(Float64::infinityPositive()));
-  assert(set.contains(Float64::infinityNegative()));
+  assert(set.size == 2);
+  assert(set.contains(Float64::infinityPositive));
+  assert(set.contains(Float64::infinityNegative));
 }
 
 fun float32(): Unit {
-  let set = std::HashSet[Float32]::new(Float32::infinityPositive(), Float32::infinityNegative());
+  let set = std::HashSet[Float32]::new(Float32::infinityPositive, Float32::infinityNegative);
 
-  assert(set.size() == 2);
-  assert(set.contains(Float32::infinityPositive()));
-  assert(set.contains(Float32::infinityNegative()));
+  assert(set.size == 2);
+  assert(set.contains(Float32::infinityPositive));
+  assert(set.contains(Float32::infinityNegative));
 }

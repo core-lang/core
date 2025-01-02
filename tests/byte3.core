@@ -1,9 +1,9 @@
 fun main(): Unit {
     let ba = Array[UInt8]::new();
-    assert(ba.size() == 0i64);
+    assert(ba.size == 0i64);
 
     let ba = Array[UInt8]::fill(10i64, 2u8);
-    assert(ba.size() == 10i64);
+    assert(ba.size == 10i64);
 
     ba(0i64) = 10u8;
     ba(1i64) = 11u8;

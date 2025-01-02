@@ -7,11 +7,11 @@ fun main(): Unit {
 class SomeTest
 
 impl SomeTest {
-    fun unaryPlus(): Float32 {
+    fun unaryPlus: Float32 {
         return 1.0f32;
     }
 
-    fun unaryMinus(): Float32 {
+    fun unaryMinus: Float32 {
         return 2.0f32;
     }
 }

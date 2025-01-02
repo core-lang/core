@@ -1,7 +1,7 @@
 fun main(): Unit {
-    let x = 97i32.toChar().getOrPanic();
+    let x = 97i32.toChar.getOrPanic();
     assert(x == 'a');
 
-    let y = 65i64.toChar().getOrPanic();
+    let y = 65i64.toChar.getOrPanic();
     assert(y == 'A');
 }

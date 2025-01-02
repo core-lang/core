@@ -4,21 +4,21 @@ fun main(): Unit {
 }
 
 fun float64(): Unit {
-  let map = std::HashMap[Float64, String]::new((Float64::infinityPositive(), "a"), (Float64::infinityNegative(), "b"));
+  let map = std::HashMap[Float64, String]::new((Float64::infinityPositive, "a"), (Float64::infinityNegative, "b"));
 
-  assert(map.size() == 2);
-  assert(map.contains(Float64::infinityPositive()));
-  assert(map.get(Float64::infinityPositive()).getOrPanic() == "a");
-  assert(map.contains(Float64::infinityNegative()));
-  assert(map.get(Float64::infinityNegative()).getOrPanic() == "b");
+  assert(map.size == 2);
+  assert(map.contains(Float64::infinityPositive));
+  assert(map.get(Float64::infinityPositive).getOrPanic() == "a");
+  assert(map.contains(Float64::infinityNegative));
+  assert(map.get(Float64::infinityNegative).getOrPanic() == "b");
 }
 
 fun float32(): Unit {
-  let map = std::HashMap[Float32, String]::new((Float32::infinityPositive(), "a"), (Float32::infinityNegative(), "b"));
+  let map = std::HashMap[Float32, String]::new((Float32::infinityPositive, "a"), (Float32::infinityNegative, "b"));
 
-  assert(map.size() == 2);
-  assert(map.contains(Float32::infinityPositive()));
-  assert(map.get(Float32::infinityPositive()).getOrPanic() == "a");
-  assert(map.contains(Float32::infinityNegative()));
-  assert(map.get(Float32::infinityNegative()).getOrPanic() == "b");
+  assert(map.size == 2);
+  assert(map.contains(Float32::infinityPositive));
+  assert(map.get(Float32::infinityPositive).getOrPanic() == "a");
+  assert(map.contains(Float32::infinityNegative));
+  assert(map.get(Float32::infinityNegative).getOrPanic() == "b");
 }

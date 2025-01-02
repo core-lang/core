@@ -1,19 +1,19 @@
 fun main(): Unit {
-  let x = UInt8::minValue().toInt64();
+  let x = UInt8::minValue.toInt64;
   assert(x == 0);
 
-  let x = UInt8::maxValue().toInt64();
+  let x = UInt8::maxValue.toInt64;
   assert(x == 255);
 
-  let x = 12u8.toInt64();
+  let x = 12u8.toInt64;
   assert(x == 12);
 
-  let x = 67u8.toInt64();
+  let x = 67u8.toInt64;
   assert(x == 67);
 
-  let x = 129u8.toInt64();
+  let x = 129u8.toInt64;
   assert(x == 129);
 
-  let x = 254u8.toInt64();
+  let x = 254u8.toInt64;
   assert(x == 254);
 }

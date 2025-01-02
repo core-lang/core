@@ -5,7 +5,7 @@ fun main(): Unit {
   let nan = Result[Float64, String]::Ok(0.0/0.0);
 
   assert(ok1.includes(ok));
-  assert(ok1.includes("ok").not());
-  assert(er1.includes(23i32).not());
+  assert(ok1.includes("ok").not);
+  assert(er1.includes(23i32).not);
   assert(nan.includes(0.0/0.0));
 }

@@ -23,5 +23,5 @@ fun main(): Unit {
     assert(data.pop().getOrPanic() === h);
     assert(data.pop().getOrPanic() === g);
     assert(data.pop().getOrPanic() === f);
-    assert(data.size() == 0);
+    assert(data.size == 0);
 }

@@ -2,6 +2,6 @@ fun main(): Unit {
   let ok1 = Ok[String, Int64]("ok");
   let err = Err[String, Int64](-1);
 
-  assert(ok1.toOption() == Some[String]("ok"));
-  assert(err.toOption() == None[String]);
+  assert(ok1.toOption == Some[String]("ok"));
+  assert(err.toOption == None[String]);
 }

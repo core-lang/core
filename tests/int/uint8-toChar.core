@@ -1,10 +1,10 @@
 fun main(): Unit {
-  let x = 48u8.toChar();
+  let x = 48u8.toChar;
   assert(x == '0');
 
-  let x = 65u8.toChar();
+  let x = 65u8.toChar;
   assert(x == 'A');
 
-  let x = 97u8.toChar();
+  let x = 97u8.toChar;
   assert(x == 'a');
 }

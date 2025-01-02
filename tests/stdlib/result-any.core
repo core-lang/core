@@ -3,6 +3,6 @@ fun main(): Unit {
   let err = Err[String, Int64](-1);
 
   assert(ok1.any(|val: String|: Bool { val == "ok" }));
-  assert(ok1.any(|val: String|: Bool { val == "err" }).not());
-  assert(err.any(|val: String|: Bool { val == "ok" }).not());
+  assert(ok1.any(|val: String|: Bool { val == "err" }).not);
+  assert(err.any(|val: String|: Bool { val == "ok" }).not);
 }

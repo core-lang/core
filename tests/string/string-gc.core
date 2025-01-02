@@ -2,11 +2,11 @@
 
 fun main(): Unit {
     let x = Array[String]::new();
-    assert(x.size() == 0i64);
+    assert(x.size == 0i64);
 
     let emptyString = "".clone();
     let x = Array[String]::fill(10i64, emptyString);
-    assert(x.size() == 10i64);
+    assert(x.size == 10i64);
 
     x(0i64) = "a" + "b";
     x(1i64) = "x" + "y";

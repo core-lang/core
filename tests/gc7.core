@@ -6,6 +6,6 @@ fun main(): Unit {
 
 fun foo(): Unit {
   let x = "abc";
-  assert(x.size() == 3i64);
+  assert(x.size == 3i64);
   println(x);
 }

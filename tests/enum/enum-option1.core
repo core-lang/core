@@ -1,15 +1,15 @@
 fun main(): Unit {
-    assert(Option[String]::None.isNone());
-    assert(Option[Int32]::None.isNone());
-    assert(Option[String]::None.isSome().not());
-    assert(Option[Int32]::None.isSome().not());
+    assert(Option[String]::None.isNone);
+    assert(Option[Int32]::None.isNone);
+    assert(Option[String]::None.isSome.not);
+    assert(Option[Int32]::None.isSome.not);
 
-    assert(Option[String]::Some("abc").isNone().not());
-    assert(Option[Int32]::Some(12i32).isNone().not());
-    assert(Option[String]::Some("abc").isSome());
-    assert(Option[Int32]::Some(12i32).isSome());
+    assert(Option[String]::Some("abc").isNone.not);
+    assert(Option[Int32]::Some(12i32).isNone.not);
+    assert(Option[String]::Some("abc").isSome);
+    assert(Option[Int32]::Some(12i32).isSome);
 
-    Option[String]::None.isNone();
-    Option[Int32]::Some(12i32).isNone();
+    Option[String]::None.isNone;
+    Option[Int32]::Some(12i32).isNone;
     ()
 }

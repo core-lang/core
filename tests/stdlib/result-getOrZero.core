@@ -3,6 +3,6 @@ fun main(): Unit {
   let er = Result[Int32, String]::Err("err");
 
   // thread 'main' panicked at 'no impl found for generic trait method call', core/src/vm/impls.rs:86:10
-  // assert(ok.getOrZero() == 23i32);
-  // assert(er.getOrZero() == 0i32);
+  // assert(ok.getOrZero == 23i32);
+  // assert(er.getOrZero == 0i32);
 }

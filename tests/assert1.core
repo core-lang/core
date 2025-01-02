@@ -3,5 +3,5 @@ fun main(): Unit {
   assert(a);
 
   let b = false;
-  assert(b.not());
+  assert(b.not);
 }

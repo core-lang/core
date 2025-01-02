@@ -36,8 +36,8 @@
 fun isValidUtf8(data: Array[UInt8]): Bool {
   var i = 0i64
 
-  while i < data.size() {
-    let by = data(i).toInt32()
+  while i < data.size {
+    let by = data(i).toInt32
     var codepoint = 0i32
     var bytes = 0i32
     var min = 0i32
@@ -74,11 +74,11 @@ fun isValidUtf8(data: Array[UInt8]): Bool {
         bytes = bytes - 1i32
         i = i + 1i64
 
-        if i >= data.size() {
+        if i >= data.size {
           return false
         }
 
-        let by = data(i).toInt32()
+        let by = data(i).toInt32
 
         if by & 0xC0i32 != 0x80i32 {
           return false
@@ -115,17 +115,17 @@ impl Stacktrace {
   }
 
   @pub fun getStacktrace(): Array[StacktraceElement] {
-    if self.elements.isSome() {
+    if self.elements.isSome {
       return self.elements.getOrPanic()
     }
 
-    if self.backtrace.isNone() {
+    if self.backtrace.isNone {
       let elements = Array[StacktraceElement]::new()
       self.elements = Some[Array[StacktraceElement]](elements)
       return elements
     }
 
-    let backtraceLength = self.backtrace.getOrPanic().size()
+    let backtraceLength = self.backtrace.getOrPanic().size
     var i = 0i64
     let len = backtraceLength / 2i64
     let elements = List[StacktraceElement]::new()

@@ -3,14 +3,14 @@
 fun main(): Unit {
     let x = buildList();
     std::forceCollect();
-    assert(x.size() == 3i64);
+    assert(x.size == 3i64);
     popList(x, "ghi");
     std::forceCollect();
     popList(x, "def");
     std::forceCollect();
     popList(x, "abc");
     std::forceCollect();
-    assert(x.size() == 0i64);
+    assert(x.size == 0i64);
 }
 
 fun buildList(): List[(Int32, String)] {

@@ -14,5 +14,5 @@ fun main(): Unit {
     assert(y.1);
 
     assert(x.0 == "another string");
-    assert(x.1.not());
+    assert(x.1.not);
 }

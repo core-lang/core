@@ -3,9 +3,9 @@ use crate::language::sem_analysis::ConstValue;
 use crate::language::tests::*;
 
 #[test]
-fn type_method_len() {
-    ok("fun f(a: String): Int64 = a.size()");
-    ok("fun f(a: String): Int64 = \"abc\".size()");
+fn type_method_size() {
+    ok("fun f(a: String): Int64 = a.size");
+    ok("fun f(a: String): Int64 = \"abc\".size");
 }
 
 #[test]
@@ -1321,7 +1321,7 @@ fn test_new_call_method_wrong_params() {
 
 #[test]
 fn test_new_call_method_generic() {
-    ok("fun f[T: std::Hash](t: T): Unit { t.hash(); () }");
+    ok("fun f[T: std::Hash](t: T): Unit { t.hash; () }");
 }
 
 #[test]
@@ -1542,8 +1542,8 @@ fn test_type_param_with_name_but_no_call() {
     err(
         "trait X { fun foo(): Int32; }
         fun f[T: X](): Unit { T::foo; }",
-        pos(2, 31),
-        ErrorMessage::InvalidLeftSideOfSeparator,
+        pos(2, 32),
+        ErrorMessage::UnknownStaticMethodWithTypeParam,
     );
 
     err(
@@ -1552,8 +1552,8 @@ fn test_type_param_with_name_but_no_call() {
         impl[T: X] SomeClass[T] {
             fun f(): Unit { T::foo; }
         }",
-        pos(4, 29),
-        ErrorMessage::InvalidLeftSideOfSeparator,
+        pos(4, 30),
+        ErrorMessage::UnknownStaticMethodWithTypeParam,
     );
 }
 
@@ -2539,7 +2539,7 @@ fn literal_without_suffix_long() {
 #[test]
 fn variadic_parameter() {
     ok("
-        fun f(x: Int32...): Int64 = x.size()
+        fun f(x: Int32...): Int64 = x.size
         fun g(): Unit {
             f(1i32, 2i32, 3i32, 4i32)
             f()

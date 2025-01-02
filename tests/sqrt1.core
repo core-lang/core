@@ -1,17 +1,17 @@
 fun main(): Unit {
-    assert(9f64.sqrt() == 3f64);
+    assert(9f64.sqrt == 3f64);
 
     let x = 0f64 / 0f64;
-    assert(x.sqrt().isNan());
+    assert(x.sqrt.isNan);
 
     let x = -1f64;
-    assert(x.sqrt().isNan());
+    assert(x.sqrt.isNan);
 
-    assert(9f32.sqrt() == 3f32);
+    assert(9f32.sqrt == 3f32);
 
     let x = 0f32 / 0f32;
-    assert(x.sqrt().isNan());
+    assert(x.sqrt.isNan);
 
     let x = -1f32;
-    assert(x.sqrt().isNan());
+    assert(x.sqrt.isNan);
 }
