@@ -37,7 +37,7 @@ fun isValidUtf8(data: Array[UInt8]): Bool {
   var i = 0i64
 
   while i < data.size() {
-    let by = data(i).toInt32()
+    let by = data(i).toInt32
     var codepoint = 0i32
     var bytes = 0i32
     var min = 0i32
@@ -78,7 +78,7 @@ fun isValidUtf8(data: Array[UInt8]): Bool {
           return false
         }
 
-        let by = data(i).toInt32()
+        let by = data(i).toInt32
 
         if by & 0xC0i32 != 0x80i32 {
           return false

@@ -6,7 +6,7 @@ fun main(): Unit {
     var iterations = 8200i32;
 
     if std::argc() > 0i32 {
-        iterations = std::argv(0i32).toInt32().getOrPanic();
+        iterations = std::argv(0i32).toInt32.getOrPanic();
     }  
 
     let bench = Benchmark();
@@ -81,7 +81,7 @@ impl Scheduler {
         Scheduler(
             0i32,
             0i32,
-            Array[Option[TaskControlBlock]]::fill(NUMBER_OF_IDS.toInt64(), Option[TaskControlBlock]::None),
+            Array[Option[TaskControlBlock]]::fill(NUMBER_OF_IDS.toInt64, Option[TaskControlBlock]::None),
             None[TaskControlBlock],
             None[TaskControlBlock],
             None[Int32],
@@ -111,7 +111,7 @@ impl Scheduler {
     fun addTask(id: Int32, priority: Int32, queue: Option[Packet], task: Task): Unit {
         self.currentTcb = Some(TaskControlBlock::new(self.list, id, priority, queue, task));
         self.list = self.currentTcb;
-        self.blocks.set(id.toInt64(), self.currentTcb);
+        self.blocks.set(id.toInt64, self.currentTcb);
     }
 
     fun schedule(): Unit {
@@ -128,7 +128,7 @@ impl Scheduler {
     }
 
     fun release(id: Int32): Option[TaskControlBlock] {
-        let blockTcb = self.blocks.get(id.toInt64());
+        let blockTcb = self.blocks.get(id.toInt64);
         if blockTcb.isNone() {   
             return Option[TaskControlBlock]::None;
         }
@@ -155,7 +155,7 @@ impl Scheduler {
     }
 
     fun queue(packet: Packet): Option[TaskControlBlock] {
-        let t = self.blocks.get(packet.id.toInt64());
+        let t = self.blocks.get(packet.id.toInt64);
         if t.isNone() {
             return None;
         }
@@ -172,7 +172,7 @@ const STATE_SUSPENDED: Int32 = 2i32;
 const STATE_HELD: Int32 = 4i32;
 
 var STATE_SUSPENDED_RUNNABLE: Int32 = STATE_SUSPENDED | STATE_RUNNABLE;
-var STATE_NOT_HELD: Int32 = STATE_HELD.not();
+var STATE_NOT_HELD: Int32 = STATE_HELD.not;
 
 class TaskControlBlock {
     link: Option[TaskControlBlock],
@@ -367,7 +367,7 @@ impl Task for HandlerTask {
                 if self.v2.isSome() {                    
                     let v = self.v2.getOrPanic();
                     self.v2 = v.link;
-                    v.a1 = v1_p.a2.get(count.toInt64());
+                    v.a1 = v1_p.a2.get(count.toInt64);
                     v1_p.a1 = count + 1i32;
                     return self.scheduler.queue(v);
                 }
@@ -415,7 +415,7 @@ impl Packet {
     }
 
     @static fun new(link: Option[Packet], id: Int32, kind: Int32): Packet {
-        let array: Array[Int32] = Array[Int32]::newDefault(DATA_SIZE.toInt64());
+        let array: Array[Int32] = Array[Int32]::newDefault(DATA_SIZE.toInt64);
         return Packet(link, id, kind, 0i32, array);
     }
 }

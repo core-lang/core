@@ -1,13 +1,13 @@
 fun main(): Unit {
     let x = 0f32 / 0f32;
-    assert(x.isNan());
+    assert(x.isNan);
 
     let x = 3f32;
-    assert(x.isNan().not());
+    assert(x.isNan.not);
 
     let y = 0f64 / 0f64;
-    assert(y.isNan());
+    assert(y.isNan);
 
     let y = 2f64;
-    assert(y.isNan().not());
+    assert(y.isNan.not);
 }

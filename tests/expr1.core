@@ -10,18 +10,18 @@ fun main(): Unit {
     assert(+1i32 != -1i32);
     assert(+2i32 == 2i32);
 
-    assert((-1i32).not() == 0i32);
-    assert((-2i32).not() == 1i32);
-    assert(-1i32 == 0i32.not());
+    assert((-1i32).not == 0i32);
+    assert((-2i32).not == 1i32);
+    assert(-1i32 == 0i32.not);
 
     assert(true);
-    assert(false.not());
+    assert(false.not);
 
     let x = true;
     assert(x);
 
     let x = false;
-    assert(x.not());
+    assert(x.not);
 
     assert(10i32 == 1i32+(2i32+(3i32+4i32)));
     assert(-1i32 == 1i32-2i32);

@@ -15,7 +15,7 @@ fun sieve(limit: Int64): List[Int64] {
 
     if limit >= 2i64 {
         let numbers = Array[Bool]::fill(limit+1i64, true);
-        let sqrtLimit = limit.toFloat64().sqrt().toInt64();
+        let sqrtLimit = limit.toFloat64.sqrt.toInt64;
 
         var factor = 2i64;
 

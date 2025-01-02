@@ -1,6 +1,6 @@
 fun main(): Unit {
     SOLAR_MASS = 4.0 * PI * PI;
-    let n = std::argv(0i32).toInt32().getOrPanic();
+    let n = std::argv(0i32).toInt32.getOrPanic();
     let bodies = NBodySystem::new();
 
     var i = 0i32;
@@ -55,7 +55,7 @@ impl NBodySystem {
                 let dz = iBody.z - jBody.z;
 
                 let dSquared = dx * dx + dy * dy + dz * dz;
-                let distance = dSquared.sqrt();
+                let distance = dSquared.sqrt;
                 let mag = dt / (dSquared * distance);
 
                 iBody.vx = iBody.vx - dx * jBody.mass * mag;
@@ -99,7 +99,7 @@ impl NBodySystem {
             dy = iBody.y - jBody.y;
             dz = iBody.z - jBody.z;
 
-            distance = (dx*dx + dy*dy + dz*dz).sqrt();
+            distance = (dx*dx + dy*dy + dz*dz).sqrt;
             e = e - (iBody.mass * jBody.mass) / distance;
 
             j = j + 1i64;

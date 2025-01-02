@@ -17,11 +17,11 @@ fun testNeedleEmpty(): Unit {
 }
 
 fun testHaystackEmpty(): Unit {
-  assert("".contains("abc").not());
+  assert("".contains("abc").not);
 }
 
 fun testNeedleLarger(): Unit {
-  assert("abc".contains("abcdef").not());
+  assert("abc".contains("abcdef").not);
 }
 
 fun testSuccess(): Unit {
@@ -36,5 +36,5 @@ fun testMultipleMatch(): Unit {
 }
 
 fun testFailure(): Unit {
-  assert("def".contains("abc").not());
+  assert("def".contains("abc").not);
 }

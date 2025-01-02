@@ -5,5 +5,5 @@ fun main(): Unit {
   assert(set.includes(1i32));
   assert(set.includes(10'000i32));
   assert(set.includes(7i32));
-  assert(set.includes(0i32).not());
+  assert(set.includes(0i32).not);
 }

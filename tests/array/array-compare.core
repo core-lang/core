@@ -6,10 +6,10 @@ fun main(): Unit {
   let e = Array[Int32]::new();
 
   assert(Array[Int32]::compare(a, 0i64, a, 0i64, 11i64));
-  assert(Array[Int32]::compare(a, 0i64, b, 0i64, 11i64).not());
+  assert(Array[Int32]::compare(a, 0i64, b, 0i64, 11i64).not);
   assert(Array[Int32]::compare(a, 0i64, b, 0i64, 10i64));
   assert(Array[Int32]::compare(a, 1i64, b, 1i64, 9i64));
-  assert(Array[Int32]::compare(a, 1i64, b, 1i64, 10i64).not());
+  assert(Array[Int32]::compare(a, 1i64, b, 1i64, 10i64).not);
   assert(Array[Int32]::compare(a, 0i64, c, 0i64, 10i64));
   assert(Array[Int32]::compare(a, 1i64, d, 0i64, 9i64));
   assert(Array[Int32]::compare(e, 0i64, e, 0i64, 0i64));

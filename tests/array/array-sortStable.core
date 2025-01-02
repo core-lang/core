@@ -21,14 +21,14 @@ fun float64(): Unit {
   // we need to make extra efforts to ensure the NaNs we are using have the desired signs.
 
   // expected order
-  let nNaN = -(0.0/0.0).abs();
+  let nNaN = -(0.0/0.0).abs;
   let nInf = -1.0/0.0;
   let nOne = -1.0;
   let nZero = -0.0;
   let pZero = 0.0;
   let pOne = 1.0;
   let pInf= 1.0/0.0;
-  let pNaN = (0.0/0.0).abs();
+  let pNaN = (0.0/0.0).abs;
 
   let x = Array[Float64]::new(pOne, pInf, nInf, pNaN, nNaN, nZero, pZero, nOne);
   Array[Float64]::sortStable(x);

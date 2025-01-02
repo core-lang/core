@@ -1,6 +1,6 @@
 fun main(): Unit {
-  assert(true.toString() == "true");
-  assert(false.toString() == "false");
-  assert(0i32.toString() == "0");
-  assert("toString".toString() == "toString");
+  assert(true.toString == "true");
+  assert(false.toString == "false");
+  assert(0i32.toString == "0");
+  assert("toString".toString == "toString");
 }

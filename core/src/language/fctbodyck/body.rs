@@ -1053,9 +1053,11 @@ impl<'a> TypeCheck<'a> {
             e.pos,
             expr_type.clone(),
             false,
+            false,
             name,
             &arg_types,
             &SourceTypeArray::empty(),
+            true,
         ) {
             let call_type = CallType::Expr(expr_type, descriptor.fct_id, descriptor.type_params);
             self.analysis
@@ -1144,21 +1146,24 @@ impl<'a> TypeCheck<'a> {
         pos: Position,
         object_type: SourceType,
         is_static: bool,
+        is_nullary: bool,
         name: Name,
         args: &[SourceType],
         fct_type_params: &SourceTypeArray,
+        report_errors: bool,
     ) -> Option<MethodDescriptor> {
         let descriptor = lookup_method(
             self.sa,
             object_type.clone(),
             &self.fct.type_params,
             is_static,
+            is_nullary,
             name,
             args,
             fct_type_params,
         );
 
-        if descriptor.is_none() {
+        if descriptor.is_none() && report_errors {
             let type_name = object_type.name_fct(self.sa, self.fct);
             let name = self.sa.interner.str(name).to_string();
             let param_names = args
@@ -1209,6 +1214,7 @@ impl<'a> TypeCheck<'a> {
                 ty.clone(),
                 &self.fct.type_params,
                 false,
+                true,
                 name,
                 &call_types,
                 &SourceTypeArray::empty(),
@@ -1296,6 +1302,7 @@ impl<'a> TypeCheck<'a> {
             self.sa,
             lhs_type.clone(),
             &self.fct.type_params,
+            false,
             false,
             name,
             &call_types,
@@ -1708,9 +1715,11 @@ impl<'a> TypeCheck<'a> {
             e.pos,
             expr_type.clone(),
             false,
+            false,
             get,
             arg_types,
             &SourceTypeArray::empty(),
+            true,
         ) {
             let call_type =
                 CallType::Expr(expr_type.clone(), descriptor.fct_id, descriptor.type_params);
@@ -3047,6 +3056,35 @@ impl<'a> TypeCheck<'a> {
             }
         }
 
+        if let Some(function) = self.find_method(
+            e.pos,
+            object_type.clone(),
+            false,
+            true,
+            name,
+            &[],
+            &SourceTypeArray::empty(),
+            false,
+        ) {
+            let call_type = Arc::new(CallType::Method(
+                object_type.clone(),
+                function.fct_id,
+                SourceTypeArray::Empty,
+            ));
+            self.analysis.map_calls.insert_or_replace(e.id, call_type);
+
+            let class_type_params = object_type.type_params();
+            let fty = replace_type_param(
+                self.sa,
+                function.return_type.clone(),
+                &class_type_params,
+                None,
+            );
+
+            self.analysis.set_ty(e.id, fty.clone());
+            return fty;
+        }
+
         // field not found, report error
         if !object_type.is_error() {
             let field_name = self.sa.interner.str(name).to_string();
@@ -3677,16 +3715,38 @@ fn lookup_method(
     object_type: SourceType,
     type_param_defs: &TypeParamDefinition,
     is_static: bool,
+    is_nullary: bool,
     name: Name,
     args: &[SourceType],
     fct_type_params: &SourceTypeArray,
 ) -> Option<MethodDescriptor> {
     let candidates = if object_type.is_enum() {
-        find_methods_in_enum(sa, object_type, type_param_defs, name, is_static)
+        find_methods_in_enum(
+            sa,
+            object_type,
+            type_param_defs,
+            name,
+            is_static,
+            is_nullary,
+        )
     } else if object_type.is_value() || object_type.is_primitive() {
-        find_methods_in_value(sa, object_type, type_param_defs, name, is_static)
+        find_methods_in_value(
+            sa,
+            object_type,
+            type_param_defs,
+            name,
+            is_static,
+            is_nullary,
+        )
     } else if object_type.cls_id().is_some() {
-        find_methods_in_class(sa, object_type, type_param_defs, name, is_static)
+        find_methods_in_class(
+            sa,
+            object_type,
+            type_param_defs,
+            name,
+            is_static,
+            is_nullary,
+        )
     } else {
         Vec::new()
     };

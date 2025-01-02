@@ -100,6 +100,7 @@ impl SemAnalysis {
         class_name: &'static str,
         function_name: &'static str,
         is_static: bool,
+        is_nullary: bool,
     ) -> Option<FctDefinitionId> {
         let class_name = self.interner.intern(class_name);
         let function_name = self.interner.intern(function_name);
@@ -110,8 +111,14 @@ impl SemAnalysis {
         let cls = self.classes.idx(cls_id);
         let cls = cls.read();
 
-        let candidates =
-            find_methods_in_class(self, cls.ty(), cls.type_params(), function_name, is_static);
+        let candidates = find_methods_in_class(
+            self,
+            cls.ty(),
+            cls.type_params(),
+            function_name,
+            is_static,
+            is_nullary,
+        );
         if candidates.len() == 1 {
             Some(candidates[0].fct_id)
         } else {
@@ -125,6 +132,7 @@ impl SemAnalysis {
         value_name: &'static str,
         function_name: &'static str,
         is_static: bool,
+        is_nullary: bool,
     ) -> Option<FctDefinitionId> {
         let value_name = self.interner.intern(value_name);
         let function_name = self.interner.intern(function_name);
@@ -141,6 +149,7 @@ impl SemAnalysis {
             value.type_params(),
             function_name,
             is_static,
+            is_nullary,
         );
 
         if candidates.len() == 1 {

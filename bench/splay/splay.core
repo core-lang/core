@@ -7,9 +7,9 @@ fun main(): Unit {
         std::exit(1i32);
     }
 
-    rnd = std::Random::new(std::argv(0i32).toInt64().getOrPanic());
-    splayTreeSize = std::argv(1i32).toInt32().getOrPanic();
-    let iterations = std::argv(2i32).toInt32().getOrPanic();
+    rnd = std::Random::new(std::argv(0i32).toInt64.getOrPanic());
+    splayTreeSize = std::argv(1i32).toInt32.getOrPanic();
+    let iterations = std::argv(2i32).toInt32.getOrPanic();
 
     let bench = Benchmark::new();
     bench.setup();
@@ -76,7 +76,7 @@ impl Benchmark {
 
         var length = keys.size();
 
-        if length != splayTreeSize.toInt64() {
+        if length != splayTreeSize.toInt64 {
             fatalError("Splay tree has wrong sie");
         }
 
@@ -139,7 +139,7 @@ fun generatePayloadTree(depth: Int32, tag: String): PayloadNode =
         var i = 0i32;
 
         while i < 10i32 {
-            arr(i.toInt64()) = i;
+            arr(i.toInt64) = i;
             i = i + 1i32;
         }
 
@@ -162,12 +162,12 @@ impl SplayTree {
         SplayTree(None[SplayNode])
     }
 
-    fun isEmpty(): Bool {
+    fun isEmpty: Bool {
         return self.root.isNone();
     }
 
     fun insert(key: Int32, value: PayloadNode): Unit {
-        if self.isEmpty() {
+        if self.isEmpty {
             self.root = Some(SplayNode::new(key, Some[PayloadNode](value)));
             return
         }
@@ -197,7 +197,7 @@ impl SplayTree {
     }
 
     fun remove(key: Int32): Option[SplayNode] {
-        if self.isEmpty() {
+        if self.isEmpty {
             return Option[SplayNode]::None;
         }
 
@@ -223,7 +223,7 @@ impl SplayTree {
     }
 
     fun find(key: Int32): Option[SplayNode] {
-        if self.isEmpty() {
+        if self.isEmpty {
             return None;
         }
 
@@ -238,7 +238,7 @@ impl SplayTree {
     }
 
     fun findMax(startNode: Option[SplayNode]): Option[SplayNode] {
-        if self.isEmpty() {
+        if self.isEmpty {
             return None;
         }
 
@@ -256,7 +256,7 @@ impl SplayTree {
     }
 
     fun findGreatestLessThan(key: Int32): Option[SplayNode] {
-        if self.isEmpty() {
+        if self.isEmpty {
             return None;
         }
 
@@ -279,7 +279,7 @@ impl SplayTree {
     }
 
     fun splay(key: Int32): Unit {
-        if self.isEmpty() {
+        if self.isEmpty {
             return
         }
 

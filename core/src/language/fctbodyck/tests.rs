@@ -3,7 +3,7 @@ use crate::language::sem_analysis::ConstValue;
 use crate::language::tests::*;
 
 #[test]
-fn type_method_len() {
+fn type_method_size() {
     ok("fun f(a: String): Int64 = a.size()");
     ok("fun f(a: String): Int64 = \"abc\".size()");
 }

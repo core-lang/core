@@ -7,7 +7,7 @@ fun main(): Unit {
     assert(y.first == "my string");
     assert(y.second);
     assert(x.first == "another string");
-    assert(x.second.not());
+    assert(x.second.not);
 }
 
 value Pair(first: String, second: Bool)

@@ -2,7 +2,7 @@ fun main(): Unit {
   assert(1i32 == A()("hello"));
 
   assert(B()(true));
-  assert(B()(false).not());
+  assert(B()(false).not);
 }
 
 class A

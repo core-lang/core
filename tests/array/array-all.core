@@ -5,5 +5,5 @@ fun main(): Unit {
 
   assert(array0.all(|val: Int64|: Bool { val < 4 }));
   assert(array1.all(|val: Int64|: Bool { val < 4 }));
-  assert(array2.all(|val: Int64|: Bool { val < 4 }).not());
+  assert(array2.all(|val: Int64|: Bool { val < 4 }).not);
 }

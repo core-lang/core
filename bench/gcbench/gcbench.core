@@ -65,7 +65,7 @@ fun timeConstruction(depth: Int32): Unit {
     }
 
     let finish = timestamp();
-    let msecs = (finish - start).toFloat32() / 1000.0f32 / 1000.0f32;
+    let msecs = (finish - start).toFloat32 / 1000.0f32 / 1000.0f32;
     println("\tTop down construction took " + msecs.toString() + "ms");
 
     let start = finish;
@@ -78,7 +78,7 @@ fun timeConstruction(depth: Int32): Unit {
     }
 
     let finish = timestamp();
-    let msecs = (finish - start).toFloat32() / 1000.0f32 / 1000.0f32;
+    let msecs = (finish - start).toFloat32 / 1000.0f32 / 1000.0f32;
     println("\tBottom up construction took " + msecs.toString() + "ms");
 }
 
@@ -88,7 +88,7 @@ fun main(): Unit {
         std::exit(1i32);
     }
 
-    let depth = argv(0i32).toInt32().getOrPanic();
+    let depth = argv(0i32).toInt32.getOrPanic();
 
     stretchTreeDepth = depth+1i32;
     longLivedTreeDepth = depth;
@@ -103,12 +103,12 @@ fun main(): Unit {
     populate(longLivedTreeDepth, longLivedTree);
 
     println("Creating a long-lived array of " + kArraySize.toString() + " doubles");
-    let array = Array[Float64]::fill(kArraySize.toInt64(), 0.0);
+    let array = Array[Float64]::fill(kArraySize.toInt64, 0.0);
 
     var i = 0i32;
 
     while i < kArraySize / 2i32 {
-        array(i.toInt64()) = 1.0/i.toFloat64();
+        array(i.toInt64) = 1.0/i.toFloat64;
         i = i + 1i32;
     }
 
@@ -121,6 +121,6 @@ fun main(): Unit {
 
     assert(longLivedTree.i == 0i32 && array(1000i64) == 1.0/1000.0);
     let finish = timestamp();
-    let elapsed = (finish - start).toFloat32() / 1000.0f32 / 1000.0f32;
+    let elapsed = (finish - start).toFloat32 / 1000.0f32 / 1000.0f32;
     println("Completed in " + elapsed.toString() + "ms.");
 }

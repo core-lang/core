@@ -13,5 +13,5 @@ fun main(): Unit {
   assert(er1 == er1);
   assert(er1 != er2);
   assert(nan != nan);
-  assert(nan.equals(nan).not());
+  assert(nan.equals(nan).not);
 }

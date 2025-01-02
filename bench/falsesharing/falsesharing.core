@@ -3,8 +3,8 @@ fun main(): Unit {
         println("usage: falsesharing <threads> <iterations>");
     }
 
-    let threads = argv(0).toInt64().getOrPanic();
-    let iterations = argv(1).toInt32().getOrPanic();
+    let threads = argv(0).toInt64.getOrPanic();
+    let iterations = argv(1).toInt32.getOrPanic();
     let objects = construct(8096i64);
     forceCollect();
 
@@ -22,14 +22,14 @@ fun construct(size: Int64): Array[Foo] {
 
     var i = 0i64;
 
-    while i < objects.size() {
+    while i < objects.size {
         objects(i) = Foo(nil, nil);
         i = i + 1i64;
     }
 
     i = 0i64;
 
-    while i < objects.size() {
+    while i < objects.size {
         if i == 0i64 {
              objects(0i64).left = objects(size-1i64);
 	} else {
@@ -50,7 +50,7 @@ fun construct(size: Int64): Array[Foo] {
 
 class MyThread(let thread_idx: Int64, let threads: Int64, let iters: Int32, let objects: Array[Foo]) extends Thread {
   @override fun run(): Unit {
-	let size = self.objects.size();
+	let size = self.objects.size;
 	let objects_per_thread = size / self.threads;
 	assert(size.remainder(self.threads) == 0i64);
 	let start_idx = self.thread_idx  * objects_per_thread;

@@ -124,6 +124,7 @@ pub fn find_methods_in_enum(
     type_param_defs: &TypeParamDefinition,
     name: Name,
     is_static: bool,
+    is_nullary: bool,
 ) -> Vec<Candidate> {
     let enum_id = object_type.enum_id().unwrap();
     let enum_ = sa.enums.idx(enum_id);
@@ -142,11 +143,15 @@ pub fn find_methods_in_enum(
             };
 
             if let Some(&fct_id) = table.get(&name) {
-                return vec![Candidate {
-                    object_type: object_type.clone(),
-                    container_type_params: bindings,
-                    fct_id,
-                }];
+                let function = sa.fcts.idx(fct_id);
+                let function = function.read();
+                if function.is_nullary == is_nullary {
+                    return vec![Candidate {
+                        object_type: object_type.clone(),
+                        container_type_params: bindings,
+                        fct_id,
+                    }];
+                }
             }
         }
     }

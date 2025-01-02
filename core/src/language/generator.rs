@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 use core_parser::ast;
+use core_parser::interner::ArcStr;
 use core_parser::lexer::position::Position;
 
 use crate::bytecode::{
@@ -1011,6 +1012,25 @@ impl<'a> AstBytecodeGen<'a> {
         if let Some(value_id) = object_ty.value_id() {
             let type_params = object_ty.type_params();
             return self.visit_expr_dot_value(expr, value_id, type_params, dest);
+        }
+
+        let call_type = self.analysis.map_calls.get(expr.id);
+        if call_type.is_some_and(|c| c.is_method()) {
+            let dot = ast::ExprDotType {
+                id: expr.id,
+                pos: expr.pos,
+                span: expr.span,
+                lhs: expr.lhs.clone(),
+                rhs: expr.rhs.clone(),
+            };
+            let call = ast::ExprCallType {
+                id: expr.id,
+                pos: expr.pos,
+                span: expr.span,
+                callee: Box::new(ast::Expr::Dot(dot)),
+                args: Vec::new(),
+            };
+            return self.visit_expr_call(&call, dest);
         }
 
         let (cls_ty, field_id) = {

@@ -1,8 +1,8 @@
 fun main(): Unit {
-    let x = 1i32.unaryPlus();
+    let x = 1i32.unaryPlus;
     assert(x == (+1i32));
 
-    let x = 1i32.unaryMinus();
+    let x = 1i32.unaryMinus;
     assert(x == (-1i32));
 
     let x = 1i32.plus(2i32);
@@ -50,7 +50,7 @@ fun main(): Unit {
     let x = 1i32 ^ 3i32;
     assert(x == 2i32);
 
-    let x = 1i32.not();
+    let x = 1i32.not;
     assert(x == (-2i32));
 
     assert(2i32 != 3i32);

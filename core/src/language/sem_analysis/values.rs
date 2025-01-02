@@ -174,6 +174,7 @@ pub fn find_methods_in_value(
     type_param_defs: &TypeParamDefinition,
     name: Name,
     is_static: bool,
+    is_nullary: bool,
 ) -> Vec<Candidate> {
     let value_id = if object_type.is_primitive() {
         object_type
@@ -199,11 +200,15 @@ pub fn find_methods_in_value(
             };
 
             if let Some(&fct_id) = table.get(&name) {
-                return vec![Candidate {
-                    object_type: object_type.clone(),
-                    container_type_params: bindings,
-                    fct_id,
-                }];
+                let function = sa.fcts.idx(fct_id);
+                let function = function.read();
+                if function.is_nullary == is_nullary {
+                    return vec![Candidate {
+                        object_type: object_type.clone(),
+                        container_type_params: bindings,
+                        fct_id,
+                    }];
+                }
             }
         }
     }

@@ -2,7 +2,7 @@ fun main(): Unit {
   var maxDepth = 6i32;
 
   if std::argc() > 0i32 {
-    maxDepth = std::argv(0i32).toInt32().getOrPanic();
+    maxDepth = std::argv(0i32).toInt32.getOrPanic();
   }
 
   if 6i32 > maxDepth {

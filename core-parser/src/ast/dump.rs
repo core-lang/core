@@ -340,7 +340,9 @@ impl<'a> AstDumper<'a> {
             dump!(d, "internal = {}", fct.internal);
             dump!(d, "params");
             d.indent(|d| {
-                if fct.params.is_empty() {
+                if fct.is_nullary {
+                    dump!(d, "nullary");
+                } else if fct.params.is_empty() {
                     dump!(d, "no params");
                 } else {
                     for param in &fct.params {
