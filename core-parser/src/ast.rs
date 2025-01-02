@@ -665,6 +665,7 @@ pub struct Function {
     pub is_constructor: bool,
 
     pub params: Vec<Param>,
+    pub is_nullary: bool,
 
     pub return_type: Option<Type>,
     pub block: Option<Box<ExprBlockType>>,

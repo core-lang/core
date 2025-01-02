@@ -860,7 +860,7 @@ impl<'a> Parser<'a> {
         let pos = self.expect_token(TokenKind::Fun)?.position;
         let ident = self.expect_identifier()?;
         let type_params = self.parse_type_params()?;
-        let params = self.parse_function_params()?;
+        let (params, is_nullary) = self.parse_function_params()?;
         let return_type = self.parse_function_type()?;
         let block = self.parse_function_block()?;
         let span = self.span_from(start);
@@ -878,6 +878,7 @@ impl<'a> Parser<'a> {
             internal: modifiers.contains(Modifier::Internal),
             is_constructor: false,
             is_test: modifiers.contains(Modifier::Test),
+            is_nullary,
             params,
             return_type,
             block,
@@ -885,7 +886,11 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_function_params(&mut self) -> Result<Vec<Param>, ParseErrorAndPos> {
+    /** Returns the function parameters, and whether the function is nullary. */
+    fn parse_function_params(&mut self) -> Result<(Vec<Param>, bool), ParseErrorAndPos> {
+        if self.token.is(TokenKind::Colon) {
+            return Ok((Vec::new(), true));
+        }
         self.expect_token(TokenKind::LParen)?;
         self.param_idx = 0;
 
@@ -895,7 +900,7 @@ impl<'a> Parser<'a> {
             p.parse_function_param()
         })?;
 
-        Ok(params)
+        Ok((params, false))
     }
 
     fn parse_list<F, R>(
@@ -2057,6 +2062,7 @@ impl<'a> Parser<'a> {
             is_constructor: false,
             is_test: false,
             params,
+            is_nullary: false,
             return_type: Some(return_type),
             block,
             type_params: None,
