@@ -1,6 +1,6 @@
 fun main(): Unit {
     let x = Array[()]::fill(7i64, ());
-    assert(x.size() == 7i64);
+    assert(x.size == 7i64);
     let y = Array[()]::new();
-    assert(y.size() == 0i64);
+    assert(y.size == 0i64);
 }

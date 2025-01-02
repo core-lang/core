@@ -22,11 +22,11 @@ impl Node {
     fun printAges(date: Int32): Unit {
         self.printAge(date);
 
-        if self.left.isSome() {
+        if self.left.isSome {
             self.left.getOrPanic().printAges(date);
         }
 
-        if self.right.isSome() {
+        if self.right.isSome {
             self.right.getOrPanic().printAges(date);
         }
     }
@@ -36,17 +36,17 @@ impl Node {
         print("age: " + (date - self.birthday).toString());
         println(" value: " + self.value.toString());
 
-        if self.left.isSome() {
+        if self.left.isSome {
             self.left.getOrPanic().printTree(date, prefix + "  ");
         }
 
-        if self.right.isSome() {
+        if self.right.isSome {
             self.right.getOrPanic().printTree(date, prefix + "  ");
         }
     }
 
     @static fun splay(tree: Option[Node], node: Node): Option[Node] {
-        if tree.isNone() {
+        if tree.isNone {
             return None;
         }
         var tree = tree.getOrPanic();
@@ -60,14 +60,14 @@ impl Node {
         var continue = true;
         while continue {
             if node.value
-            ... < tree.value && tree.left.isSome() {
+            ... < tree.value && tree.left.isSome {
                 if node.value <= tree.left.getOrPanic().value {
                     // rotate right
                     let y = tree.left.getOrPanic();
                     tree.left = y.right;
                     y.right = Option[Node]::Some(tree);
                     tree = y;
-                    if tree.left.isNone() {
+                    if tree.left.isNone {
                         continue = false;
                     }
                 }
@@ -78,14 +78,14 @@ impl Node {
                     tree = tree.left.getOrPanic();
                 }
             }
-            ... > tree.value && tree.right.isSome() {
+            ... > tree.value && tree.right.isSome {
                 if node.value > tree.right.getOrPanic().value {
                     // rotate left
                     let y = tree.right.getOrPanic();
                     tree.right = y.left;
                     y.left = Option[Node]::Some(tree);
                     tree = y;
-                    if tree.right.isNone() {
+                    if tree.right.isNone {
                         continue = false;
                     }
                 }
@@ -107,7 +107,7 @@ impl Node {
     }
 
     @static fun insert(tree: Option[Node], node: Node): Node {
-        if tree.isNone() {
+        if tree.isNone {
             return node;
         }
 
@@ -127,7 +127,7 @@ impl Node {
     }
 
     @static fun trunc(date: Int32, tree: Node, depth: Int32): Unit {
-        if tree.left.isSome() {
+        if tree.left.isSome {
             if depth == 0i32 {
                 tree.left = None;
             } else {
@@ -135,7 +135,7 @@ impl Node {
             }
         }
 
-        if tree.right.isSome() {
+        if tree.right.isSome {
             if depth == 0i32 {
                 tree.right = None;
             } else {
@@ -145,7 +145,7 @@ impl Node {
     }
 
     @static fun countNodes(node: Option[Node]): Int32 {
-        if node.isNone() {
+        if node.isNone {
             return 0i32;
         }
         let node = node.getOrPanic();
@@ -159,8 +159,8 @@ fun main(): Unit {
         exit(1i32);
     }
 
-    let rnd = std::Random::new(argv(0i32).toInt64().getOrPanic());
-    let max_size = argv(1i32).toInt32().getOrPanic();
+    let rnd = std::Random::new(argv(0i32).toInt64.getOrPanic());
+    let max_size = argv(1i32).toInt32.getOrPanic();
     var date = 0i32;
 
     var tree: Node = Node::new(None[Array[Int32]]);
@@ -171,8 +171,8 @@ fun main(): Unit {
     var j = 2i32;
 
     while j + 2i32 <= argc() {
-        let n = argv(j).toInt32().getOrPanic();
-        let depth = argv(j).toInt32().getOrPanic();
+        let n = argv(j).toInt32.getOrPanic();
+        let depth = argv(j).toInt32.getOrPanic();
 
         var i = 0i32;
         while i < n {

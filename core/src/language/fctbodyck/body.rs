@@ -1,10 +1,9 @@
+use fixedbitset::FixedBitSet;
+use option_ext::OptionExt;
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::sync::Arc;
 use std::{f32, f64};
-
-use fixedbitset::FixedBitSet;
-use option_ext::OptionExt;
 
 use core_parser::ast;
 use core_parser::ast::visit::Visitor;
@@ -1053,9 +1052,11 @@ impl<'a> TypeCheck<'a> {
             e.pos,
             expr_type.clone(),
             false,
+            false,
             name,
             &arg_types,
             &SourceTypeArray::empty(),
+            true,
         ) {
             let call_type = CallType::Expr(expr_type, descriptor.fct_id, descriptor.type_params);
             self.analysis
@@ -1144,21 +1145,24 @@ impl<'a> TypeCheck<'a> {
         pos: Position,
         object_type: SourceType,
         is_static: bool,
+        is_nullary: bool,
         name: Name,
         args: &[SourceType],
         fct_type_params: &SourceTypeArray,
+        report_errors: bool,
     ) -> Option<MethodDescriptor> {
         let descriptor = lookup_method(
             self.sa,
             object_type.clone(),
             &self.fct.type_params,
             is_static,
+            is_nullary,
             name,
             args,
             fct_type_params,
         );
 
-        if descriptor.is_none() {
+        if descriptor.is_none() && report_errors {
             let type_name = object_type.name_fct(self.sa, self.fct);
             let name = self.sa.interner.str(name).to_string();
             let param_names = args
@@ -1209,6 +1213,7 @@ impl<'a> TypeCheck<'a> {
                 ty.clone(),
                 &self.fct.type_params,
                 false,
+                true,
                 name,
                 &call_types,
                 &SourceTypeArray::empty(),
@@ -1296,6 +1301,7 @@ impl<'a> TypeCheck<'a> {
             self.sa,
             lhs_type.clone(),
             &self.fct.type_params,
+            false,
             false,
             name,
             &call_types,
@@ -1455,7 +1461,7 @@ impl<'a> TypeCheck<'a> {
             };
             self.check_expr_call_method(e, object_type, method_name, type_params, &arg_types)
         } else if let Some(_expr_path) = callee.to_path() {
-            self.check_expr_call_path(e, expected_ty, callee, type_params, &arg_types)
+            self.check_expr_call_path(e, expected_ty, callee, type_params, &arg_types, false)
         } else {
             if !type_params.is_empty() {
                 let msg = ErrorMessage::NoTypeParamsExpected;
@@ -1708,9 +1714,11 @@ impl<'a> TypeCheck<'a> {
             e.pos,
             expr_type.clone(),
             false,
+            false,
             get,
             arg_types,
             &SourceTypeArray::empty(),
+            true,
         ) {
             let call_type =
                 CallType::Expr(expr_type.clone(), descriptor.fct_id, descriptor.type_params);
@@ -1816,6 +1824,7 @@ impl<'a> TypeCheck<'a> {
         method_name: Name,
         fct_type_params: SourceTypeArray,
         arg_types: &[SourceType],
+        is_nullary: bool,
     ) -> SourceType {
         let mut lookup = MethodLookup::new(self.sa, self.fct)
             .pos(e.pos)
@@ -1823,6 +1832,7 @@ impl<'a> TypeCheck<'a> {
             .name(method_name)
             .arg_types(arg_types)
             .arg_names(e.arg_names())
+            .is_nullary(is_nullary)
             .fct_type_params(&fct_type_params)
             .type_param_defs(&self.fct.type_params);
 
@@ -2263,6 +2273,7 @@ impl<'a> TypeCheck<'a> {
             tp_id,
             name,
             arg_types,
+            self.fct.is_nullary,
         )
     }
 
@@ -2273,6 +2284,7 @@ impl<'a> TypeCheck<'a> {
         id: TypeParamId,
         name: Name,
         args: &[SourceType],
+        is_nullary: bool,
     ) -> SourceType {
         let mut found_fcts = Vec::new();
 
@@ -2280,7 +2292,9 @@ impl<'a> TypeCheck<'a> {
             let trait_id = trait_ty.trait_id().expect("trait expected");
             let trait_ = self.sa.traits[trait_id].read();
 
-            if let Some(fid) = trait_.find_method_with_replace(self.sa, false, name, None, args) {
+            if let Some(fid) =
+                trait_.find_method_with_replace(self.sa, false, name, None, args, is_nullary)
+            {
                 found_fcts.push(fid);
             }
         }
@@ -2326,6 +2340,7 @@ impl<'a> TypeCheck<'a> {
         callee: &ast::Expr,
         type_params: SourceTypeArray,
         arg_types: &[SourceType],
+        is_nullary: bool,
     ) -> SourceType {
         let callee_as_path = callee.to_path().unwrap();
 
@@ -2381,6 +2396,7 @@ impl<'a> TypeCheck<'a> {
                         method_name,
                         type_params,
                         &arg_types,
+                        is_nullary,
                     )
                 } else {
                     SourceType::Error
@@ -2411,6 +2427,7 @@ impl<'a> TypeCheck<'a> {
                         method_name,
                         type_params,
                         &arg_types,
+                        is_nullary,
                     )
                 } else {
                     SourceType::Error
@@ -2460,6 +2477,7 @@ impl<'a> TypeCheck<'a> {
                             method_name,
                             type_params,
                             &arg_types,
+                            is_nullary,
                         )
                     } else {
                         SourceType::Error
@@ -2553,8 +2571,56 @@ impl<'a> TypeCheck<'a> {
                 self.check_expr_path_module(e, expected_ty, module_id, element_name)
             }
 
+            Some(Sym::Value(_)) | Some(Sym::Class(_)) => {
+                let dot = ast::ExprPathType {
+                    id: e.id,
+                    pos: e.pos,
+                    span: e.span,
+                    lhs: e.lhs.clone(),
+                    rhs: e.rhs.clone(),
+                };
+                let call = ast::ExprCallType {
+                    id: e.id,
+                    pos: e.pos,
+                    span: e.span,
+                    callee: Box::new(ast::Expr::Path(dot)),
+                    args: Vec::new(),
+                };
+                self.check_expr_call_path(
+                    &call,
+                    expected_ty,
+                    &call.callee,
+                    SourceTypeArray::Empty,
+                    &[],
+                    true,
+                )
+            }
+
+            Some(Sym::TypeParam(tid)) => {
+                let path = ast::ExprPathType {
+                    id: e.id,
+                    pos: e.pos,
+                    span: e.span,
+                    lhs: e.lhs.clone(),
+                    rhs: e.rhs.clone(),
+                };
+                let call = ast::ExprCallType {
+                    id: e.id,
+                    pos: e.pos,
+                    span: e.span,
+                    callee: Box::new(ast::Expr::Path(path)),
+                    args: Vec::new(),
+                };
+                self.check_expr_call_generic_static_method(&call, tid, element_name, &[])
+            }
+
             _ => {
-                let msg = ErrorMessage::InvalidLeftSideOfSeparator;
+                let sym_string = if let Some(sym) = sym {
+                    sym.name()
+                } else {
+                    "nothing".into()
+                };
+                let msg = ErrorMessage::InvalidLeftSideOfSeparator(sym_string);
                 self.sa.diag.lock().report(self.file_id, e.lhs.pos(), msg);
 
                 self.analysis.set_ty(e.id, SourceType::Error);
@@ -3047,10 +3113,67 @@ impl<'a> TypeCheck<'a> {
             }
         }
 
+        if let Some(function) = self.find_method(
+            e.pos,
+            object_type.clone(),
+            false,
+            true,
+            name,
+            &[],
+            &object_type.type_params(),
+            false,
+        ) {
+            let call_type = Arc::new(CallType::Method(
+                object_type.clone(),
+                function.fct_id,
+                object_type.type_params(),
+            ));
+            self.analysis.map_calls.insert_or_replace(e.id, call_type);
+
+            let class_type_params = object_type.type_params();
+            let fty = replace_type_param(
+                self.sa,
+                function.return_type.clone(),
+                &class_type_params,
+                None,
+            );
+
+            self.analysis.set_ty(e.id, fty.clone());
+            return fty;
+        }
+
+        if object_type.is_type_param() {
+            // try type param
+            let dot = ast::ExprDotType {
+                id: e.id,
+                pos: e.pos,
+                span: e.span,
+                lhs: e.lhs.clone(),
+                rhs: e.rhs.clone(),
+            };
+            let call = ast::ExprCallType {
+                id: e.id,
+                pos: e.pos,
+                span: e.span,
+                callee: Box::new(ast::Expr::Dot(dot)),
+                args: Vec::new(),
+            };
+            let fty = self.check_expr_call_generic_type_param(
+                &call,
+                object_type.clone(),
+                object_type.type_param_id().unwrap(),
+                name,
+                &[],
+                true,
+            );
+            return fty;
+        }
+
         // field not found, report error
         if !object_type.is_error() {
             let field_name = self.sa.interner.str(name).to_string();
             let expr_name = object_type.name_fct(self.sa, self.fct);
+            //println!("{field_name}");
             let msg = ErrorMessage::UnknownField(field_name, expr_name);
             self.sa.diag.lock().report(self.file_id, e.pos, msg);
         }
@@ -3677,16 +3800,38 @@ fn lookup_method(
     object_type: SourceType,
     type_param_defs: &TypeParamDefinition,
     is_static: bool,
+    is_nullary: bool,
     name: Name,
     args: &[SourceType],
     fct_type_params: &SourceTypeArray,
 ) -> Option<MethodDescriptor> {
     let candidates = if object_type.is_enum() {
-        find_methods_in_enum(sa, object_type, type_param_defs, name, is_static)
+        find_methods_in_enum(
+            sa,
+            object_type,
+            type_param_defs,
+            name,
+            is_static,
+            is_nullary,
+        )
     } else if object_type.is_value() || object_type.is_primitive() {
-        find_methods_in_value(sa, object_type, type_param_defs, name, is_static)
+        find_methods_in_value(
+            sa,
+            object_type,
+            type_param_defs,
+            name,
+            is_static,
+            is_nullary,
+        )
     } else if object_type.cls_id().is_some() {
-        find_methods_in_class(sa, object_type, type_param_defs, name, is_static)
+        find_methods_in_class(
+            sa,
+            object_type,
+            type_param_defs,
+            name,
+            is_static,
+            is_nullary,
+        )
     } else {
         Vec::new()
     };

@@ -9,7 +9,7 @@ impl Foo {
         }
     }
 
-    fun toInt32(): Int32 {
+    fun toInt32: Int32 {
         if self == Foo::A {
             0i32
         } else {
@@ -31,5 +31,5 @@ fun asString(foo: Foo): String {
 }
 
 fun asInt(foo: Foo): Int32 {
-    foo.toInt32()
+    foo.toInt32
 }

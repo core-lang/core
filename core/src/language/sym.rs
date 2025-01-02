@@ -328,4 +328,23 @@ impl Sym {
             _ => None,
         }
     }
+
+    pub fn name(&self) -> String {
+        let name = match *self {
+            Class(_) => "class",
+            Value(_) => "value",
+            Trait(_) => "trait",
+            TypeParam(_) => "type param",
+            Enum(_) => "enum",
+            Field(_) => "field",
+            Fct(_) => "function",
+            Var(_) => "variable",
+            Annotation(_) => "annotation",
+            Global(_) => "global",
+            Const(_) => "constant",
+            Module(_) => "module",
+            EnumVariant(_, _) => "enum_variant",
+        };
+        name.into()
+    }
 }

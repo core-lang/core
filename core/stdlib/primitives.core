@@ -7,42 +7,41 @@ use std.fatalError
 @pub @internal value Bool
 
 impl Bool {
-  @pub @internal fun toInt32(): Int32
-  @pub @internal fun toInt64(): Int64
+  @pub @internal fun toInt32: Int32
+  @pub @internal fun toInt64: Int64
 
-  @pub fun hash(): Int32 = self.toInt32()
+  @pub fun toString: String = if self { "true" } else { "false" }
+  @pub fun toStringBinary: String = if self { "1" } else { "0" }
+  @pub fun toStringHex: String = if self { "1" } else { "0" }
 
-  @pub fun toString(): String = if self { "true" } else { "false" }
-  @pub fun toStringBinary(): String = if self { "1" } else { "0" }
-  @pub fun toStringHex(): String = if self { "1" } else { "0" }
+  @pub fun hash: Int32 = self.toInt32
 
   @pub @internal fun equals(rhs: Bool): Bool
-  @pub @internal fun not(): Bool
+  @pub @internal fun not: Bool
 }
 
 @pub @internal value Int32
 
 impl Int32 {
-  @pub @internal fun toUInt8(): UInt8
-  @pub fun toChar(): Option[Char] {
+  @pub @internal fun toUInt8: UInt8
+  @pub fun toChar: Option[Char] {
     if self >= 0i32 && self <= 0x10FFFFi32 && (self < 0xD800i32 || self > 0xDFFFi32) {
-      Option[Char]::Some(self.toCharUnchecked())
+      Option[Char]::Some(self.toCharUnchecked)
     } else {
       Option[Char]::None
     }
   }
-  @pub @internal fun toCharUnchecked(): Char
-  @pub @internal fun toInt64(): Int64
-  @pub @internal fun toString(): String
+  @pub @internal fun toCharUnchecked: Char
+  @pub @internal fun toInt64: Int64
+  @pub @internal fun toFloat32: Float32
+  @pub @internal fun toFloat64: Float64
 
-  @pub fun toStringBinary(): String = String::binary(self.asInt64(), Int32::bits())
-  @pub fun toStringHex(): String = String::hex(self.asInt64(), Int32::bits())
+  @pub @internal fun toString: String
+  @pub fun toStringBinary: String = String::binary(self.asInt64, Int32::bits)
+  @pub fun toStringHex: String = String::hex(self.asInt64, Int32::bits)
 
-  @pub @internal fun toFloat32(): Float32
-  @pub @internal fun toFloat64(): Float64
-
-  @pub @internal fun asInt64(): Int64
-  @pub @internal fun asFloat32(): Float32
+  @pub @internal fun asInt64: Int64
+  @pub @internal fun asFloat32: Float32
 
   @pub @internal fun equals(rhs: Int32): Bool
   @pub @internal fun compareTo(rhs: Int32): Int32
@@ -71,16 +70,16 @@ impl Int32 {
   @pub @internal fun reverseBits(): Int32
   @pub @internal fun reverseBytes(): Int32
 
-  @pub @internal fun unaryPlus(): Int32
-  @pub @internal fun unaryMinus(): Int32
-  @pub @internal fun not(): Int32
-  @pub fun abs(): Int32 {
+  @pub @internal fun unaryPlus: Int32
+  @pub @internal fun unaryMinus: Int32
+  @pub @internal fun not: Int32
+  @pub fun abs: Int32 {
     let s = self.shiftRightSigned(31i32)
     self.bitwiseXor(s).wrappingSub(s)
   }
 
-  @pub @internal fun countZeroBits(): Int32 = self.not().countOneBits()
-  @pub @internal fun countOneBits(): Int32 {
+  @pub @internal fun countZeroBits: Int32 = self.not.countOneBits
+  @pub @internal fun countOneBits: Int32 {
     var x = self
     var c = 0i32
     while x != 0i32 {
@@ -89,11 +88,11 @@ impl Int32 {
     }
     c
   }
-  @pub @internal fun countZeroBitsLeading(): Int32 {
+  @pub @internal fun countZeroBitsLeading: Int32 {
     if self == 0i32 {
-      return Int32::bits()
+      return Int32::bits
     }
-    var t = 1i32.shiftLeft(Int32::bits() - 1i32)
+    var t = 1i32.shiftLeft(Int32::bits - 1i32)
     var r = 0i32
     while self.bitwiseAnd(t) == 0i32 {
       t = t.shiftRight(1i32)
@@ -101,10 +100,10 @@ impl Int32 {
     }
     r
   }
-  @pub @internal fun countOneBitsLeading(): Int32 = self.not().countZeroBitsLeading()
-  @pub @internal fun countZeroBitsTrailing(): Int32 {
+  @pub @internal fun countOneBitsLeading: Int32 = self.not.countZeroBitsLeading
+  @pub @internal fun countZeroBitsTrailing: Int32 {
     if self == 0i32 {
-      return Int32::bits()
+      return Int32::bits
     }
     var t = 1i32
     var r = 0i32
@@ -114,15 +113,15 @@ impl Int32 {
     }
     r
   }
-  @pub @internal fun countOneBitsTrailing(): Int32 = self.not().countZeroBitsTrailing()
+  @pub @internal fun countOneBitsTrailing: Int32 = self.not.countZeroBitsTrailing
 
-  @pub fun hash(): Int32 = self
+  @pub fun hash: Int32 = self
 
-  @pub @static fun bits(): Int32 = 32i32
-  @pub @static fun bytes(): Int32 = 4i32
+  @pub @static fun bits: Int32 = 32i32
+  @pub @static fun bytes: Int32 = 4i32
 
-  @pub @static fun maxValue(): Int32 = 2147483647i32
-  @pub @static fun minValue(): Int32 = -2147483648i32
+  @pub @static fun maxValue: Int32 = 2147483647i32
+  @pub @static fun minValue: Int32 = -2147483648i32
 
   @pub @static fun min(lhs: Int32, rhs: Int32): Int32 = if lhs < rhs { lhs } else { rhs }
   @pub @static fun max(lhs: Int32, rhs: Int32): Int32 = if lhs < rhs { rhs } else { lhs }
@@ -156,41 +155,42 @@ impl Iterator for Int32RangeIterator {
 @pub @internal value Char
 
 impl Char {
-  @pub @internal fun toInt32(): Int32
-  @pub @internal fun toInt64(): Int64
-  @pub @internal fun toString(): String
+  @pub @internal fun toInt32: Int32
+  @pub @internal fun toInt64: Int64
+
+  @pub @internal fun toString: String
 
   @pub @internal fun equals(rhs: Char): Bool
   @pub @internal fun compareTo(rhs: Char): Int32
 
-  @pub fun hash(): Int32 = self.toInt32()
+  @pub fun hash: Int32 = self.toInt32
 
   @pub fun encodeUtf8(bytes: Array[UInt8], offset: Int64): Unit {
-    let val = self.toInt32()
+    let val = self.toInt32
 
     if val
     ... < 0x80i32 {
-      bytes.set(offset, val.toUInt8())
+      bytes.set(offset, val.toUInt8)
     }
     ... < 0x800i32 {
-      bytes.set(offset, (0xC0i32 | (val.shiftRightSigned(6i32) & 0x1Fi32)).toUInt8())
-      bytes.set(offset+1i64, (0x80i32 | (val & 0x3Fi32)).toUInt8())
+      bytes.set(offset, (0xC0i32 | (val.shiftRightSigned(6i32) & 0x1Fi32)).toUInt8)
+      bytes.set(offset+1i64, (0x80i32 | (val & 0x3Fi32)).toUInt8)
     }
     ... < 0x10000i32 {
-      bytes.set(offset, (0xE0i32 | (val.shiftRightSigned(12i32) & 0x0Fi32)).toUInt8())
-      bytes.set(offset+1i64, (0x80i32 | (val.shiftRightSigned(6i32) & 0x3Fi32)).toUInt8())
-      bytes.set(offset+2i64, (0x80i32 | (val & 0x3Fi32)).toUInt8())
+      bytes.set(offset, (0xE0i32 | (val.shiftRightSigned(12i32) & 0x0Fi32)).toUInt8)
+      bytes.set(offset+1i64, (0x80i32 | (val.shiftRightSigned(6i32) & 0x3Fi32)).toUInt8)
+      bytes.set(offset+2i64, (0x80i32 | (val & 0x3Fi32)).toUInt8)
     }
     else {
-      bytes.set(offset, (0xF0i32 | (val.shiftRightSigned(18i32) & 0x07i32)).toUInt8())
-      bytes.set(offset+1i64, (0x80i32 | (val.shiftRightSigned(12i32) & 0x3Fi32)).toUInt8())
-      bytes.set(offset+2i64, (0x80i32 | (val.shiftRightSigned(6i32) & 0x3Fi32)).toUInt8())
-      bytes.set(offset+3i64, (0x80i32 | (val & 0x3Fi32)).toUInt8())
+      bytes.set(offset, (0xF0i32 | (val.shiftRightSigned(18i32) & 0x07i32)).toUInt8)
+      bytes.set(offset+1i64, (0x80i32 | (val.shiftRightSigned(12i32) & 0x3Fi32)).toUInt8)
+      bytes.set(offset+2i64, (0x80i32 | (val.shiftRightSigned(6i32) & 0x3Fi32)).toUInt8)
+      bytes.set(offset+3i64, (0x80i32 | (val & 0x3Fi32)).toUInt8)
     }
   }
 
-  @pub fun lenUtf8(): Int32 {
-    if self.toInt32()
+  @pub fun lenUtf8: Int32 {
+    if self.toInt32
     ... < 0x80i32    { 1i32 }
     ... < 0x800i32   { 2i32 }
     ... < 0x10000i32 { 3i32 }
@@ -201,24 +201,23 @@ impl Char {
 @pub @internal value Int64
 
 impl Int64 {
-  @pub @internal fun toUInt8(): UInt8
-  @pub fun toChar(): Option[Char] =
+  @pub @internal fun toUInt8: UInt8
+  @pub fun toChar: Option[Char] =
     if self >= 0i64 && self <= 0x10FFFFi64 && (self < 0xD800i64 || self > 0xDFFFi64) {
-      Option[Char]::Some(self.toCharUnchecked())
+      Option[Char]::Some(self.toCharUnchecked)
     } else {
       Option[Char]::None
     }
-  @pub @internal fun toCharUnchecked(): Char
-  @pub @internal fun toInt32(): Int32
-  @pub @internal fun toString(): String
+  @pub @internal fun toCharUnchecked: Char
+  @pub @internal fun toInt32: Int32
+  @pub @internal fun toFloat32: Float32
+  @pub @internal fun toFloat64: Float64
 
-  @pub fun toStringBinary(): String = String::binary(self, Int64::bits())
-  @pub fun toStringHex(): String = String::hex(self, Int64::bits())
+  @pub @internal fun toString: String
+  @pub fun toStringBinary: String = String::binary(self, Int64::bits)
+  @pub fun toStringHex: String = String::hex(self, Int64::bits)
 
-  @pub @internal fun toFloat32(): Float32
-  @pub @internal fun toFloat64(): Float64
-
-  @pub @internal fun asFloat64(): Float64
+  @pub @internal fun asFloat64: Float64
 
   @pub @internal fun equals(rhs: Int64): Bool
   @pub @internal fun compareTo(rhs: Int64): Int32
@@ -247,16 +246,16 @@ impl Int64 {
   @pub @internal fun reverseBits(): Int64
   @pub @internal fun reverseBytes(): Int64
 
-  @pub @internal fun unaryPlus(): Int64
-  @pub @internal fun unaryMinus(): Int64
-  @pub @internal fun not(): Int64
-  @pub fun abs(): Int64 {
+  @pub @internal fun unaryPlus: Int64
+  @pub @internal fun unaryMinus: Int64
+  @pub @internal fun not: Int64
+  @pub fun abs: Int64 {
     let s = self.shiftRightSigned(63i32)
     self.bitwiseXor(s).wrappingSub(s)
   }
 
-  @pub @internal fun countZeroBits(): Int32 = self.not().countOneBits()
-  @pub @internal fun countOneBits(): Int32 {
+  @pub @internal fun countZeroBits: Int32 = self.not.countOneBits
+  @pub @internal fun countOneBits: Int32 {
     var x = self
     var c = 0i32
     while x != 0i64 {
@@ -265,11 +264,11 @@ impl Int64 {
     }
     c
   }
-  @pub @internal fun countZeroBitsLeading(): Int32 {
+  @pub @internal fun countZeroBitsLeading: Int32 {
     if self == 0i64 {
-      return Int64::bits()
+      return Int64::bits
     }
-    var t = 1i64.shiftLeft(Int64::bits() - 1i32)
+    var t = 1i64.shiftLeft(Int64::bits - 1i32)
     var r = 0i32
     while self.bitwiseAnd(t) == 0i64 {
       t = t.shiftRight(1i32)
@@ -277,10 +276,10 @@ impl Int64 {
     }
     r
   }
-  @pub @internal fun countOneBitsLeading(): Int32 = self.not().countZeroBitsLeading()
-  @pub @internal fun countZeroBitsTrailing(): Int32 {
+  @pub @internal fun countOneBitsLeading: Int32 = self.not.countZeroBitsLeading
+  @pub @internal fun countZeroBitsTrailing: Int32 {
     if self == 0i64 {
-      return Int64::bits()
+      return Int64::bits
     }
     var t = 1i64
     var r = 0i32
@@ -290,15 +289,15 @@ impl Int64 {
     }
     r
   }
-  @pub @internal fun countOneBitsTrailing(): Int32 = self.not().countZeroBitsTrailing()
+  @pub @internal fun countOneBitsTrailing: Int32 = self.not.countZeroBitsTrailing
 
-  @pub fun hash(): Int32 = self.toInt32()
+  @pub fun hash: Int32 = self.toInt32
 
-  @pub @static fun bits(): Int32 = 64i32
-  @pub @static fun bytes(): Int32 = 8i32
+  @pub @static fun bits: Int32 = 64i32
+  @pub @static fun bytes: Int32 = 8i32
 
-  @pub @static fun maxValue(): Int64 = 9223372036854775807i64
-  @pub @static fun minValue(): Int64 = -9223372036854775808i64
+  @pub @static fun maxValue: Int64 = 9223372036854775807i64
+  @pub @static fun minValue: Int64 = -9223372036854775808i64
 
   @pub @static fun min(lhs: Int64, rhs: Int64): Int64 = if lhs < rhs { lhs } else { rhs }
   @pub @static fun max(lhs: Int64, rhs: Int64): Int64 = if lhs < rhs { rhs } else { lhs }
@@ -307,18 +306,19 @@ impl Int64 {
 @pub @internal value Float32
 
 impl Float32 {
-  @pub @internal fun toInt32(): Int32
-  @pub @internal fun toInt64(): Int64
-  @pub @internal fun toFloat64(): Float64
-  @pub @internal fun toString(): String
+  @pub @internal fun toInt32: Int32
+  @pub @internal fun toInt64: Int64
+  @pub @internal fun toFloat64: Float64
 
-  @pub @internal fun asInt32(): Int32
+  @pub @internal fun toString: String
+
+  @pub @internal fun asInt32: Int32
 
   @pub @internal fun equals(rhs: Float32): Bool
   @pub @internal fun compareTo(rhs: Float32): Int32
   @pub @internal fun sortsAs(rhs: Float32): Int32 {
-    var ix = self.asInt32()
-    var iy = rhs.asInt32()
+    var ix = self.asInt32
+    var iy = rhs.asInt32
 
     let sx = ix.shiftRightSigned(31i32).shiftRight(1i32)
     let sy = iy.shiftRightSigned(31i32).shiftRight(1i32)
@@ -337,46 +337,47 @@ impl Float32 {
   @pub @internal fun times(rhs: Float32): Float32
   @pub @internal fun div(rhs: Float32): Float32
 
-  @pub @internal fun unaryPlus(): Float32
-  @pub @internal fun unaryMinus(): Float32
-  @pub @internal fun abs(): Float32
+  @pub @internal fun unaryPlus: Float32
+  @pub @internal fun unaryMinus: Float32
+  @pub @internal fun abs: Float32
 
-  @pub @internal fun roundToZero(): Float32
-  @pub @internal fun roundUp(): Float32
-  @pub @internal fun roundDown(): Float32
-  @pub @internal fun roundHalfEven(): Float32
+  @pub @internal fun roundToZero: Float32
+  @pub @internal fun roundUp: Float32
+  @pub @internal fun roundDown: Float32
+  @pub @internal fun roundHalfEven: Float32
 
-  @pub @internal fun isNan(): Bool
-  @pub @internal fun sqrt(): Float32
+  @pub @internal fun isNan: Bool
+  @pub @internal fun sqrt: Float32
 
-  @pub fun hash(): Int32 =
+  @pub fun hash: Int32 =
     // discard the sign, such that 0.0 and -0.0 hash the same, at the cost of all positive numbers
     // and their negative counterparts hashing the same, but keeping the computation branch-free.
-    self.asInt32() & 0x7FFFFFFFi32
+    self.asInt32 & 0x7FFFFFFFi32
 
   // should be lets, not funs
-  @pub @static fun bits(): Int32 = 32i32
-  @pub @static fun bytes(): Int32 = 4i32
-  @pub @static fun infinityPositive(): Float32 = 0x7f800000i32.asFloat32()
-  @pub @static fun infinityNegative(): Float32 = 0xff800000i32.asFloat32()
-  @pub @static fun notANumber(): Float32 = 0x7fC00000i32.asFloat32()
+  @pub @static fun bits: Int32 = 32i32
+  @pub @static fun bytes: Int32 = 4i32
+  @pub @static fun infinityPositive: Float32 = 0x7f800000i32.asFloat32
+  @pub @static fun infinityNegative: Float32 = 0xff800000i32.asFloat32
+  @pub @static fun notANumber: Float32 = 0x7fC00000i32.asFloat32
 }
 
 @pub @internal value Float64
 
 impl Float64 {
-  @pub @internal fun toInt32(): Int32
-  @pub @internal fun toInt64(): Int64
-  @pub @internal fun toFloat32(): Float32
-  @pub @internal fun toString(): String
+  @pub @internal fun toInt32: Int32
+  @pub @internal fun toInt64: Int64
+  @pub @internal fun toFloat32: Float32
 
-  @pub @internal fun asInt64(): Int64
+  @pub @internal fun toString: String
+
+  @pub @internal fun asInt64: Int64
 
   @pub @internal fun equals(rhs: Float64): Bool
   @pub @internal fun compareTo(rhs: Float64): Int32
   @pub @internal fun sortsAs(rhs: Float64): Int32 {
-    var ix = self.asInt64()
-    var iy = rhs.asInt64()
+    var ix = self.asInt64
+    var iy = rhs.asInt64
 
     let sx = ix.shiftRightSigned(63i32).shiftRight(1i32)
     let sy = iy.shiftRightSigned(63i32).shiftRight(1i32)
@@ -395,54 +396,54 @@ impl Float64 {
   @pub @internal fun times(rhs: Float64): Float64
   @pub @internal fun div(rhs: Float64): Float64
 
-  @pub @internal fun unaryPlus(): Float64
-  @pub @internal fun unaryMinus(): Float64
-  @pub @internal fun abs(): Float64
+  @pub @internal fun unaryPlus: Float64
+  @pub @internal fun unaryMinus: Float64
+  @pub @internal fun abs: Float64
 
-  @pub @internal fun roundToZero(): Float64
-  @pub @internal fun roundUp(): Float64
-  @pub @internal fun roundDown(): Float64
-  @pub @internal fun roundHalfEven(): Float64
+  @pub @internal fun roundToZero: Float64
+  @pub @internal fun roundUp: Float64
+  @pub @internal fun roundDown: Float64
+  @pub @internal fun roundHalfEven: Float64
 
-  @pub @internal fun isNan(): Bool
-  @pub @internal fun sqrt(): Float64
+  @pub @internal fun isNan: Bool
+  @pub @internal fun sqrt: Float64
 
-  @pub fun hash(): Int32 {
+  @pub fun hash: Int32 {
     // discard the sign, such that 0.0 and -0.0 hash the same, at the cost of all positive numbers
     // and their negative counterparts hashing the same, but keeping the computation branch-free.
-    let hash = self.asInt64() & 0x7FFFFFFFFFFFFFFF;
-    (hash ^ hash.shiftRight(31i32)).toInt32()
+    let hash = self.asInt64 & 0x7FFFFFFFFFFFFFFF;
+    (hash ^ hash.shiftRight(31i32)).toInt32
   }
 
   // should be lets, not funs
-  @pub @static fun bits(): Int32 = 64i32
-  @pub @static fun bytes(): Int32 = 8i32
-  @pub @static fun infinityPositive(): Float64 = 0x7ff0000000000000i64.asFloat64()
-  @pub @static fun infinityNegative(): Float64 = 0xfff0000000000000i64.asFloat64()
-  @pub @static fun notANumber(): Float64 = 0x7ff8000000000000i64.asFloat64()
+  @pub @static fun bits: Int32 = 64i32
+  @pub @static fun bytes: Int32 = 8i32
+  @pub @static fun infinityPositive: Float64 = 0x7ff0000000000000i64.asFloat64
+  @pub @static fun infinityNegative: Float64 = 0xfff0000000000000i64.asFloat64
+  @pub @static fun notANumber: Float64 = 0x7ff8000000000000i64.asFloat64
 }
 
 @pub @internal value UInt8
 
 impl UInt8 {
-  @pub @internal fun toChar(): Char
-  @pub @internal fun toInt32(): Int32
-  @pub @internal fun toInt64(): Int64
-  @pub @internal fun toString(): String
+  @pub @internal fun toChar: Char
+  @pub @internal fun toInt32: Int32
+  @pub @internal fun toInt64: Int64
 
-  @pub fun toStringBinary(): String = String::binary(self.toInt64(), UInt8::bits())
-  @pub fun toStringHex(): String = String::hex(self.toInt64(), UInt8::bits())
+  @pub @internal fun toString: String
+  @pub fun toStringBinary: String = String::binary(self.toInt64, UInt8::bits)
+  @pub fun toStringHex: String = String::hex(self.toInt64, UInt8::bits)
 
   @pub @internal fun equals(rhs: UInt8): Bool
   @pub @internal fun compareTo(rhs: UInt8): Int32
 
-  @pub fun hash(): Int32 = self.toInt32()
+  @pub fun hash: Int32 = self.toInt32
 
-  @pub @static fun bits(): Int32 = 8
-  @pub @static fun bytes(): Int32 = 1
+  @pub @static fun bits: Int32 = 8
+  @pub @static fun bytes: Int32 = 1
 
-  @pub @static fun maxValue(): UInt8 = 255u8
-  @pub @static fun minValue(): UInt8 = 0u8
+  @pub @static fun maxValue: UInt8 = 255u8
+  @pub @static fun minValue: UInt8 = 0u8
 }
 
 @pub enum Option[T] {
@@ -454,11 +455,11 @@ use Option.Some
 use Option.None
 
 impl[T] Option[T] {
-  @pub fun isNone(): Bool = if self
+  @pub fun isNone: Bool = if self
     ... is Some(_) { false }
     ... is None    { true  }
 
-  @pub fun isSome(): Bool = if self
+  @pub fun isSome: Bool = if self
     ... is Some(_) { true  }
     ... is None    { false }
 
@@ -508,6 +509,7 @@ impl[T] Option[T] {
 }
 
 impl[T] Option[Option[T]] {
+  // WTF -- removing `()` causes memory corruption in main (tests/stdlib/option-flatten.core:6) -- WTF
   @pub fun flatten(): Option[T] = if self
     ... is Some(val) { val }
     ... is None      { None[T] }
@@ -525,8 +527,8 @@ impl[T: Identity] Option[T] {
 
 impl[T: Equals] Equals for Option[T] {
   @pub fun equals(rhs: Option[T]): Bool {
-    if self.isSome() {
-      if rhs.isSome() {
+    if self.isSome {
+      if rhs.isSome {
         let lhs = self.getOrPanic()
         let rhs = rhs.getOrPanic()
         lhs.equals(rhs)
@@ -534,7 +536,7 @@ impl[T: Equals] Equals for Option[T] {
         false
       }
     } else {
-      rhs.isNone()
+      rhs.isNone
     }
   }
 }
@@ -546,25 +548,25 @@ impl[T: Equals] Option[T] {
 }
 
 impl[T: Hash] Hash for Option[T] {
-  @pub fun hash(): Int32 = if self
+  @pub fun hash: Int32 = if self
     ... is Some(val) { 23i32.wrappingMul(val.hash()) }
     ... is None      { 31i32 }
 }
 
 impl[T: Stringable] Stringable for Option[T] {
-  @pub fun toString(): String = if self
+  @pub fun toString: String = if self
     ... is Some(val) { "Some(${val})" }
     ... is None      { "None" }
 }
 
 impl[T: Default] Option[T] {
-  @pub fun getOrDefault(): T = if self
+  @pub fun getOrDefault: T = if self
     ... is Some(val) { val }
-    ... is None      { T::default() }
+    ... is None      { T::default }
 }
 
 impl[T: Zero] Option[T] {
-  @pub fun getOrZero(): T = if self
+  @pub fun getOrZero: T = if self
     ... is Some(val) { val }
     ... is None      { T::zero() }
 }
@@ -578,11 +580,11 @@ use Result.Ok
 use Result.Err
 
 impl[T, E] Result[T, E] {
-  @pub fun isOk(): Bool = if self
+  @pub fun isOk: Bool = if self
     ... is Ok(_)  { true  }
     ... is Err(_) { false }
 
-  @pub fun isErr(): Bool = if self
+  @pub fun isErr: Bool = if self
     ... is Ok(_)  { false }
     ... is Err(_) { true  }
 
@@ -626,11 +628,11 @@ impl[T, E] Result[T, E] {
     ... is Ok(val) { if fct(val) { Err[T, E](err) } else { self } }
     ... is Err(_)  { self }
 
-  @pub fun swap(): Result[E, T] = if self
+  @pub fun swap: Result[E, T] = if self
     ... is Ok (val) { Err[E, T](val) }
     ... is Err(err) { Ok [E, T](err) }
 
-  @pub fun toOption(): Option[T] = if self
+  @pub fun toOption: Option[T] = if self
     ... is Ok(val) { Some[T](val) }
     ... is Err(_)  { None[T] }
 }
@@ -653,8 +655,8 @@ impl[T: Equals, E] Result[T, E] {
 
 impl[T: Equals, E: Equals] Equals for Result[T, E] {
   @pub fun equals(rhs: Result[T, E]): Bool {
-    if self.isOk() {
-      if rhs.isOk() {
+    if self.isOk {
+      if rhs.isOk {
         let lhs = self.getOrPanic()
         let rhs = rhs.getOrPanic()
         lhs.equals(rhs)
@@ -662,7 +664,7 @@ impl[T: Equals, E: Equals] Equals for Result[T, E] {
         false
       }
     } else {
-      if rhs.isErr() {
+      if rhs.isErr {
         let lhs = self.getErrOrPanic()
         let rhs = rhs.getErrOrPanic()
         lhs.equals(rhs)
@@ -674,37 +676,37 @@ impl[T: Equals, E: Equals] Equals for Result[T, E] {
 }
 
 impl[T: Hash, E: Hash] Hash for Result[T, E] {
-  @pub fun hash(): Int32 = if self
+  @pub fun hash: Int32 = if self
     ... is Ok (val) { 29i32.wrappingMul(val.hash()) }
     ... is Err(err) { 37i32.wrappingMul(err.hash()) }
 }
 
 impl[T: Stringable, E: Stringable] Stringable for Result[T, E] {
-  @pub fun toString(): String = if self
+  @pub fun toString: String = if self
     ... is Ok (val) { "Ok (${val})" }
     ... is Err(err) { "Err(${err})" }
 }
 
 impl[T: Default, E] Result[T, E] {
-  @pub fun getOrDefault(): T = if self
+  @pub fun getOrDefault: T = if self
     ... is Ok(val) { val }
-    ... is Err(_)  { T::default() }
+    ... is Err(_)  { T::default }
 }
 
 impl[T, E: Default] Result[T, E] {
-  @pub fun getErrOrDefault(): E = if self
-    ... is Ok(_)    { E::default() }
+  @pub fun getErrOrDefault: E = if self
+    ... is Ok(_)    { E::default }
     ... is Err(err) { err }
 }
 
 impl[T: Zero, E] Result[T, E] {
-  @pub fun getOrZero(): T = if self
+  @pub fun getOrZero: T = if self
     ... is Ok(val) { val }
     ... is Err(_)  { T::zero() }
 }
 
 impl[T, E: Zero] Result[T, E] {
-  @pub fun getErrOrZero(): E = if self
+  @pub fun getErrOrZero: E = if self
     ... is Ok(_)    { E::zero() }
     ... is Err(err) { err }
 }

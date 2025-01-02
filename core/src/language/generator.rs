@@ -756,6 +756,25 @@ impl<'a> AstBytecodeGen<'a> {
     }
 
     fn visit_expr_path(&mut self, expr: &ast::ExprPathType, dest: DataDest) -> Register {
+        let call_type = self.analysis.map_calls.get(expr.id);
+        if call_type.is_some_and(|c| c.is_fct() || c.is_generic_static_method()) {
+            let dot = ast::ExprDotType {
+                id: expr.id,
+                pos: expr.pos,
+                span: expr.span,
+                lhs: expr.lhs.clone(),
+                rhs: expr.rhs.clone(),
+            };
+            let call = ast::ExprCallType {
+                id: expr.id,
+                pos: expr.pos,
+                span: expr.span,
+                callee: Box::new(ast::Expr::Dot(dot)),
+                args: Vec::new(),
+            };
+            return self.visit_expr_call(&call, dest);
+        }
+
         let ident_type = self.analysis.map_idents.get(expr.id).cloned().unwrap();
 
         match ident_type {
@@ -1011,6 +1030,25 @@ impl<'a> AstBytecodeGen<'a> {
         if let Some(value_id) = object_ty.value_id() {
             let type_params = object_ty.type_params();
             return self.visit_expr_dot_value(expr, value_id, type_params, dest);
+        }
+
+        let call_type = self.analysis.map_calls.get(expr.id);
+        if call_type.is_some_and(|c| c.is_method() || c.is_generic_method()) {
+            let dot = ast::ExprDotType {
+                id: expr.id,
+                pos: expr.pos,
+                span: expr.span,
+                lhs: expr.lhs.clone(),
+                rhs: expr.rhs.clone(),
+            };
+            let call = ast::ExprCallType {
+                id: expr.id,
+                pos: expr.pos,
+                span: expr.span,
+                callee: Box::new(ast::Expr::Dot(dot)),
+                args: Vec::new(),
+            };
+            return self.visit_expr_call(&call, dest);
         }
 
         let (cls_ty, field_id) = {
@@ -3031,6 +3069,9 @@ impl<'a> AstBytecodeGen<'a> {
 
     fn specialize_call(&mut self, fct: &FctDefinition, call_type: &CallType) -> ConstPoolIdx {
         let type_params = self.determine_call_type_params(call_type);
+        if fct.type_params.len() != type_params.len() {
+            //println!("{:?} {:?}", fct.type_params, type_params);
+        }
         assert_eq!(fct.type_params.len(), type_params.len());
 
         match *call_type {

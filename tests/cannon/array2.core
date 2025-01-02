@@ -1,7 +1,7 @@
 fun main(): Unit {
   let array = createArray(5i64);
 
-  assert(array.size() == 5i64);
+  assert(array.size == 5i64);
   assert(getLength(array) == 5i64);
   
   setArray(array, 2i64, 50i64);
@@ -12,6 +12,6 @@ fun main(): Unit {
 }
 
 fun createArray(a: Int64): Array[Int64] = Array[Int64]::zero(a);
-fun getLength(a: Array[Int64]): Int64 = a.size();
+fun getLength(a: Array[Int64]): Int64 = a.size;
 fun setArray(arr: Array[Int64], idx: Int64, value: Int64): Unit = arr(idx) = value;
 fun getArray(arr: Array[Int64], idx: Int64): Int64 = arr(idx);

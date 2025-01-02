@@ -6,5 +6,5 @@ fun main(): Unit {
 }
 
 fun number_args(x: Int32...): Int64 {
-    x.size()
+    x.size
 }

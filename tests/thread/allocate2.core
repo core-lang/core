@@ -33,7 +33,7 @@ fun allocator(): Unit {
         list = list.prev.getOrPanic();
     }
 
-    assert(list.prev.isNone());
+    assert(list.prev.isNone);
 }
 
 class Foo(key: Int32, prev: Option[Foo])

@@ -1,7 +1,7 @@
 fun main(): Unit {
   str[Bool](true);
   str[Bool](false);
-  str[UInt8](1.toUInt8());
+  str[UInt8](1.toUInt8);
   str[Int32](1i32);
   str[Int64](1i64);
   str[Float32](1f32);
@@ -9,4 +9,4 @@ fun main(): Unit {
   ()
 }
 
-fun str[T : std::Stringable](val: T): String = val.toString();
+fun str[T : std::Stringable](val: T): String = val.toString

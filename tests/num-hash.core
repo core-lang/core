@@ -1,7 +1,7 @@
 fun main(): Unit {
   assert(true.hash() == 1i32);
   assert(false.hash() == 0i32);
-  assert(1.toUInt8().hash() == 1i32);
+  assert(1.toUInt8.hash() == 1i32);
   assert(1.hash() == 1i32);
   assert(1i64.hash() == 1i32);
 }

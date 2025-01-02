@@ -4,7 +4,7 @@ fun main(): Unit {
     let primes = sieve(100i64);
     var i = 0i64;
 
-    while i < primes.size() {
+    while i < primes.size {
         println(primes(i).toString());
         i = i + 1i64;
     }
@@ -15,7 +15,7 @@ fun sieve(limit: Int64): List[Int64] {
 
     if limit >= 2i64 {
         let numbers = Array[Bool]::fill(limit+1i64, true);
-        let sqrtLimit = limit.toFloat64().sqrt().toInt64();
+        let sqrtLimit = limit.toFloat64.sqrt.toInt64;
 
         var factor = 2i64;
 

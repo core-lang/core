@@ -27,7 +27,7 @@ impl[T] SharedQueue[T] {
 
     fun enqueue(value: T): Unit {
         self.mtx.lock[()](||: Unit {
-            while self.queue.size() == self.capacity {
+            while self.queue.size == self.capacity {
                 self.conditionNonFull.wait(self.mtx);
             }
 
@@ -39,7 +39,7 @@ impl[T] SharedQueue[T] {
 
     fun dequeue(): T {
         let value = self.mtx.lock[T](||: T {
-            while self.queue.size() == 0 {
+            while self.queue.size == 0 {
                 self.conditionNonEmpty.wait(self.mtx);
             }
 

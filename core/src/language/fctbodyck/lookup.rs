@@ -27,6 +27,7 @@ pub struct MethodLookup<'a> {
     name: Option<Name>,
     arg_types: Option<&'a [SourceType]>,
     arg_names: Vec<&'a Option<Name>>,
+    is_nullary: bool,
     fct_tps: Option<&'a SourceTypeArray>,
     type_param_defs: Option<&'a TypeParamDefinition>,
     ret: Option<SourceType>,
@@ -51,6 +52,7 @@ impl<'a> MethodLookup<'a> {
             name: None,
             arg_types: None,
             arg_names: Vec::new(),
+            is_nullary: false,
             fct_tps: None,
             ret: None,
             pos: None,
@@ -101,6 +103,11 @@ impl<'a> MethodLookup<'a> {
         self
     }
 
+    pub fn is_nullary(mut self, is_nullary: bool) -> MethodLookup<'a> {
+        self.is_nullary = is_nullary;
+        self
+    }
+
     pub fn pos(mut self, pos: Position) -> MethodLookup<'a> {
         self.pos = Some(pos);
         self
@@ -135,7 +142,7 @@ impl<'a> MethodLookup<'a> {
 
             LookupKind::Method(ref obj) => {
                 let name = self.name.expect("name not set");
-                self.find_method(obj.clone(), name, false)
+                self.find_method(obj.clone(), name, false, self.is_nullary)
             }
 
             LookupKind::Trait(trait_id) => {
@@ -145,7 +152,7 @@ impl<'a> MethodLookup<'a> {
 
             LookupKind::Static(ref obj) => {
                 let name = self.name.expect("name not set");
-                self.find_method(obj.clone(), name, true)
+                self.find_method(obj.clone(), name, true, self.is_nullary)
             }
         };
 
@@ -313,6 +320,7 @@ impl<'a> MethodLookup<'a> {
         object_type: SourceType,
         name: Name,
         is_static: bool,
+        is_nullary: bool,
     ) -> Option<FctDefinitionId> {
         let candidates = if object_type.is_enum() {
             find_methods_in_enum(
@@ -321,6 +329,7 @@ impl<'a> MethodLookup<'a> {
                 self.type_param_defs.unwrap(),
                 name,
                 is_static,
+                is_nullary,
             )
         } else if object_type.is_value() || object_type.is_primitive() {
             find_methods_in_value(
@@ -329,6 +338,7 @@ impl<'a> MethodLookup<'a> {
                 self.type_param_defs.unwrap(),
                 name,
                 is_static,
+                is_nullary,
             )
         } else if object_type.is_cls() {
             find_methods_in_class(
@@ -337,6 +347,7 @@ impl<'a> MethodLookup<'a> {
                 self.type_param_defs.unwrap(),
                 name,
                 is_static,
+                is_nullary,
             )
         } else {
             Vec::new()

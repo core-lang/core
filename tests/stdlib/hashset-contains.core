@@ -1,9 +1,9 @@
 fun main(): Unit {
   let set = std::HashSet[Int32]::new(1i32, 10'000i32, 7i32);
 
-  assert(set.size() == 3);
+  assert(set.size == 3);
   assert(set.contains(1i32));
   assert(set.contains(10'000i32));
   assert(set.contains(7i32));
-  assert(set.contains(0i32).not());
+  assert(set.contains(0i32).not);
 }

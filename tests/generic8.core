@@ -12,5 +12,5 @@ impl[T] A[T] {
 }
 
 fun consume(x: Array[Int32]): Unit {
-    assert(x.size() == 0i64);
+    assert(x.size == 0i64);
 }

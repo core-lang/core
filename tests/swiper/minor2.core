@@ -11,7 +11,7 @@ fun main(): Unit {
     }
 
     std::forceMinorCollect();
-    assert(x.next.getOrPanic().next.isSome());
+    assert(x.next.getOrPanic().next.isSome);
 
     i = 0i32;
 
@@ -22,9 +22,9 @@ fun main(): Unit {
     }
 
     std::forceMinorCollect();
-    assert(x.next.getOrPanic().next.isSome());
+    assert(x.next.getOrPanic().next.isSome);
     std::forceMinorCollect();
-    assert(x.next.getOrPanic().next.isSome());
+    assert(x.next.getOrPanic().next.isSome);
 }
 
 class Foo(next: Option[Foo])

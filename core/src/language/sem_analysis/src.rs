@@ -262,9 +262,30 @@ impl CallType {
         }
     }
 
+    pub fn is_fct(&self) -> bool {
+        match *self {
+            CallType::Fct(_, _) => true,
+            _ => false,
+        }
+    }
+
     pub fn is_method(&self) -> bool {
         match *self {
             CallType::Method(_, _, _) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_generic_method(&self) -> bool {
+        match *self {
+            CallType::GenericMethod(_, _, _) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_generic_static_method(&self) -> bool {
+        match *self {
+            CallType::GenericStaticMethod(_, _, _) => true,
             _ => false,
         }
     }

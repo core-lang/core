@@ -25,12 +25,15 @@ pub fn check(sa: &mut SemAnalysis) {
                     method.name,
                     Some(impl_.extended_ty.clone()),
                     method.params_without_self(),
+                    method.is_nullary,
                 ) {
                     defined.insert(fid);
                     impl_for.insert(fid, method_id);
 
                     let trait_method = sa.fcts.idx(fid);
                     let trait_method = trait_method.read();
+
+                    if method.is_nullary != trait_method.is_nullary {}
 
                     let return_type_valid = method.return_type
                         == if trait_method.return_type.is_self() {
@@ -60,6 +63,7 @@ pub fn check(sa: &mut SemAnalysis) {
                     let msg = if method.is_static {
                         ErrorMessage::StaticMethodNotInTrait(trait_name, mtd_name, args)
                     } else {
+                        // does not define method
                         ErrorMessage::MethodNotInTrait(trait_name, mtd_name, args)
                     };
 

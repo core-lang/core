@@ -4,8 +4,8 @@ fun main(): Unit {
   let list2 = List[Option[Int64]]::new(Some[Int64](1), Some[Int64](2), Some[Int64](3));
   let list3 = List[Option[Int64]]::new(Some[Int64](1), None[Int64], Some[Int64](2), None[Int64], Some[Int64](3));
 
-  assert(list0.flatten() == List[Int64]::new());
-  assert(list1.flatten() == List[Int64]::new());
-  assert(list2.flatten() == List[Int64]::new(1, 2, 3));
-  assert(list3.flatten() == List[Int64]::new(1, 2, 3));
+  assert(list0.flatten == List[Int64]::new());
+  assert(list1.flatten == List[Int64]::new());
+  assert(list2.flatten == List[Int64]::new(1, 2, 3));
+  assert(list3.flatten == List[Int64]::new(1, 2, 3));
 }

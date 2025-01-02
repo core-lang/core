@@ -3,6 +3,6 @@ fun main(): Unit {
   let none = None[String];
 
   assert(some.all(|val: String|: Bool { val == "some" }));
-  assert(some.all(|val: String|: Bool { val == "none" }).not());
+  assert(some.all(|val: String|: Bool { val == "none" }).not);
   assert(none.all(|val: String|: Bool { val == "some" }));
 }

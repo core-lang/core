@@ -8,7 +8,7 @@ fun sum_args(x: Foo...): Int32 {
     var result = 0i32;
     var idx = 0i64;
     
-    while idx < x.size() {
+    while idx < x.size {
         let foo = x(idx);
         result = result + foo.value;
         idx = idx + 1i64;

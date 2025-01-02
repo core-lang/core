@@ -153,7 +153,7 @@ pub enum ErrorMessage {
     UnknownValueField(String, String),
     UnknownIdentifierInModule(String, String),
     ValueFieldNotInitialized(String, String),
-    InvalidLeftSideOfSeparator,
+    InvalidLeftSideOfSeparator(String),
     InvalidUseOfTypeParams,
     NameOfStaticMethodExpected,
     NameExpected,
@@ -570,8 +570,11 @@ impl ErrorMessage {
             ErrorMessage::ValueFieldNotInitialized(ref struc, ref field) => {
                 format!("field `{}` in struct `{}` not initialized.", field, struc)
             }
-            ErrorMessage::InvalidLeftSideOfSeparator => {
-                "left hand side of separator is not a class.".into()
+            ErrorMessage::InvalidLeftSideOfSeparator(ref sym) => {
+                format!(
+                    "left hand side of separator is not an enum or a module, but is {}.",
+                    sym
+                )
             }
             ErrorMessage::InvalidUseOfTypeParams => {
                 "type params need to be used on class or function.".into()

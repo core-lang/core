@@ -1,9 +1,9 @@
 fun main(): Unit {
     let x = Array[Bool]::new();
-    assert(x.size() == 0i64);
+    assert(x.size == 0i64);
 
     let y = Array[Bool]::fill(10i64, true);
-    assert(y.size() == 10i64);
+    assert(y.size == 10i64);
     assert(y(0i64) == true);
     assert(y(9i64) == true);
 

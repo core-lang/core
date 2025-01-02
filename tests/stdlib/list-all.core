@@ -5,5 +5,5 @@ fun main(): Unit {
 
   assert(list0.all(|val: Int64|: Bool { val < 4 }));
   assert(list1.all(|val: Int64|: Bool { val < 4 }));
-  assert(list2.all(|val: Int64|: Bool { val < 4 }).not());
+  assert(list2.all(|val: Int64|: Bool { val < 4 }).not);
 }

@@ -11,12 +11,12 @@ fun main(): Unit {
 
 fun test_multiple_ascii_chars(): Unit {
     let bytes = Array[UInt8]::zero(3i64);
-    bytes(0i64) = 'a'.toInt32().toUInt8();
-    bytes(1i64) = 'b'.toInt32().toUInt8();
-    bytes(2i64) = 'c'.toInt32().toUInt8();
+    bytes(0i64) = 'a'.toInt32.toUInt8;
+    bytes(1i64) = 'b'.toInt32.toUInt8;
+    bytes(2i64) = 'c'.toInt32.toUInt8;
 
     let val = String::fromBytes(bytes).getOrPanic();
-    let it = val.codePoints();
+    let it = val.codePoints;
 
     assert(it.next().getOrPanic() == 'a');
     assert(it.next().getOrPanic() == 'b');
@@ -29,9 +29,9 @@ fun test_1byte(): Unit {
     bytes(0i64) = 0x24u8;
 
     let val = String::fromBytes(bytes).getOrPanic();
-    let it = val.codePoints();
+    let it = val.codePoints;
 
-    assert(it.next().getOrPanic() == 0x24.toChar().getOrPanic());
+    assert(it.next().getOrPanic() == 0x24.toChar.getOrPanic());
     it.next().unwrapNone();
 }
 
@@ -41,9 +41,9 @@ fun test_2bytes(): Unit {
     bytes(1i64) = 0xA2u8;
 
     let val = String::fromBytes(bytes).getOrPanic();
-    let it = val.codePoints();
+    let it = val.codePoints;
 
-    assert(it.next().getOrPanic() == 0xA2.toChar().getOrPanic());
+    assert(it.next().getOrPanic() == 0xA2.toChar.getOrPanic());
     it.next().unwrapNone();
 }
 
@@ -54,9 +54,9 @@ fun test_3bytes(): Unit {
     bytes(2i64) = 0xACu8;
 
     let val = String::fromBytes(bytes).getOrPanic();
-    let it = val.codePoints();
+    let it = val.codePoints;
 
-    assert(it.next().getOrPanic() == 0x20ACi32.toChar().getOrPanic());
+    assert(it.next().getOrPanic() == 0x20ACi32.toChar.getOrPanic());
     it.next().unwrapNone();
 }
 
@@ -68,9 +68,9 @@ fun test_4bytes(): Unit {
     bytes(3i64) = 0x88u8;
 
     let val = String::fromBytes(bytes).getOrPanic();
-    let it = val.codePoints();
+    let it = val.codePoints;
 
-    assert(it.next().getOrPanic() == 0x10348.toChar().getOrPanic());
+    assert(it.next().getOrPanic() == 0x10348.toChar.getOrPanic());
     it.next().unwrapNone()
 }
 
@@ -79,5 +79,5 @@ fun test_invalid(): Unit {
     bytes(0i64) = 0x80u8;
 
     let fail = String::fromBytes(bytes);
-    assert(fail.isNone());
+    assert(fail.isNone);
 }

@@ -6,7 +6,7 @@ fun main(): Unit {
 fun float64(): Unit {
   let set = std::HashSet[Float64]::new(0.0);
 
-  assert(set.size() == 1);
+  assert(set.size == 1);
   assert(set.contains(0.0));
   assert(set.contains(-0.0));
 }
@@ -14,7 +14,7 @@ fun float64(): Unit {
 fun float32(): Unit {
   let set = std::HashSet[Float32]::new(0.0f32);
 
-  assert(set.size() == 1);
+  assert(set.size == 1);
   assert(set.contains(0.0f32));
   assert(set.contains(-0.0f32));
 }
