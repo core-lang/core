@@ -1,0 +1,197 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Core",
+  "scopeName": "source.core",
+  "foldingStartMarker": "\\{\\s*$",
+  "foldingStopMarker": "^\\s*\\}",
+  "fileTypes": [
+    "core"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#annotations"
+    },
+    {
+      "include": "#literals-bool"
+    },
+    {
+      "include": "#literals-char"
+    },
+    {
+      "include": "#literals-number"
+    },
+    {
+      "include": "#literals-string"
+    },
+    {
+      "include": "#declarations-use"
+    },
+    {
+      "include": "#declarations-mod"
+    },
+    {
+      "include": "#declarations-member"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.core",
+          "match": "^\\s*(?=//).*$"
+        },
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block.core"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.core",
+          "match": "===|!==|==|!=|>=|<=|&|\\*|>|<|-|\\+|\\/"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.core",
+          "match": "\\b(if|else|is|for|in|while|return)\\b"
+        },
+        {
+          "name": "keyword.other.core",
+          "match": "\\b(const|class|value|union|enum|trait|impl|annotation)\\b"
+        }
+      ]
+    },
+    "annotations": {
+      "patterns": [
+        {
+          "name": "meta.tag.core",
+          "match": "(?<!\\w)@[\\w\\.]+\\b"
+        }
+      ]
+    },
+    "literals-bool": {
+      "patterns": [
+        {
+          "name": "constant.language.core",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    },
+    "literals-char": {
+      "patterns": [
+        {
+          "begin": "'",
+          "end": "'",
+          "name": "string.quoted.single.core"
+        }
+      ]
+    },
+    "literals-number": {
+      "patterns": [
+        {
+          "match": "(?<!\\$)(\\b\\d([0-9']*\\d)?\\.\\B(?!\\.)|\\b\\d([0-9']*\\d)?\\.([Ee][+-]?\\d([0-9']*\\d)?)(i32|i64|u8|f32|f64)?\\b|\\b\\d([0-9']*\\d)?\\.([Ee][+-]?\\d([0-9']*\\d)?)?(i32|i64|u8|f32|f64)\\b|\\b\\d([0-9']*\\d)?\\.(\\d([0-9']*\\d)?)([Ee][+-]?\\d([0-9']*\\d)?)?(i32|i64|u8|f32|f64)?\\b|(?<!\\.)\\B\\.\\d([0-9']*\\d)?([Ee][+-]?\\d([0-9']*\\d)?)?(i32|i64|u8|f32|f64)?\\b|\\b\\d([0-9']*\\d)?([Ee][+-]?\\d([0-9']*\\d)?)(i32|i64|u8|f32|f64)?\\b|\\b\\d([0-9']*\\d)?([Ee][+-]?\\d([0-9']*\\d)?)?(i32|i64|u8|f32|f64)\\b|\\b(0|[1-9]([0-9']*\\d)?)(?!\\.)(i32|i64|u8|f32|f64)?\\b)(?!\\$)",
+          "name": "constant.numeric.decimal.core"
+        },
+        {
+          "match": "\\b(?<!\\$)0(x|X)((?<!\\.)[0-9a-fA-F]([0-9a-fA-F']*[0-9a-fA-F])?(i32|i64|u8|f32|f64)?(?!\\.)|([0-9a-fA-F]([0-9a-fA-F']*[0-9a-fA-F])?\\.?|([0-9a-fA-F]([0-9a-fA-F']*[0-9a-fA-F])?)?\\.[0-9a-fA-F]([0-9a-fA-F']*[0-9a-fA-F])?)[Pp][+-]?\\d([0-9']*\\d)?(i32|i64|u8|f32|f64)?)\\b(?!\\$)",
+          "name": "constant.numeric.hex.core"
+        },
+        {
+          "match": "\\b(?<!\\$)0(b|B)[01]([01']*[01])?(i32|i64|u8|f32|f64)?\\b(?!\\$)",
+          "name": "constant.numeric.binary.core"
+        }
+      ]
+    },
+    "literals-string": {
+      "patterns": [
+        {
+          "begin": "\"",
+          "end": "\"",
+          "name": "string.quoted.double.core"
+        }
+      ]
+    },
+    "declarations-use": {
+      "patterns": [
+        {
+          "match": "\\b(use)\\b\\s*(?!//|/\\*)([^;]*)(;*)",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.core"
+            },
+            "2": {
+              "name": "string.quoted.double.core"
+            }
+          }
+        }
+      ]
+    },
+    "declarations-mod": {
+      "patterns": [
+        {
+          "match": "\\b(mod)\\b\\s*(?!//|/\\*)([^\\.,;]*)(;*)",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.core"
+            },
+            "2": {
+              "name": "string.quoted.double.core"
+            }
+          }
+        }
+      ]
+    },
+    "declarations-member": {
+      "patterns": [
+        {
+          "match": "\\b(fun)\\b\\s*(?!//|/\\*)((?:(?:[A-Z\\p{Lt}\\p{Lu}_a-z$\\p{Lo}\\p{Nl}\\p{Ll}][A-Z\\p{Lt}\\p{Lu}_a-z$\\p{Lo}\\p{Nl}\\p{Ll}0-9]*)))?",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.core"
+            },
+            "2": {
+              "name": "entity.name.function.declaration.core"
+            }
+          }
+        },
+        {
+          "match": "\\b(let)\\b\\s*(?!//|/\\*)((?:(?:[A-Z\\p{Lt}\\p{Lu}_a-z$\\p{Lo}\\p{Nl}\\p{Ll}][A-Z\\p{Lt}\\p{Lu}_a-z$\\p{Lo}\\p{Nl}\\p{Ll}0-9]*)))?",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.core"
+            },
+            "2": {
+              "name": "entity.name.function.declaration.core"
+            }
+          }
+        },
+        {
+          "match": "\\b(var)\\b\\s*(?!//|/\\*)((?:(?:[A-Z\\p{Lt}\\p{Lu}_a-z$\\p{Lo}\\p{Nl}\\p{Ll}][A-Z\\p{Lt}\\p{Lu}_a-z$\\p{Lo}\\p{Nl}\\p{Ll}0-9]*)))?",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.core"
+            },
+            "2": {
+              "name": "entity.name.function.declaration.core"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
