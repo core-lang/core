@@ -638,6 +638,154 @@ impl<'a> TypeCheck<'a> {
         self.check_stmt_let(&node.cond);
         let cond = node.cond.expr.as_ref().unwrap();
         let expr_type = self.analysis.ty(cond.id());
+        let expr_enum_id = expr_type.enum_id();
+
+        if expr_enum_id.is_some() {
+            self.check_expr_if_enum(node, expected_ty)
+        } else {
+            self.check_expr_if_union(node, expected_ty)
+        }
+    }
+
+    fn check_expr_if_union(&mut self, node: &ast::ExprIfType, expected_ty: SourceType) -> SourceType {
+        let cond = node.cond.expr.as_ref().unwrap();
+        let expr_type = self.analysis.ty(cond.id());
+        let mut result_type = SourceType::Error;
+
+        let expr_union_id = expr_type.union_id();
+        let expr_type_params = expr_type.type_params();
+
+        let union_variants = if let Some(expr_union_id) = expr_union_id {
+            let union_ = self.sa.unions[expr_union_id].read();
+            union_.variants.len()
+        } else {
+            0
+        };
+
+        let mut used_variants = FixedBitSet::with_capacity(union_variants);
+        let mut non_variant_cases = false;
+
+        for case in &node.cases {
+            self.symtable.push_level();
+
+            match &case.data {
+                ast::IfCaseData::Simple => {
+                    self.check_if_condition_is_bool(expr_type.clone(), cond);
+                    non_variant_cases = true;
+                }
+
+                ast::IfCaseData::Continuation(continuation) => {
+                    let cont_type = self.check_expr(&continuation, expected_ty.clone());
+                    self.check_if_condition_is_bool(cont_type, continuation);
+                    non_variant_cases = true;
+                }
+
+                ast::IfCaseData::Patterns(patterns) => {
+                    debug_assert_eq!(patterns.len(), 1);
+                    if !expr_type.is_union() {
+                        self.sa.diag.lock().report(
+                            self.file_id,
+                            node.pos,
+                            ErrorMessage::UnionExpected,
+                        );
+                    }
+                    let pattern = patterns.first().expect("no pattern");
+                    let sym = self.read_path(&pattern.path);
+
+                    let mut used_idents: HashSet<Name> = HashSet::new();
+
+                    match sym {
+                        Ok(Sym::Class(class_id)) => {
+                            let union = self.sa.unions.idx(expr_type.union_id().unwrap());
+                            let union = union.read();
+                            let found = union.variants.iter().find(|v| v.type_.cls_id().unwrap() == class_id);
+                            if !found.is_some() {
+                                panic!()
+                            }
+                            used_variants.insert(found.unwrap().id);
+                            if cond.is_ident() {
+                                let tpe = found.unwrap().clone().type_;
+                                let var_id = self.vars.add_var(cond.to_ident().unwrap().name, tpe, false);
+                                self.add_local(var_id, cond.pos());
+                                self.analysis
+                                    .map_vars
+                                    .insert(cond.id(), self.vars.local_var_id(var_id));
+                            }
+                        }
+
+                        Ok(Sym::Value(value_id)) => {
+                            unimplemented!()
+                        }
+
+                        Ok(_) => {
+                            let msg = ErrorMessage::UnionVariantExpected;
+                            self.sa.diag.lock().report(self.file_id, node.pos, msg);
+                        }
+
+                        Err(()) => {}
+                    }
+                }
+            }
+
+            let case_ty = self.check_expr(&case.value, expected_ty.clone());
+
+            if result_type.is_error() {
+                result_type = case_ty;
+            } else if case_ty.is_error() {
+                // ignore this case
+            } else if !result_type.allows(self.sa, case_ty.clone()) {
+                let result_type_name = result_type.name_fct(self.sa, self.fct);
+                let case_ty_name = case_ty.name_fct(self.sa, self.fct);
+                let msg = ErrorMessage::IfBranchTypesIncompatible(result_type_name, case_ty_name);
+                self.sa
+                    .diag
+                    .lock()
+                    .report(self.file_id, case.value.pos(), msg);
+            }
+
+            self.symtable.pop_level();
+        }
+
+        used_variants.toggle_range(..);
+        let is_exhaustive = used_variants.count_ones(..) == 0;
+        if !is_exhaustive && node.else_block.is_none() {
+            let msg = ErrorMessage::IfPatternVariantUncovered;
+            self.sa.diag.lock().report(self.file_id, node.pos, msg);
+        } else if let Some(else_block) = &node.else_block {
+            if is_exhaustive && !non_variant_cases {
+                let msg = ErrorMessage::IfPatternUnreachable;
+                self.sa
+                    .diag
+                    .lock()
+                    .report(self.file_id, else_block.pos(), msg)
+            } else {
+                let else_ty = self.check_expr(&else_block, expected_ty.clone());
+
+                if result_type.is_error() {
+                    result_type = else_ty;
+                } else if else_ty.is_error() {
+                    // ignore this case
+                } else if !result_type.allows(self.sa, else_ty.clone()) {
+                    let result_type_name = result_type.name_fct(self.sa, self.fct);
+                    let else_ty_name = else_ty.name_fct(self.sa, self.fct);
+                    let msg =
+                        ErrorMessage::IfBranchTypesIncompatible(result_type_name, else_ty_name);
+                    self.sa
+                        .diag
+                        .lock()
+                        .report(self.file_id, else_block.pos(), msg);
+                }
+            }
+        }
+
+        self.analysis.set_ty(node.id, result_type.clone());
+
+        result_type
+    }
+
+    fn check_expr_if_enum(&mut self, node: &ast::ExprIfType, expected_ty: SourceType) -> SourceType {
+        let cond = node.cond.expr.as_ref().unwrap();
+        let expr_type = self.analysis.ty(cond.id());
         let mut result_type = SourceType::Error;
 
         let expr_enum_id = expr_type.enum_id();
@@ -669,7 +817,7 @@ impl<'a> TypeCheck<'a> {
                 }
                 ast::IfCaseData::Patterns(patterns) => {
                     debug_assert_eq!(patterns.len(), 1);
-                    if !expr_type.is_enum() && !expr_type.is_union() {
+                    if !expr_type.is_enum() {
                         self.sa.diag.lock().report(
                             self.file_id,
                             node.pos,

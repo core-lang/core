@@ -53,6 +53,8 @@ pub enum ErrorMessage {
     IfPatternBindingAlreadyUsed,
     EnumExpected,
     EnumVariantExpected,
+    UnionExpected,
+    UnionVariantExpected,
     VarNeedsTypeInfo(String),
     ParamTypesIncompatible(String, Vec<String>, Vec<String>),
     ArgumentNameMismatch(String, Vec<String>, Vec<String>),
@@ -296,6 +298,8 @@ impl ErrorMessage {
             ErrorMessage::IfPatternBindingAlreadyUsed => "var is already used in pattern.".into(),
             ErrorMessage::EnumExpected => format!("enum expected."),
             ErrorMessage::EnumVariantExpected => format!("enum variant expected."),
+            ErrorMessage::UnionExpected => "union expected.".into(),
+            ErrorMessage::UnionVariantExpected => "union variant expected.".into(),
             ErrorMessage::IfPatternVariantUncovered => "not all variants are covered.".into(),
             ErrorMessage::IfPatternUnreachable => "variant not reachable.".into(),
             ErrorMessage::VarNeedsTypeInfo(ref name) => format!(

@@ -109,7 +109,7 @@ impl UnionDefinition {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct UnionVariant {
     pub id: usize,
     pub type_: SourceType,

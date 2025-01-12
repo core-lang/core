@@ -8,4 +8,4 @@ fun main(): Unit {
 }
 
 fun m(foo: Foo): String = if foo
-... is String { return foo; }
+... is String { foo }
